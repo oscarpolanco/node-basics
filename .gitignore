@@ -1,2 +1,6 @@
+# general
 *.code-workspace
 node-modules
+
+# notes app
+notes.txt
