@@ -23,7 +23,7 @@ To begin with, to do these examples you just need a very basic experience with `
 - You should see the version that you just download from `node` (Use the lasted version for the examples)
 - Now you are good to start the example
 
-## What is Node.js?
+### What is Node.js?
 
 `Node.js` came about when the original developers take `js` something that we can only run on the browser and they allow it to run as a `standalone` process on your machine so before `node`; `js` can't be used as a general-purpose language limited to the browser but this change with the introduction of `node` that will allow the `js` developers to use `js` on the `server` side so they can use the same `js` programing language to create web servers; command-line interfaces; application backend and more.
 
@@ -43,7 +43,7 @@ And 2 popular `js` methods on the server:
 
 These 2 methods are not part of the `js` language itself because they actually implemented by the `chrome` runtime when `chrome` run the `js` file that uses either of those some `C++` code gets executed behind the scenes which are responsible for taking care of that functionality in other words `chrome` will tail `v8` what to do when it finds these methods. The exact same thing happened with `node`.
 
-### Practice example
+#### Practice example
 
 - Open your browser(I'm using `chrome`; you can use any browser but the steps may change depending on what you are using)
 - Go to any website
@@ -87,3 +87,11 @@ As you can see you still have all the `js` core features when independent that y
 - You will see a large object with a lot of methods and properties. `Process` is similar to `document` for manipulating the current `node` `process`
 - Type `process.exit` and click `enter`
 - Now you are on the standard terminal
+
+### Why should I use node.js?
+
+In the past, in the `node.js` website there was some more text that will help us to understand the advantages that we will have using `node.js`. One of that quotes will be: `Node.js uses an event-driven, non-blocking I/O model that makes it lightweight and efficient.
+
+Let's begin to destructure the previews quote; `I/O` stand for `input and output`; your `node` application will use `I/O` anytime it trying to communicate with the outside world so if your `node` app needs to communicate with your machine that is running on that is `I/O` for example reading some data from a file in the filesystem or if your `node` app needs to communicate with your another server that's `I/O` as well. Those `I/O` operations take some time and that leads us to the `non-blocking` part of the quote; that means when your `node` application is waiting for a response; like a response from a database; it can do other things. Finally, the `event-driven` part refers to register `callbacks`(Later we will see about this) and call than when the `I/O` operation is done.
+
+There was another quote that said: `Node.js package ecosystem, npm, is the largest ecosystem of open source libraries in the world`. `NPM` is a tool that actually is already in your machine when you installed `node` and its page is: https://www.npmjs.com/; where you can find a lot of pre-written packages that you can use inside of your application.
