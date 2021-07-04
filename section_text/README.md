@@ -95,3 +95,24 @@ In the past, in the `node.js` website there was some more text that will help us
 Let's begin to destructure the previews quote; `I/O` stand for `input and output`; your `node` application will use `I/O` anytime it trying to communicate with the outside world so if your `node` app needs to communicate with your machine that is running on that is `I/O` for example reading some data from a file in the filesystem or if your `node` app needs to communicate with your another server that's `I/O` as well. Those `I/O` operations take some time and that leads us to the `non-blocking` part of the quote; that means when your `node` application is waiting for a response; like a response from a database; it can do other things. Finally, the `event-driven` part refers to register `callbacks`(Later we will see about this) and call than when the `I/O` operation is done.
 
 There was another quote that said: `Node.js package ecosystem, npm, is the largest ecosystem of open source libraries in the world`. `NPM` is a tool that actually is already in your machine when you installed `node` and its page is: https://www.npmjs.com/; where you can find a lot of pre-written packages that you can use inside of your application.
+
+### Your first node.js script
+
+- Create a new directory on your machine
+- Open your new directory on your editor
+- Create a new file on the directory that you just created and call it `hello.js`
+- On the newly created file using the `console.log` to print a message
+    `console.log('Welcome to the course!');`
+    You might say that this is a regular `js` script no a `node` one but remember that `console.log` is not actually part of the `js` programing language that comes from the runtime; whether is `node` or the browser
+- Open your browser
+- Go to the [node.js page](https://nodejs.org/en/)
+- Click on the `Docs` option on the top of the navbar
+- At the left; you will see a sidebar with the `node` versions
+- Click on the one that we are using(As we mentioned before we will be using the last version of `node`)
+- On the left sidebar you will see all the functions that are available in the version of `node`; search for `console` and click on it
+- Now you will see the specification of `console`
+- Open your terminal
+- Get to the folder using the `cd` command
+    `cd path/to/my/folder`
+- When you are on the folder that you created; type: `node hello.js`
+- You should see the message that you added on the `hello.js` file
