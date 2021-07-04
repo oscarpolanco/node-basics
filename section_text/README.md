@@ -116,3 +116,11 @@ There was another quote that said: `Node.js package ecosystem, npm, is the large
     `cd path/to/my/folder`
 - When you are on the folder that you created; type: `node hello.js`
 - You should see the message that you added on the `hello.js` file
+
+## Section 2: Node.js module system(Notes App)
+
+In this section, we will be creating our first `node` app to explore the `Node Module System` that allows us to load functionality into our app and use it like read and write on the file system. We will target 3 different ways to use the `Node Module System`:
+
+- Load core modules: Modules that come with the `node` installation
+- Load third party modules: Modules build by other devs
+- Load your custom modules: Modules that are build by you
