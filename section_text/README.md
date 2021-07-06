@@ -41,7 +41,7 @@ And 2 popular `js` methods on the server:
 `fs.readFile`: Allow you to read the context of a file on the disk
 `os.platform`: `os` stand for `operating system` and `platform` will tell us the name of the `operating system` that we are running the code
 
-These 2 methods are not part of the `js` language itself because they actually implemented by the `chrome` runtime when `chrome` run the `js` file that uses either of those some `C++` code gets executed behind the scenes which are responsible for taking care of that functionality in other words `chrome` will tail `v8` what to do when it finds these methods. The exact same thing happened with `node`.
+These 2 methods are not part of the `js` language itself because they actually implemented by the `chrome` runtime; when `chrome` run the `js` file that uses either of those some `C++` code gets executed behind the scenes which are responsible for taking care of that functionality in other words `chrome` will tell `v8` what to do when it finds these methods. The exact same thing happened with `node`.
 
 #### Practice example
 
@@ -124,3 +124,43 @@ In this section, we will be creating our first `node` app to explore the `Node M
 - Load core modules: Modules that come with the `node` installation
 - Load third party modules: Modules build by other devs
 - Load your custom modules: Modules that are build by you
+
+### Importing node.js core modules
+
+As we mentioned before we are going to introduce the `node module system` that is what is going to help us to take advantage of all the things that `node` provides. In this case, we are going to be using the [file system](https://nodejs.org/dist/latest-v16.x/docs/api/fs.html) module and this will allow us to have access to the operating system `file system`; we will able to read; write; append files; figure out if a given file exists and more.
+
+If you see on the [file system](https://nodejs.org/dist/latest-v16.x/docs/api/fs.html) docs you will have a table of content. Scroll down until you begin to see the `fs.` sections; these are all the methods of the `file system` module. In our case we will use the `fs.writeFile` method that will allow us to write data to a file on our `file system` from our `node.js` app(For the moment we will use the `synchronous` version of the `fs.writeFile` that is called `fs.writeFileSync`); this method takes 2 argument that is the name of the file and the data that you will use to write on the file. So let us begin to write our app!!!
+
+- Go to your editor
+- Delete the `hello.js` file(we are not going to use it anymore)
+- Create a new directory call `notes-app`
+- In this newly created directory; create a file called `app.js`
+- Open this newly created file
+- Add the `fs` object and call the `writeFileSync` method
+    `fs.writeFileSync();`
+- As mentioned before the `writeFileSync` takes 2 arguments that are the name of the file and the content that you will add to the file. So add as a name of the file `notes.txt` and as a content `This file was created by Node.js!`
+    `fs.writeFileSync('notes.txt', 'This file was created by Node.js!');`
+- Now go to your terminal and get to the `app.js` file
+- let us run our script using the `node` command: `node app.js`
+- You should see an error on the terminal. `fs is not defined`; you get this error because you will need to `require` the `file system` object from `node` and this will be done using the `require` function that `node` provide
+- Go back to the `app.js` file on your editor
+- At the top of the file add the `require` function
+    `require();`
+    This is a function that `node` provides and this is the core of the `module system`. The `require` function is how we load in other things; whether is a core `node` module; another file that we created or `npm` module that we choose to install on our system
+- We will pass a single string as a parameter of the `require` function and since is a `node` core module you just need to put the name of that module in this case `fs`
+    `require('fs');`
+- The `require` function returns all the stuff of the module that you are going to use so we need to store it in a constant so we can use it when we want. In this case, we will stick with the module name(the variable could be named as we wanted the only important thing is the string that we send to the `require` function matches on what `node` call that module)
+    `const fs = require('fs');`
+- Go back to your terminal and use the `node` command to run the `app` script: `node app.js`
+- You should not see any output on your terminal
+- Go back to your editor
+- You should see that on the `notes-app` directory a new file is created with the name that you use on the `writeFileSync` method
+- Open that file and you should see the message that you put on the `writeFileSync`
+- Now let use another function that appends a message on the file that we create but first delete the file that was created by the `app` script
+- Now bellow of the `writeFileSync` method; use the `fs` object and call the `appendFileSync` method
+    `fs.appendFileSync();`
+- The `appendFileSync` receive the name of the file and the `content` that you need to append so add the name of the file that you add on the `writeFileSync` and as a content ` This is the appended line`(Add a space before the new message because we are appending content)
+- Go to your terminal and run the `app` script: `node app.js`
+- Go back to your editor
+- You should see a new file created
+- Open that file and you should see the message that you saw before and the one that you just append
