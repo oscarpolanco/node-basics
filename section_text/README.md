@@ -164,3 +164,79 @@ If you see on the [file system](https://nodejs.org/dist/latest-v16.x/docs/api/fs
 - Go back to your editor
 - You should see a new file created
 - Open that file and you should see the message that you saw before and the one that you just append
+
+### Importing your own files
+
+Now we are going to use the `require` function to load the files that you create on your project. At this moment you have the `app.js` file where all your code is stored and all new code that you add needs to be on this file in order to run; the thing that is not ideal as the application becomes larger and more complex. To fix the mentioned before we are going to create multiple files that will store part of the application. Let's begin with the process
+
+- Go to the `app.js` file on your editor
+- Remove all the content
+- Add a constant call `name` and add your name as it value(A string)
+    `const name = 'test';`
+- Use `console.log` to print `name`
+    `console.log(name);`
+- On your terminal; go to the `notes-app` directory
+- Run the `app` script: `node app.js`
+- You should the `name` content as an output
+- Go back to your editor and create a new file call `utils.js` on the `notes-app` directory
+- On this newly created file add a `console.log` with the name of the file so we know when the file run
+    `console.log('utils.js');`
+- Now get back to the `app.js` file
+- At the top of the file add the `require` function
+    `require();`
+- As a parameter of the `require` function we will add the relative path of the file that we need to load. The first thing that we add is `./` that means that we will be on the folder that store `app.js`; then add the name of the file
+    `require(./utils.js);`
+- Go to your terminal and re-run the `app.js` file
+- You should see the message of the `utils.js` file; them the `app.js` file message
+- Now get back to the `app.js` file
+- Remove the `name` constant(leave the `name` call on the `console.log`)
+- Go to the `utils.js` file and add the `name` constant with different content than before
+- In your terminal run the `app.js` script
+- You should see an error that said the `name` is not defined. This is because in the `node module system` each file has its own scope. So you can't have access to the variables defined on another file. To have access to the variables and method of another file we need to `export` those
+- At the bottom of the `util.js` file add `module.exports` and add the `name` variable as its content
+    `module.exports = name;`
+
+    The thing that you specify as the value of `module.export` is the content that will be returned when you `require` the file
+- Go to the `app.js`
+- Add a constant call `name` that catch the value of the `utils require`
+    `const name = require('./utils.js');`
+- Go to your terminal and run the `app.js` script
+- You should see the `name` output without errors
+- Now get to the `util.js`
+- Define a function call `add` that receive 2 values and return the sum of these 2 values
+    ```js
+    const add = function(a, b) {
+        return a + b;
+    }
+    ```
+- Export the `add` function
+    `module.exports = add;`
+- Go to the `app.js` file
+- Rename the `name` constant to `add`
+    `const add = require('./utils.js');`
+- Add a constant call `sum` that it value will be the sum of the `4` and `-2` numbers
+    `const sum = add(4, -2);`
+- Console the `sum` value(Remove the `name` console)
+    `console.log(sum)`
+- Go to your terminal and run the `app.js` script
+- You should see the `utils` message and the `sum` value
+- Go to back to your editor and add a new file call `note.js` on the `notes-app` directory
+- Add a function that will be call `getNotes` and return a `string`
+    ```js
+    function getNotes() {
+        return "Your notes...";
+    }
+    ```
+- Export the `getNotes` function
+    `module.exports = getNotes;`
+- Import the `getNotes` function on the `app.js` file
+    `const getNotes = require('./notes');`
+- Add a constant call `notes` that it value will be the return string of the `getNotes` function and console it value
+    ```js
+    const notes = getNotes();
+    console.log(notes);
+    ```
+- Go to your terminal and run the `app.js` file
+- You will see the message of the `getNotes` function
+- Now go to the `app.js` and remove all content not related to the `getNotes` function
+- Delete the `utils.js` file
