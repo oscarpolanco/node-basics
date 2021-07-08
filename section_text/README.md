@@ -240,3 +240,49 @@ Now we are going to use the `require` function to load the files that you create
 - You will see the message of the `getNotes` function
 - Now go to the `app.js` and remove all content not related to the `getNotes` function
 - Delete the `utils.js` file
+
+### Import npm modules
+
+At this moment you see that you can get `node` core modules and files that you created and now you will be using` npm` modules. This will allow us to have access to a large number of packages so we don't recreate the will over and over.
+
+As mentioned before when we install `node` you also get` npm`. This will give us access to everything on https://www.npmjs.com/ but before we begin to use `npm` modules we need to do 2 things:
+- We have to initialize `npm` on our project
+- We have to install all of the modules that we want to use
+
+Let's begin with the process:
+
+- On your terminal; go to the root of your app in this case the `notes-app` directory
+- Use the `npm -v`
+- You will see the version that you got of `npm` (Usually this version doesn't matter; just make sure that you are over version 5)
+- Now initialize `npm` on your project with the following command:
+    `npm init`
+
+    This will create a single file that will help us to manage all the `npm` modules
+- It will show a lot of information about what is happening and some options that you can update as you want. For every question that it asks we will stick with the default answer so press enter for each one
+- You will see the output of the file that will create. Press enter to the last question
+- You will see a new file is created that is called `package.json`. As you see the extension of this file is `json` that stands for` javascript object notation`
+- Go to your browser
+- Open the [npm page] (https://www.npmjs.com/)
+- On the `search package` input; type `validator` (We will use the` validator` package for the example)
+- Choose the first option
+- You will see the `npm` package page that has all the information of the package
+- Go back to your terminal and type the install command for the `validator` package (You will see on the package page that use a` i` instead of `install` but both are the same). This command will go to the `npm` servers; grab all the code for that package and add it to our application
+    `npm install validator`
+
+    You will see that a new file and a new directory are added to the `notes-app` directory. One is the `node_modules` directory that is the folder that will contain all the code of every dependency in this case you will see that inside of it you have a` validator` directory with all the code that you just install. We should not update any file in the `node_modules` directory and when we use` npm install` it will generate `node_modules` every time. The `package.lock.json` is a file that contains extra information that makes` npm` a little bit faster and secure and it will give you the exact code that you install the first time that you add a module and again this file should not update this will be maintained by the `npm` commands. Finally, if you see the `package.json` new property is added that is called `dependencies` and have the information of the `validator` package that we just installed
+- Now that we got the package installed; we can use it. Go to the `app.js` file
+- At the top of the file add the `require` function:` require (); `
+- Then we need to add the `package` name that we will use in this case` validator` as a parameter of the `require` function
+    `require ('validator');`
+- As we did before we need a variable to store all the content that comes from `require`
+    `const validator = require ('validator');`
+- In this case, we will use the `isEmail` function that will help us to know if a given` email` is valid. To add a `console.log` with the following
+    `console.log (validator.isEmail ('test@example.com '));`
+- Go to your terminal and run the `app.js` script
+- You will see the `getNotes` output and below the value that returns the` isEmail` function that in this case is `true` because it is a valid` email` (You can test changing the `string` that you send to the function )
+- Now we will the `isURL` method and console it
+    `console.log (validator.isURL ('https://mead.io'));`
+- Go to your terminal and run the `app.js` script
+- You will have the same outputs as before and a new one with the value of the `isURL`
+
+There is important to know that you will see on the documentation 2 forms of getting the `validator` module on your file; one with `require` as we used before and the other one with` import`. They are 2 different versions of the same but we use `require` because at this moment` node` does not support `import` by default.

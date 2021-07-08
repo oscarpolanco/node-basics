@@ -1,6 +1,6 @@
 # general
 *.code-workspace
-node-modules
+node_modules
 
 # notes app
 notes.txt
