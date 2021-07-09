@@ -286,3 +286,19 @@ Let's begin with the process:
 - You will have the same outputs as before and a new one with the value of the `isURL`
 
 There is important to know that you will see on the documentation 2 forms of getting the `validator` module on your file; one with `require` as we used before and the other one with` import`. They are 2 different versions of the same but we use `require` because at this moment` node` does not support `import` by default.
+
+Before we continue let's talk about the `node_modules` directory. This is a generated directory so is something that we should not manually change because when we use the `npm` command again our changes will be overwritten. You also can recreate this directory base on the content of the `package.json` and` package-lock.json` so when you are sharing your code with others you don't need to share the `node_modules` directory. Let's test it:
+
+- On your editor delete the `node_modules` directory on the` notes_app` folder
+- Go to your terminal and get to the `node_app` directory
+- Run the `app.js` script
+- You should see an error because you lose the functionality on the `node_modules` directory
+- To generate it again just use the `install` command:
+     `npm install`
+
+     This command will look at the content of the `package.json` and create the` node_modules` directory again
+- Run the `app.js` script
+- You will see that work the same as before
+
+
+
