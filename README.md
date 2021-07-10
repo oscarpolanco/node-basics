@@ -6,3 +6,7 @@ On this repository, you will see some examples related to using `NodeJs` to get 
 ## Requirements
 
 - [NodeJs](https://nodejs.org/en/)
+
+## Examples
+
+- [Notes-app](https://github.com/oscarpolanco/node-basics/tree/master/notes-app)
