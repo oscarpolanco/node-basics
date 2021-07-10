@@ -332,5 +332,54 @@ At this moment we just make some examples to check the `node module system` and 
 - File system: This Will allow us to store the user's data
 - Command-line arguments: This Will allow us to get input from the user
 
+### Getting input from the user
 
+Now we will get some input from the user that will be a core functionality for the `notes app` because if a user wants to do something like `add` a new `note` it will need to provide some information about that like the title and body. For the moment we will use the terminal to get the input from the user but later we will see how to get that from the browser.
 
+First, we are going to try to get the input from the terminal:
+
+- On your terminal; go to the `notes-app` directory
+- Run the `app.js` script but at the end add a new value like this:
+    `node app.js test`
+- You should see the same out that before without any change but actually we add a new value that our program could choose to use in this case `test`
+- Now we need to have access to this new value and for this, we will use the `process` variable that we mentioned before when `node` was introduced. So on your editor; go to the `app.js`
+- Remove all the code except the `requires`
+- Log the `process.argv` variable
+    `console.log(process.argv);`
+
+    `argv` stands for `argument vector` that have an `array` will all `arguments` provided
+- Go back to your terminal and run the same command as before
+- You should see an `array` with 3 `strings`(The first 2 are always provided):
+    - The first one is the path of the `node.js` executable
+    - The second is the path of the `app.js` file
+    - The third one is the extra `argument` that we use(in my case `test`)
+- Now we are going to extract the `argument` that we need using the advantages of an `array`. Go back to the `app.js` and update the `process.argv` to get the correct `index` of the `array`
+    `console.log(process.argv[2]);`
+- On your terminal run the `app.js` again with the same command as before
+- You should see just the `argument` that you just use in the output
+- In the case of the `notes-app` we will use the first value to be the `action` that we are going to take. This will be our command and will run some code depending on it. So go back to the `app.js` and remove the `console`
+- Add a new constant call command that have the `process.argv[2]` as it value
+    `const command = process.argv[2];`
+- Our first command will be `add` that will represent that the user want to create a `note`. So bellow the `command` variable add a condition that check for the `add` string and `console` a text
+    ```js
+    if (command === 'add') {
+        console.log('Adding note!');
+    }
+    ```
+- On your terminal run the `node` command but at the end put the `add` command
+    `node app.js add`
+- You should see the input related to the `add` command
+- Go back to the `app.js` file and add the condition for the second command that will be `remove`
+    ```js
+    if (command === 'add') {
+        console.log('Adding note!');
+    } else if (command === 'remove') {
+        console.log('Removing note!');
+    }
+    ```
+- Go to the terminal and use the `node` command with `remove` at the end
+- You should see the `remove` command output
+- Now if someone `add` a `note` we will need some extra input like the `title` and the `body` of the `note` and for this, we will use the `command line options`(Those command with `-` like `node -v`; some have `--`). On the `app.js` file add a `console` with the `process.argv` again
+- Go to your terminal and run the `node` command with the `add` command and an option called `title` like this
+    `node app.js add --title="This is my title"`
+- You should see the `add` command and the `title` option on the `array`. One thing you notice is that the option is not something that `parse` for us; we have the exact text that we add; so we will need to add some code to `parse` that and get the actual value that we need and for this, we will use an `npm` package for this next
