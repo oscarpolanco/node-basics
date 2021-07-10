@@ -300,5 +300,30 @@ Before we continue let's talk about the `node_modules` directory. This is a gene
 - Run the `app.js` script
 - You will see that work the same as before
 
+### Global npm modules and nodemon
+
+Now we are going to see `global npm modules` that will allow us to get a new command to execute on the terminal. Until this moment we install what is called `local installed package` that when we install a dependency explicitly on a project and you can tell is a `local dependency` because is listed on the `package.json` and you will need to use `require` on your `app` to get those modules.
+
+When we install a module `globally` we don't need to call it directly on our source files instead we can call it directly on our terminal. In our case, we are going to install a useful module that will run our `app` and restart the process every time our `app` change its call [nodemon](https://www.npmjs.com/package/nodemon).
+
+- Go to your terminal
+- Run the following command:
+    `npm install nodemon -g`
+
+    The `-g` flag is responsible of install the module `globally`
+- On your editor; check that the `package.json`; `package-lock.json` and `node_modules` don't present any updates
+- Now get back on your terminal
+- Type the `nodemon` command with the `-v` flag
+- You should see the `nodemon` version
+- Now go to the `notes-app` directory
+- Run the `app.js` script using `nodemon`
+    `nodemon app.js`
+- You will see some logs then the output of the `app.js` script
+- On your editor go to the `app.js` file
+- Update one of the output messages and save
+- Go to your terminal
+- You should see the new output automatically
+- Press `command c`(`ctrl c`) to stop the `nodemon` command
+
 
 
