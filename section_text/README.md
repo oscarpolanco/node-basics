@@ -262,7 +262,7 @@ Let's begin with the process:
 - You will see the output of the file that will create. Press enter to the last question
 - You will see a new file is created that is called `package.json`. As you see the extension of this file is `json` that stands for` javascript object notation`
 - Go to your browser
-- Open the [npm page] (https://www.npmjs.com/)
+- Open the [npm page](https://www.npmjs.com/)
 - On the `search package` input; type `validator` (We will use the` validator` package for the example)
 - Choose the first option
 - You will see the `npm` package page that has all the information of the package
@@ -383,3 +383,115 @@ First, we are going to try to get the input from the terminal:
 - Go to your terminal and run the `node` command with the `add` command and an option called `title` like this
     `node app.js add --title="This is my title"`
 - You should see the `add` command and the `title` option on the `array`. One thing you notice is that the option is not something that `parse` for us; we have the exact text that we add; so we will need to add some code to `parse` that and get the actual value that we need and for this, we will use an `npm` package for this next
+
+### Argument parsing with Yargs: Part I
+
+At this moment we know that we can pass `arguments` via `node` and read them using the `process` variable but; as we saw; we don't necessarily receive those `arguments` in the most useful way possible because `node` doesn't offer any `parse` utility so we get the raw `arguments`. We will need to write some code to get the actual value that we need but this is something common on `node` application this means that we got a lot of `npm` packages that can `parse` what we need so you don't have to reinvent the wheel over and over. One more thing is that `node` doesn't `parse` the `argument` intentionally to let the community create various packages each to solve the `parsing` problem. In our case, we will use [yargs](https://www.npmjs.com/package/yargs). Let's start with the process:
+
+- On your terminal; go to the `notes-app` directory
+- Use the `node install` command to install `yargs`
+    `npm install yargs`
+- Go to your editor
+- Go to the `app.js` file and `require yargs`(At the top of the file; for convention, we put the package first then the file that we `require`)
+    `const yargs = require('yargs');`
+- Remove all the code bellow the all the `requires`
+- Add 2 consoles; one for the `process.args` and the other for `yargs.argv`
+    ```js
+    console.log(process.argv);
+    console.log(yargs.argv);
+    ```
+    The `yargs.argv` is the version of `process.argv` from `yargs`
+- Go to your terminal and run the `app.js` without `arguments`
+    `node app.js`
+- You should see an output like this:
+    ```bash
+    [
+        '/path/of/your/machine/.nvm/versions/node/v16.4.0/bin/node',
+        '/path/of/your/machine/node-basics/notes-app/app.js'
+    ]
+    { _: [], '$0': 'app.js' }
+    ```
+    Here you see the `process` output that you saw before and the `yargs` output that is an object with the following properties
+        - `_`: Will be populated with an array of `arguments`
+        - `$0`: Name of the file that we execute in this case `app.js`
+- Now run the `app.js` file sending `arguments`
+    `node app.js add --title="Testing title"`
+- You will get an output like this:
+    ```bash
+    [
+        '/path/of/your/machine/.nvm/versions/node/v16.4.0/bin/node',
+        '/path/of/your/machine/node-basics/notes-app/app.js',
+        'add',
+        '--title=Testing title'
+    ]
+    { _: [ 'add' ], title: 'Testing title', '$0': 'app.js' }
+    ```
+    Here you will see that the `yargs` output has the command on the `_` property and a new property that is our `command option` that in this case is the `title` with the text that you use as its value. Now we got an object that will be easy to access
+
+By default `yargs` come with some useful behavior for example the `--help` option and some more.
+
+- On your terminal; run the `app.js` script but add the `--help` option at the end of the command(Don't add any `arguments`)
+    `node app.js --help`
+- You will see some output of the application that define all the options that at this moment we have available on our app
+- As you see there is a `--version` option. Let's use it
+    `node app.js --version`
+- This will output the `version` of the application(By default will be `1.0.0`)
+- Go back to the `app.js` file
+- Remove the `process.argv` console
+- Now we are going to change the `version` of the application using the `yargs version` method. So before the console add the following
+    `yargs.version('1.1.0');`
+- Go back to your terminal and run the `version` option again
+- You should see the new `version` as an output
+
+At this moment we can begin to set `yargs` to work with the `commands` that we need for the `notes app`.
+
+- On your editor; go to the `app.js` directory
+- Lets create the `add` command for the application. Use the `command` method of `yargs`(Bellow the `version` line)
+    `yargs.command({});`
+- On the configuration object add the following
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        handler: function () {
+            console.log('Adding a new note')
+        }
+    });
+    ```
+    - `command` property: Define the name of the `command`
+    - `describe` property: Describe the functionality of the `command`
+    - `handler` property: Receive a function that will run when you use the `command`
+- Go to your terminal and run the `--help` option
+    `node app.js --help`
+- You will see the new `add` command with the output of all `commands` available on our app
+- Now use the `add command` to run the app
+    `node app.js add`
+- You will see the `add handler` function output
+- Now add the following `commands` for the app:
+    ```js
+    yargs.command({
+        command: 'remove',
+        describe: 'Remove a note',
+        handler: function() {
+            console.log('Removing a note')
+        }
+    });
+
+    yargs.command({
+        command: 'list',
+        describe: 'List your notes',
+        handler: function() {
+            console.log('Listing out all notes')
+        }
+    });
+
+
+    yargs.command({
+        command: 'read',
+        describe: 'Read a note',
+        handler: function() {
+            console.log('Reading a note')
+        }
+    });
+    ```
+
