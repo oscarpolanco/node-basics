@@ -325,5 +325,12 @@ When we install a module `globally` we don't need to call it directly on our sou
 - You should see the new output automatically
 - Press `command c`(`ctrl c`) to stop the `nodemon` command
 
+## Section 3: File system and command line Args(Notes App)
+
+At this moment we just make some examples to check the `node module system` and now is the moment to pull all of that together creating the `notes app`. We are going to check to main topics:
+
+- File system: This Will allow us to store the user's data
+- Command-line arguments: This Will allow us to get input from the user
+
 
 
