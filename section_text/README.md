@@ -454,7 +454,7 @@ At this moment we can begin to set `yargs` to work with the `commands` that we n
         command: 'add',
         describe: 'Add a new note',
         handler: function () {
-            console.log('Adding a new note')
+            console.log('Adding a new note');
         }
     });
     ```
@@ -495,3 +495,160 @@ At this moment we can begin to set `yargs` to work with the `commands` that we n
     });
     ```
 
+### Argument Parsing with Yargs part II
+
+Now that we have all our `commands`; we will make some `actions` that will be supported by our `commands`. Let's get to it!!
+
+- First; on your editor go to the `app.js` file
+- On the `add` command; before the `handler` add the following property
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {},
+        handler: function () {
+            console.log('Adding a new note');;
+        }
+    });
+    ```
+    The `builder` property will have an object that have all the information of the `option` that we want to support
+- Now on the `builder` property add the following
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {}
+        },
+        handler: function () {
+            console.log('Adding a new note');;
+        }
+    });
+    ```
+    To define a new `option` we set it as a property on the `builder` object and will have an object where we can custumise how this option work
+- On the `title` object add a `description` property with a `string` as it value
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+            }
+        },
+        handler: function () {
+            console.log('Adding a new note');
+        }
+    });
+    ```
+    The `describe` property will have information of the `option` that we are creating
+- Now that we add the `builder` property; we got access to the `title` in the `handler` function via a parameter called `argv`. To add this `argv` parameter to the `handler` function and on the console print the `argv` parameter
+     ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+            }
+        },
+        handler: function (argv) {
+            console.log('Adding a new note', argv);
+        }
+    });
+    ```
+- Then go to your terminal and get to the `notes-app` directory
+- Run the `app.js` script with the `add` command and the `title` option
+    `node app.js add --title="Test title"`
+- You will see the `Adding notes` log and next to it will be the `argv` content(Remember that we got another console with the `yargs.argv` at the bottom of the file; remember it because is important and DO NOT DELETE IT )
+    `Adding a new note { _: [ 'add' ], title: 'Test title', '$0': 'app.js' }`
+- At this moment the `title` option is not `require` so if you run the `add` command without the `title` option it will work but actually we will need that to be `require` so go to your editor on the `app.js` file and add the following option to the `title` object
+     ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+            }
+        },
+        handler: function (argv) {
+            console.log('Adding a new note', argv);
+        }
+    });
+    ```
+    The `demandOption` is by default `false` and changing it to `true` will mean that this command is `require`
+- Go back to your terminal and run the `app.js` script with the `add` command and without a `title`
+    `node app.js add`
+- An error will show up with the available `options` and you should see the `title` with the `require` message
+- At this moment if you provide the `title` option without a value it will return as a `boolean` but we actually always want that the `title` have a `string`. Go back to the `app.js` file on the editor
+- Add the following property to the `title` object
+     ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler: function (argv) {
+            console.log('Adding a new note', argv);
+        }
+    });
+    ```
+    Now we will always have a `string` on the `title` command
+- Go back to your terminal and run the `app.js` script with the `add` command and with the empty `title` option
+    `node app.js add --title`
+- You will see that the `title` log have an empty `string`
+- Now go back to your editor
+- On the `app.js` file delete the console at the bottom of the file that has the `yargs.argv` object
+- On your terminal run the `app.js` script with the `add` command and the `title` option
+- Now you won't see any output. This is because when we access the `argv` property on the console; `yargs` will know that it needs to `parse` the `arguments`
+- To actually `parse` the `arguments` without the console you will need to use the `parse` method so at the bottom of the `app.js` file add the following
+    `yargs.parse()`
+- Get back to the terminal and run the previous command again
+- Now you will see the output that is expected
+- Go back to the `app.js` file and update the `log` to print the `title` on the `add` command
+     ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler: function (argv) {
+            console.log('Title: ' + argv.title);
+        }
+    });
+    ```
+- Finally, we will need to add the `body` option to the `add` command and log the `body` option
+     ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            },
+            body: {
+                describe: 'Note body',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler: function (argv) {
+            console.log('Title: ' + argv.title);
+            console.log('Body: ' + argv.body);
+        }
+    });
+    ```
