@@ -4,6 +4,7 @@ node_modules
 
 # notes app
 notes.txt
+notes.json
 
 # playground
 1-json.json
