@@ -543,7 +543,7 @@ Now that we have all our `commands`; we will make some `actions` that will be su
     ```
     The `describe` property will have information of the `option` that we are creating
 - Now that we add the `builder` property; we got access to the `title` in the `handler` function via a parameter called `argv`. To add this `argv` parameter to the `handler` function and on the console print the `argv` parameter
-     ```js
+    ```js
     yargs.command({
         command: 'add',
         describe: 'Add a new note',
@@ -563,7 +563,7 @@ Now that we have all our `commands`; we will make some `actions` that will be su
 - You will see the `Adding notes` log and next to it will be the `argv` content(Remember that we got another console with the `yargs.argv` at the bottom of the file; remember it because is important and DO NOT DELETE IT )
     `Adding a new note { _: [ 'add' ], title: 'Test title', '$0': 'app.js' }`
 - At this moment the `title` option is not `require` so if you run the `add` command without the `title` option it will work but actually we will need that to be `require` so go to your editor on the `app.js` file and add the following option to the `title` object
-     ```js
+    ```js
     yargs.command({
         command: 'add',
         describe: 'Add a new note',
@@ -584,7 +584,7 @@ Now that we have all our `commands`; we will make some `actions` that will be su
 - An error will show up with the available `options` and you should see the `title` with the `require` message
 - At this moment if you provide the `title` option without a value it will return as a `boolean` but we actually always want that the `title` have a `string`. Go back to the `app.js` file on the editor
 - Add the following property to the `title` object
-     ```js
+    ```js
     yargs.command({
         command: 'add',
         describe: 'Add a new note',
@@ -613,7 +613,7 @@ Now that we have all our `commands`; we will make some `actions` that will be su
 - Get back to the terminal and run the previous command again
 - Now you will see the output that is expected
 - Go back to the `app.js` file and update the `log` to print the `title` on the `add` command
-     ```js
+    ```js
     yargs.command({
         command: 'add',
         describe: 'Add a new note',
@@ -630,7 +630,7 @@ Now that we have all our `commands`; we will make some `actions` that will be su
     });
     ```
 - Finally, we will need to add the `body` option to the `add` command and log the `body` option
-     ```js
+    ```js
     yargs.command({
         command: 'add',
         describe: 'Add a new note',
@@ -652,3 +652,47 @@ Now that we have all our `commands`; we will make some `actions` that will be su
         }
     });
     ```
+
+### Storing data with JSON
+
+At this moment we need to see a little bit on how we are going to store the data of the application?; we already have the ability to take some inputs from the user via commands but what to do with that data when the application gets it? well, we will use the `fs` module to get all this data into the `file system` but inside of the files that we will create and inside of those files we will have `JSON` data. Inside of the file, we will have an `array` of `objects` and each `object` will represent a `note` with some properties that define that specific `note`; all in the `JSON` format. Before continuing with the app; is better to explore this specific topic isolate in this case working with `JSON` format so we will play a title bit!!
+
+- On the root directory at the same level of the `notes-app`; create a new folder call `playground`
+- On that newly created directory; create a file called `1-json.js`
+- Create a constant call `book` that will be an object with the following content
+    ```js
+    const book = {
+        title: 'Ego is the enemy',
+        author: 'Ryan Holiday'
+    }
+    ```
+- Now that we got an object we need to figure out how to change the `book` object to a `string` since the `fs` module can only work with `strings`. So to convert the `book` object to a `string` we will use the `JSON.stringify` method. Bellow the `book` object add a new constant call `bookJSON` that will have the `JSON.stringify` method as its value and send the `book` object as its parameter
+    `const bookJSON = JSON.stringify(book);`
+- Add a console to see the `bookJSON` value
+    `console.log(bookJSON);`
+- Go to your terminal; get to the `playground` directory
+- Run the `1-json.js` with the `node` command
+    `node 1-json.js`
+- You will see the `JSON` representation of the `book` object
+- Now we need the opposite of the `JSON.stringify` so we will recive `JSON` data and return an object. For this we will use the `JSON.parse` method. So below the `bookJSON` add a constant call `parseData` that it value will be the `JSON.parse` method sending the `bookJSON` as it value
+    `const parseData = JSON.parse(bookJSON);`
+- Then console the `parseData` value
+    `console.log(parseData.author);`
+- On your terminal; run the `1-json.js` script
+- You will see the `author` name after the previous logs
+- Get back to your editor
+- At the top of the `1-json.js`; require the `fs` module
+    `const fs = require('fs');`
+- Bellow of the previous code; use the `writeFileSync` method to create a new file call `1-json.json` and the `bookJSON` as it content
+    `fs.writeFileSync('1-json.json', bookJSON);`
+- Now we need to read the new `1-json.json` file that we will create so we will need the `readFileSync`; so create a new constant call `dataBuffer` that its value will be the `readFileSync` sending a `string` with the name of the file that we will create
+    `const dataBuffer = fs.readFileSync('1-json.json');`
+- We can't directly read the information that the `readFileSync` method return because what comes back is a `buffer` that is a way of `node.js` to represent `binary` data so we will need to turn that data into a `string` and as you guess it we got a method called `toString` for that. Bellow the `dataBuffer` constant add a new one call `dataJSON` that will receive the value of the `toString` method
+    `const dataJSON = dataBuffer.toString();`
+- Then we need to turn the `dataJSON` into an object that we can read so we will need the `parse` method
+    `const data = JSON.parse(dataJSON);`
+- Finally log the `title` property of the `data` object
+    `console.log(data.title);`
+- Get back to the terminal and run the `1-json.js`
+- You will see the previous logs and at the end, you will have the `title` property of `data`
+
