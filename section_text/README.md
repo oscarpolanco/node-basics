@@ -696,3 +696,188 @@ At this moment we need to see a little bit on how we are going to store the data
 - Get back to the terminal and run the `1-json.js`
 - You will see the previous logs and at the end, you will have the `title` property of `data`
 
+### Adding Notes
+
+Now we will add all the functionality of the `add` command.
+
+- On your editor; go to the `notes-app` directory and open the `notes.js` file
+- On the `notes.js` file bellow the `getNotes` function; add a new function call `addNotes`. This will be the function responsable of adding a note and will recive the `title` and the `body` options as parameters
+    `const addNote = function(title, body) {}`
+- Now we need to `export` the newly created function and to do this; instead of sending just the `getNotes` function we will send an object with both functions like this
+    ```js
+    module.exports = {
+        getNotes: getNotes,
+        addNote: addNote
+    };
+    ```
+- Go to the `app.js` file
+- Update the `getNotes` name to `notes` on the `require` at the top
+    `const notes = require('./notes');`
+- Now on the `handler` function of the add command; remove the consoles
+- Then use the `addNotes` function sending the `title` and the `body` values
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {...},
+        handler: function (argv) {
+            notes.addNote(argv.title, argv.body);
+        }
+    });
+    ```
+- Get back to the `note.js` file
+- The first thing we need to do when we `add` a note is to `load` all the existing notes because we don't want `addNotes` to override any existing data and we will do this for multiples function so we will create a reusable function to do this. Below the `addNotes` function create a new function call `loadNotes`
+    `const loadNotes = function() {}`
+- We will need to read a file so `require` the `fs` module at the top of the file
+    `const fs = require('fs');`
+- Get back to the `loadNotes` function and add a variable call `dataBuffer` that it value will be the what the `fs.readFileSync` returns and the file that we are going to read is the `notes.json`(Does not exits yet) file
+    ```js
+    const loadNotes = function() {
+        const dataBuffer = fs.readFileSync('notes.json');
+    }
+    ```
+- Now create another variable call `dataJSON` that will be the `string` resolve of the `dataBuffer` variable(Using the `toString` method)
+    ```js
+    const loadNotes = function() {
+        const dataBuffer = fs.readFileSync('notes.json');
+        const dataJSON = dataBuffer.toString();
+    }
+    ```
+- Then return an `object` using the `JSON.parse` function on the `dataJSON` variable
+    ```js
+    const loadNotes = function() {
+        const dataBuffer = fs.readFileSync('notes.json');
+        const dataJSON = dataBuffer.toString();
+        return JSON.parse(dataJSON);
+    }
+    ```
+- Use the `loadNotes` function on the `addNotes` function and log it result
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        console.log(notes);
+    }
+    ```
+- At this moment the `loadNotes` function will work only if a `notes.json` file exits and if it does not; it will give us an error. To handle this we will use a `try/catch` like this:
+    ```js
+    const loadNotes = function() {
+        try {
+            const dataBuffer = fs.readFileSync('notes.json');
+            const dataJSON = dataBuffer.toString();
+            return JSON.parse(dataJSON);
+        } catch(e) {
+            return [];
+        }
+    }
+    ```
+    If something on the `try` block has an `error` it will automatically run the `catch` block without crashing the script. In our case, we will return an empty `array` in case of an error because we will add an `array` of notes and that will be our initial value
+- On your terminal; go to the `notes-app` directory
+- Run the `app.js` script using the `add` command an it options: `node app.js add --title="test" --body="testing, test"`
+- You should see an empty array on the terminal log
+- Get back to the `notes.js` file and remove the console of the `addNotes` function
+- Now we can begin to add the notes that we need. Use the `push` function on the `notes` variable sending an object with the `title` and `body`
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        notes.push({
+            title: title,
+            body: body
+        });
+    }
+    ```
+- The next thing will be to save the data and like the `loadNotes` function we will use this functionallity on multiple functions so bellow the `addNotes` function create a new function that will be call `saveNotes` that will recive the `notes`
+    `const saveNotes = function(notes) {}`
+- On the newly create file add a new variable call `dataJSON` that will have the `JSON` representation of the `notes` array using `JSON.stringify`
+    ```js
+    const saveNotes = function(notes) {
+        const dataJSON = JSON.stringify(notes);
+    }
+    ```
+- Now we need to write the file that will store the `notes` using the `writeFileSync` function on the `notes.json` file using `dataJSON` as it content
+    ```js
+    const saveNotes = function(notes) {
+        const dataJSON = JSON.stringify(notes);
+        fs.writeFileSync('notes.json', dataJSON);
+    }
+    ```
+- Use the `saveNotes` function on the `addNotes`
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        notes.push({
+            title: title,
+            body: body
+        });
+
+        saveNotes(notes);
+    }
+    ```
+- Go to your terminal and run the `app.js` script again
+    `node app.js add --title="test" --body="testing, test"`
+- You should see that on the `notes-app` directory a new file is created called `notes.json`
+- Inside of that file you will see the `title` and `body` that you added when you run the `add` command
+- Now run the `add` command again with different inputs for the `title` and `body`
+- You should see that the `notes.json` file is updated and have the new and old notes on it
+- We will add one last feature that will be checking if a `title` already exists to not create a new note if that happens. So we need to look at the `notes` array on the `addNotes` function to see if the `title` that we get on the argument exists and for this, we will use the `filter` method like this:
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        const duplicateNotes = notes.filter(function(note) {
+            return note.title === title;
+        });
+
+        notes.push({
+            title: title,
+            body: body
+        });
+
+        saveNotes(notes);
+    }
+    ```
+    The `filter` function will return the `notes` that match certain criteria. The `filter` method receives a function that will be called for each item of the `array` and will send the individual item as a parameter on that function and if you return `true` the current item will be returned. In our case, we will check every item of the array of `notes` to see if we already have a `title` and if it have it we will store it on the `duplicateNotes` constant
+- Now below of the `duplicateNotes` variable add a condition that checks the length of `duplicateNotes` and puts all the `addNotes` logic inside of it. Console a message to now that a note is added
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        const duplicateNotes = notes.filter(function(note) {
+            return note.title === title;
+        });
+
+        if(duplicateNotes.length === 0) {
+            notes.push({
+                title: title,
+                body: body
+            });
+        
+            saveNotes(notes);
+            console.log('New note added!');
+        }  
+    }
+    ```
+- Finally add a `else` block with a message that no new note id added
+    ```js
+    const addNote = function(title, body) {
+        const notes = loadNotes();
+        const duplicateNotes = notes.filter(function(note) {
+            return note.title === title;
+        });
+
+        if(duplicateNotes.length === 0) {
+            notes.push({
+                title: title,
+                body: body
+            });
+        
+            saveNotes(notes);
+            console.log('New note added!');
+        }  else {
+            console.log('Note title taken!');
+        }
+    }
+    ```
+- Get back to your terminal and run one on the same command as before
+- You should see that the `Note title taken!` shows up
+- Run the `add` command again but will a new `title`
+- You should see that a new note is created without any issue
+
+
