@@ -880,4 +880,153 @@ Now we will add all the functionality of the `add` command.
 - Run the `add` command again but will a new `title`
 - You should see that a new note is created without any issue
 
+### Removing a Note
 
+Now that we have the `add` command we can continue with the `remove` one. So let's begin!!!
+
+- On your editor go to the `app.js` file on the `notes-app` directory
+- We need to add the first option that the `remove` will use that is the `title` of the note that we are going to `remove` so add the `builder` property on the `remove` command
+    ```js
+    yargs.command({
+        command: 'remove',
+        describe: 'Remove a note',
+        builder: {},
+        handler: function(argv) {
+            console.log('Removing a note');
+        }
+    });
+    ```
+- Now add the `title` option on the `builder` object and the `title` will have a `description`; will be a `string` and should be `require`
+    ```js
+    yargs.command({
+        command: 'remove',
+        describe: 'Remove a note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler: function(argv) {
+            console.log('Removing a note');
+        }
+    });
+    ```
+- Go to the `notes.js` file
+- Add a new function bellow of the `addNotes` function call `removeNote` that recive a `title` and log that `title`
+    ```js
+    const removeNote = function(title) {
+        console.log(title);
+    }
+    ```
+- Export the `removeNote` function
+    ```js
+    module.exports = {
+        getNotes: getNotes,
+        addNote: addNote,
+        removeNote: removeNote
+    };
+    ```
+- Go back to the `app.js` file and use the `removeNote` function on the `remove handler` and sent the `title` that it recive via arguments
+    ```js
+    yargs.command({
+        command: 'remove',
+        describe: 'Remove a note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler: function(argv) {
+            notes.removeNote(argv.title);
+        }
+    });
+    ```
+- Now on your terminal go to the `notes-app` directory and run the `app.js` script with the `remove` command and sending a `title`
+    `node app.js remove --title="testing"`
+- You should see the `title` as the output
+- Now we need to do the `removeNote` function so get to the `notes.js`
+- On the `removeNote` function use the `loadNotes` function to get all existing notes and remove the log
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+    }
+    ```
+- Then use `filter` to get all notes that don't match with the `title` that we recive as an argument. The notes will be store on a variable call `notesToKeep`
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter(function(note) {
+            return note.title !== title;
+        });
+    }
+    ```
+- Now we need `save` the notes that we have on the `notesToKeep` variable but we need to make sure that we only call this function when we actually `remove` a note so we will do a condition that check if the `notes` variable have different `length` that the `notesToKeep` that will mean that you remove a note
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter(function(note) {
+            return note.title !== title;
+        });
+
+        if(notesToKeep.length !== notes.length) {}
+    }
+    ```
+- Inside of the condition add the `saveNotes` function sending the `notesToKeep` variable as a parameter with a message that represent that we `remove` a note
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter(function(note) {
+            return note.title !== title;
+        });
+
+        if(notesToKeep.length !== notes.length) {
+            saveNotes(notesToKeep);
+            console.log(chalk.green.inverse('Note removed!'));
+        }
+    }
+    ```
+- Now add an `else` clause with a message that represents that we don't `remove` a note
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter(function(note) {
+            return note.title !== title;
+        });
+
+        if(notesToKeep.length !== notes.length) {
+            saveNotes(notesToKeep);
+            console.log('Note removed!');
+        } else {
+            console.log('No note found!');
+        }
+    }
+    ```
+- Get to the terminal and install the [chalk package](https://www.npmjs.com/package/chalk)
+    `npm install chalk`
+- Go back to the `notes.js` file
+- Require the `chalk` package bellow the `fs` module
+    `const chalk = require('chalk');`
+- Now use `chalk` on the all logs of the `addNote` and `removeNote` to be `green` for affirmative message and `red` for negative one like this
+    ```js
+    const removeNote = function(title) {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter(function(note) {
+            return note.title !== title;
+        });
+
+        if(notesToKeep.length !== notes.length) {
+            saveNotes(notesToKeep);
+            console.log(chalk.green.inverse('Note removed!'));
+        } else {
+            console.log(chalk.red.inverse('No note found!'));
+        }
+    }
+    ```
+- Get back to your terminal and use the `remove` command sending an existing note `title`
+- You should see a `green` log and the note should not be on the `notes.json` file
+- Use the `remove` command and send a `title` that does not exist
+- You should see a `red` message and no notes should be `remove` from the `notes.json` file
