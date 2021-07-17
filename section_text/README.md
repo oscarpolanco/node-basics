@@ -1173,3 +1173,64 @@ Now we are going to make a quick stop to talk about a `js` feature that is calle
     Mike is attending Birthday party
     ```
     The `arrow` function doesn't bind the `this` value; they access to the `this` value in the context in which they are created in this case the `printGuestList` function
+
+### Refactoring to use arrow functions
+
+On the examples that we are doing on this repository, we will use `arrow` functions and `shorthand syntax` as most as we can so we will need to refactor the functions that we have at this moment.
+
+- On your editor; go to the `app.js` file in the `notes-app` directory
+- In here we got all the commands of the application and as you see we got a function on the `handler` property and as we see before when we got a method in a object we can use the `shorthand syntax` for functions like this:
+    ```js
+    yargs.command({
+        command: 'add',
+        describe: 'Add a new note',
+        builder: {...},
+        handler(argv) {
+            notes.addNote(argv.title, argv.body);
+        }
+    });
+    ```
+- Do the same for all the other commands
+- Now get to the `notes.js` file
+- Here we got a lot of functions that we can use `arrow` functions. So lets begin with the `addNote` function. Turn that function to a `arrow` function
+    `const addNote = (title, body) => {...}`
+- Then inside of the `addNote` function we got a `filter` method that recive a function and that can be an `arrow` function and use the `shorthand syntax`
+    ```js
+    const addNote = (title, body) => {
+        const notes = loadNotes();
+        const duplicateNotes = notes.filter((note) => note.title === title);
+
+        if(duplicateNotes.length === 0) {
+            ...
+        } else {...}
+    }
+    ```
+- Now is the `removeNote` function turn and will be similar job than the `addNote` funtion
+    ```js
+    const removeNote = (title) => {
+        const notes = loadNotes();
+        const notesToKeep = notes.filter((note) => note.title !== title);
+
+        if(notesToKeep.length !== notes.length) {
+            ...
+        } else {...}
+    }
+    ```
+- The next stop is the `saveNotes` function and there we can just turn into an `arrow` function
+    ```js
+    const saveNotes = (notes) => {
+        const dataJSON = JSON.stringify(notes);
+        fs.writeFileSync('notes.json', dataJSON);
+    }
+    ```
+- Finally; we will do the same as the `saveNotes` function on the `loadNotes`
+    ```js
+    const loadNotes = () => {
+        try {
+            ...
+        } catch(e) {...}
+    }
+    ```
+- Test the `add` and `remove` command on your terminal
+
+You may as yourself; since we are exporting those functions on an object why we don't use the `shorthand syntax` on a standard function? The reason is that those functions are not designed to work with a specific object and don't need the `this` keyword.
