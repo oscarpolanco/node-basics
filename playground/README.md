@@ -26,3 +26,33 @@ This is a folder with some mini examples outside of the applications that are bu
 - Enter to the `2-json.json` file and you will see that it content update to:
     `{"name":"testing","planet":"Earth","age":"33"}`
 - Now check the code on the `1-json.js` file and have some fun with it
+
+### 2. ES6 arrow functions
+
+- On your terminal; get to the `playground` directory
+- Use `node` to run the `2-arrow-function.js` file: `node 2-arrow-function.js`
+- You will have the following output of some different examples of `arrow` and `standards` functions behavior on different cases
+    ```bash
+    ===== Arrow functions =====
+    9
+    9
+    9
+    ===== Arrow functions =====
+
+    ===== Functions as methods =====
+    Guest list for Birthday party
+    Guest list for undefined
+    Guest list for Birthday party
+    ===== Functions as methods =====
+
+    ===== Arrow function biding =====
+    Guest list for Birthday party
+    Andrew is attending undefined
+    Jen is attending undefined
+    Mike is attending undefined
+    Guest list for Birthday party
+    Andrew is attending Birthday party
+    Jen is attending Birthday party
+    Mike is attending Birthday party
+    ===== Arrow function biding =====
+    ```

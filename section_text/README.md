@@ -1030,3 +1030,146 @@ Now that we have the `add` command we can continue with the `remove` one. So let
 - You should see a `green` log and the note should not be on the `notes.json` file
 - Use the `remove` command and send a `title` that does not exist
 - You should see a `red` message and no notes should be `remove` from the `notes.json` file
+
+### ES6 Aside: Arrow functions
+
+Now we are going to make a quick stop to talk about a `js` feature that is called `arrow functions`.
+
+- First; on your editor; create a new file on the `playground` directory call `2-arrow-function.js`
+- Now on this newly create file add the following function
+    ```js
+    const square = function(x) {
+        return x * x;
+    }
+    ```
+    This function receives a number then return the `square` of that number
+- Run and console the `square` function with sending a number
+    `console.log(square(3));`
+- Now on your terminal; go to the `playground` directory and run the `2-arrow-function.js` script with `nodemon`
+    `nodemon 2-arrow-function.js`
+- You should see the `square` of the number that you send to the `square` function
+- Now get back to the `2-arrow-function.js` file
+- Update the `square` function like the following
+    ```js
+    const square = (x) => {
+        return x * x;
+    }
+    ```
+    On an `arrow` function the first thing that we set is the `arguments` without the `function` keyword; then the `arrow`(`equal` and the `greater than` symbols) and finally the `code` block of the function
+- Save the file and check the logs on the terminal
+- You should see the same output as before
+- Now we are going to take a look at the `arrow` function `shorthand syntax`. A lot of the functions that we use are pretty simple where we `return` immediately the value that we need. Now update the `square` function as the following:
+    `const square3 = (x) => x * x;`
+    If you `return` the value that you need immediately you can put that value after the `arrow` and that will be `retuned` after calling the function
+- On your terminal; you should see the same output as before
+- Now we are going to see the `arrow` function in the context of methods; in other words `arrow` functions as the properties of an object. Remove the previous code
+- Add an object call `event`
+    `const event = {}`
+- Add a `name` property with the following message:
+    ```js
+    const event = {
+        name: 'Birthday party'
+    };
+    ```
+- Now we will add a `printGuestList` that have a function that console a message with the `name` property as part of the message
+    ```js
+    const event = {
+        name: 'Birthday party',
+        printGuestList: function() {
+            console.log('Guest list for ' + this.name);
+        }
+    };
+    ```
+    To have access to the `name` property of the object we need to use the `this` binding that will have a reference to the `event` object
+- Now use the `printGuestList` function bellow the `event` definition
+    `event.printGuestList();`
+- On your terminal you should see the following: `Guest list for Birthday party`
+- Now get back to the `event` object and remove the `function` keyword of the `printGuestList` property and add a `arrow`
+    ```js
+    const event = {
+        name: 'Birthday party',
+        printGuestList: () => {
+            console.log('Guest list for ' + this.name);
+        }
+    };
+    ```
+- Save the file and check your terminal
+- You should see the following:
+    `Guest list for undefined`
+
+    We got `undefined` because the `arrow` functions don't `bind` their own `this` value which means that we don't have access to the `this` biding as a reference of the `event` object so in this case is better to use a standard function
+- We got a method `shorthand` to use a shorter syntax for the case of the `event` object will still having access to the `this` biding and all the standard feature
+    ```js
+    const event = {
+        name: 'Birthday party',
+        printGuestList() {
+            console.log('Guest list for ' + this.name);
+        }
+    };
+    ```
+    This is a alternative syntax available to us when we are using methods on objects
+- Save the file and and check the terminal
+- You should see the following: `Guest list for Birthday party`
+- Lets add some more data to the `event` object
+    ```js
+    const event = {
+        name: 'Birthday party',
+        guestList: ['Andrew', 'Jen', 'Mike'],
+        printGuestList() {
+            console.log('Guest list for ' + this.name);
+        }
+    };
+    ```
+- Now the goal will be to print all the guest of the `guestList` property bellow of the console of the `printGuestList` function. So use the `forEach` function on the `guestList` array
+    ```js
+    const event = {
+        name: 'Birthday party',
+        guestList: ['Andrew', 'Jen', 'Mike'],
+        printGuestList() {
+            console.log('Guest list for ' + this.name);
+            this.guestList.forEach();
+        }
+    };
+    ```
+- As a parameter to the `forEach` method add a function that will recive an `argument` call `guest` and console the following message using the `guest` argument and the `name` of the event
+    ```js
+    const event = {
+        name: 'Birthday party',
+        guestList: ['Andrew', 'Jen', 'Mike'],
+        printGuestList() {
+            console.log('Guest list for ' + this.name);
+            this.guestList.forEach(function(guest) {
+                console.log(guest + ' is attending ' + this.name);
+            });
+        }
+    };
+    ```
+- Save and check your terminal
+- You will see the following:
+    ```bash
+    Andrew is attending undefined
+    Jen is attending undefined
+    Mike is attending undefined
+    ```
+    We got the `event name` because we the standard function like the one we use on as a parameter of the `forEach` method is going to have it own `this` biding and actually we don't want that this function don't have it own `this` biding; we actually want that have access to it parent function biding
+- Now get to the function on the `forEach` parameter and change that function to be a `arrow` function
+    ```js
+    const event = {
+        name: 'Birthday party',
+        guestList: ['Andrew', 'Jen', 'Mike'],
+        printGuestList() {
+            console.log('Guest list for ' + this.name);
+            this.guestList.forEach((guest) => {
+                console.log(guest + ' is attending ' + this.name);
+            });
+        }
+    };
+    ```
+- Save the file and check your console
+- You should see the following:
+    ```bash
+    Andrew is attending Birthday party
+    Jen is attending Birthday party
+    Mike is attending Birthday party
+    ```
+    The `arrow` function doesn't bind the `this` value; they access to the `this` value in the context in which they are created in this case the `printGuestList` function
