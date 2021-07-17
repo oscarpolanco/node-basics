@@ -1234,3 +1234,58 @@ On the examples that we are doing on this repository, we will use `arrow` functi
 - Test the `add` and `remove` command on your terminal
 
 You may as yourself; since we are exporting those functions on an object why we don't use the `shorthand syntax` on a standard function? The reason is that those functions are not designed to work with a specific object and don't need the `this` keyword.
+
+### Listing notes
+
+Now we can continue with another command in this case the `list` command. The `list` command will print a header message then will print each note `title`.
+
+- On your editor; go to the `notes.js` file in the `notes-app` directory
+- On that file; bellow the `removeNote` function add a new function call `listNotes`
+    `const listNotes = () => {}`
+- On this newly created function; load all notes using the `loadNotes` function
+    ```js
+    const listNotes = () => {
+        const notes = loadNotes();
+    }
+    ```
+- Now print a message to be the header message of the command
+    ```js
+    const listNotes = () => {
+        const notes = loadNotes();
+
+        console.log(chalk.green.inverse('Your notes'));
+    }
+    ```
+- Finally; use the `forEach` method on the `notes` variable to console the `title`
+    ```js
+    const listNotes = () => {
+        const notes = loadNotes();
+
+        console.log(chalk.green.inverse('Your notes'));
+
+        notes.forEach(note => console.log(note.title));
+    }
+    ```
+- Export the `listNotes` function
+    ```js
+    module.exports = {
+        getNotes: getNotes,
+        addNote: addNote,
+        removeNote: removeNote,
+        listNotes: listNotes
+    };
+    ```
+- Get to the `app.js` file
+- Use the `listNotes` function on the `list` command
+    ```js
+    yargs.command({
+        command: 'list',
+        describe: 'List your notes',
+        handler() {
+            notes.listNotes();
+        }
+    });
+    ```
+- Now get to your terminal and go to the `notes-app` directory
+- Run the `app.js` script with the `list` command
+- You should see the list of all available notes
