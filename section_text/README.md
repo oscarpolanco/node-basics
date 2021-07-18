@@ -1289,3 +1289,109 @@ Now we can continue with another command in this case the `list` command. The `l
 - Now get to your terminal and go to the `notes-app` directory
 - Run the `app.js` script with the `list` command
 - You should see the list of all available notes
+
+### Reading a note
+
+Before we get to the last command of the application we will need to do a quick stop on the `addNote` function to check the `filter` method that we are using.
+
+We use `filter` to track down potential `duplicates` and keep the notes that we wanna keep but `filter` look throw every single item of the array and run the function that checks if its a `duplicate` on each of them; the problem is that regardless what happened with the condition `filter` will check every single item to the end of the array and we don't want this; it better to us that when it finds the first `duplicate` stop checking. For this, we will change the `filter` method using `find` that will return the first occurrence. Let's get to it!!
+
+- On your editor; get to the `note.js` file in the `notes-app` directory
+- Update the `duplicateNotes` name to `duplicateNote`
+- Update the `filter` function using the `find` method
+    `const duplicateNote = notes.find((note) => note.title === title);`
+- Update the condition to check if `duplicateNote` is `undefined`
+    ```js
+    const addNote = (title, body) => {
+        const notes = loadNotes();
+        const duplicateNote = notes.find((note) => note.title === title);
+
+        if(!duplicateNote) {
+            ...
+        } else {...}
+    }
+    ```
+
+Now we can work with the final command that will be the `read` command. The `read` command will receive a `title` as an argument then print the `title` and `body` of the note if it finds it.
+
+- Go to the `app.js` file
+- Add a `builder` option on the `read` command
+    ```js
+    yargs.command({
+        command: 'read',
+        describe: 'Read a note',
+        builder: {},
+        handler() {
+            console.log('Reading a note');
+        }
+    });
+    ```
+- Now add the `title` option that will be a `string` and `require`
+    ```js
+    yargs.command({
+        command: 'read',
+        describe: 'Read a note',
+        builder: {
+            title: {
+                describe: 'Note title',
+                demandOption: true,
+                type: 'string'
+            }
+        },
+        handler() {
+            console.log('Reading a note');
+        }
+    });
+    ```
+- Now get to he `notes.js` file
+- Bellow the `listNote` function; add a new one call `readNote` that recive a `title`
+    `const readNote = (title) => {}`
+- Now load all notes on the `readNote` function
+    ```js
+    const readNote = (title) => {
+        const notes = loadNotes();
+    }
+    ```
+- Then use the `find` method to get the specific note that match with the `title` that we recive on the parameters
+    ```js
+    const readNote = (title) => {
+        const notes = loadNotes();
+        const note = notes.find((note) => note.title === title);
+    }
+    ```
+- Add a condition to check if we have a match on the `title` condition
+    ```js
+    const readNote = (title) => {
+        const notes = loadNotes();
+        const note = notes.find((note) => note.title === title);
+
+        if(note) {} else {}
+    }
+    ```
+- Print the `title` and `body` of the note that have a match with the `title` that came as an argument. Use `chalk` to have a `inverse` color on the `title`
+    ```js
+    const readNote = (title) => {
+        const notes = loadNotes();
+        const note = notes.find((note) => note.title === title);
+
+        if(note) {
+            console.log(chalk.inverse(title));
+            console.log(note.body);
+        } else {}
+    }
+    ```
+- Finally; add a message when a note doesn't have a match(red inverse)
+    ```js
+    const readNote = (title) => {
+        const notes = loadNotes();
+        const note = notes.find((note) => note.title === title);
+
+        if(note) {
+            console.log(chalk.inverse(title));
+            console.log(note.body);
+        } else {
+            console.log(chalk.red.inverse('No note found!'));
+        }
+    }
+    ```
+- Now get to your terminal and test the `read` command!!
