@@ -1549,3 +1549,7 @@ Now we can work with the final command that will be the `read` command. The `rea
     }
     ```
 - Now get to your terminal and test the `read` command!!
+
+## Section 4: Debugging node.js(Notes App)
+
+Is a good moment to explore how to debug an application using the `notes app` that we already build so here we will get the tools that we need to explore `errors` and fix them.
