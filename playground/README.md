@@ -56,3 +56,15 @@ This is a folder with some mini examples outside of the applications that are bu
     Mike is attending Birthday party
     ===== Arrow function biding =====
     ```
+
+### 3. Another arrow function example
+
+- On your terminal; get to the `playground` directory
+- Use `node` to run the `3-arrow-challenge.js` file
+- You will get logs of a set of `tasks` that are not completed yet. The `tasks` are defined on a `task` object inside of the `3-arrow-challenge.js` file
+    ```bash
+    [
+        { text: 'Clean yard', completed: false },
+        { text: 'Film course', completed: false }
+    ]
+    ```

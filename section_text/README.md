@@ -56,7 +56,9 @@ These 2 methods are not part of the `js` language itself because they actually i
 - Type any `string` and press enter
 - You should see the same `string` as an output
 - Type a lowercase `string` again but this time use the `toUppercase` method(This `string` method will change your `string` to it `uppercase` version)
+
     `"example".toUppercase()`
+
 - You should have the `uppercase` version of the `string`
 - Now open your terminal
 - Type `node` and press enter. What we get after this step is a place where we can run individual `node` statements also know as `REPL` that stands for `read`; `eval`; `print` and `loop`.
@@ -102,7 +104,9 @@ There was another quote that said: `Node.js package ecosystem, npm, is the large
 - Open your new directory on your editor
 - Create a new file on the directory that you just created and call it `hello.js`
 - On the newly created file using the `console.log` to print a message
+
     `console.log('Welcome to the course!');`
+
     You might say that this is a regular `js` script no a `node` one but remember that `console.log` is not actually part of the `js` programing language that comes from the runtime; whether is `node` or the browser
 - Open your browser
 - Go to the [node.js page](https://nodejs.org/en/)
@@ -113,6 +117,7 @@ There was another quote that said: `Node.js package ecosystem, npm, is the large
 - Now you will see the specification of `console`
 - Open your terminal
 - Get to the folder using the `cd` command
+
     `cd path/to/my/folder`
 - When you are on the folder that you created; type: `node hello.js`
 - You should see the message that you added on the `hello.js` file
@@ -137,20 +142,30 @@ If you see on the [file system](https://nodejs.org/dist/latest-v16.x/docs/api/fs
 - In this newly created directory; create a file called `app.js`
 - Open this newly created file
 - Add the `fs` object and call the `writeFileSync` method
+
     `fs.writeFileSync();`
+
 - As mentioned before the `writeFileSync` takes 2 arguments that are the name of the file and the content that you will add to the file. So add as a name of the file `notes.txt` and as a content `This file was created by Node.js!`
+
     `fs.writeFileSync('notes.txt', 'This file was created by Node.js!');`
+
 - Now go to your terminal and get to the `app.js` file
 - let us run our script using the `node` command: `node app.js`
 - You should see an error on the terminal. `fs is not defined`; you get this error because you will need to `require` the `file system` object from `node` and this will be done using the `require` function that `node` provide
 - Go back to the `app.js` file on your editor
 - At the top of the file add the `require` function
+
     `require();`
+
     This is a function that `node` provides and this is the core of the `module system`. The `require` function is how we load in other things; whether is a core `node` module; another file that we created or `npm` module that we choose to install on our system
 - We will pass a single string as a parameter of the `require` function and since is a `node` core module you just need to put the name of that module in this case `fs`
+
     `require('fs');`
+
 - The `require` function returns all the stuff of the module that you are going to use so we need to store it in a constant so we can use it when we want. In this case, we will stick with the module name(the variable could be named as we wanted the only important thing is the string that we send to the `require` function matches on what `node` call that module)
+
     `const fs = require('fs');`
+
 - Go back to your terminal and use the `node` command to run the `app` script: `node app.js`
 - You should not see any output on your terminal
 - Go back to your editor
@@ -158,7 +173,9 @@ If you see on the [file system](https://nodejs.org/dist/latest-v16.x/docs/api/fs
 - Open that file and you should see the message that you put on the `writeFileSync`
 - Now let use another function that appends a message on the file that we create but first delete the file that was created by the `app` script
 - Now bellow of the `writeFileSync` method; use the `fs` object and call the `appendFileSync` method
+
     `fs.appendFileSync();`
+
 - The `appendFileSync` receive the name of the file and the `content` that you need to append so add the name of the file that you add on the `writeFileSync` and as a content ` This is the appended line`(Add a space before the new message because we are appending content)
 - Go to your terminal and run the `app` script: `node app.js`
 - Go back to your editor
@@ -172,20 +189,30 @@ Now we are going to use the `require` function to load the files that you create
 - Go to the `app.js` file on your editor
 - Remove all the content
 - Add a constant call `name` and add your name as it value(A string)
+
     `const name = 'test';`
+
 - Use `console.log` to print `name`
+
     `console.log(name);`
+
 - On your terminal; go to the `notes-app` directory
 - Run the `app` script: `node app.js`
 - You should the `name` content as an output
 - Go back to your editor and create a new file call `utils.js` on the `notes-app` directory
 - On this newly created file add a `console.log` with the name of the file so we know when the file run
+
     `console.log('utils.js');`
+
 - Now get back to the `app.js` file
 - At the top of the file add the `require` function
+
     `require();`
+
 - As a parameter of the `require` function we will add the relative path of the file that we need to load. The first thing that we add is `./` that means that we will be on the folder that store `app.js`; then add the name of the file
+
     `require(./utils.js);`
+
 - Go to your terminal and re-run the `app.js` file
 - You should see the message of the `utils.js` file; them the `app.js` file message
 - Now get back to the `app.js` file
@@ -194,12 +221,15 @@ Now we are going to use the `require` function to load the files that you create
 - In your terminal run the `app.js` script
 - You should see an error that said the `name` is not defined. This is because in the `node module system` each file has its own scope. So you can't have access to the variables defined on another file. To have access to the variables and method of another file we need to `export` those
 - At the bottom of the `util.js` file add `module.exports` and add the `name` variable as its content
+
     `module.exports = name;`
 
     The thing that you specify as the value of `module.export` is the content that will be returned when you `require` the file
 - Go to the `app.js`
 - Add a constant call `name` that catch the value of the `utils require`
+
     `const name = require('./utils.js');`
+
 - Go to your terminal and run the `app.js` script
 - You should see the `name` output without errors
 - Now get to the `util.js`
@@ -210,14 +240,22 @@ Now we are going to use the `require` function to load the files that you create
     }
     ```
 - Export the `add` function
+
     `module.exports = add;`
+
 - Go to the `app.js` file
 - Rename the `name` constant to `add`
+
     `const add = require('./utils.js');`
+
 - Add a constant call `sum` that it value will be the sum of the `4` and `-2` numbers
+
     `const sum = add(4, -2);`
+
 - Console the `sum` value(Remove the `name` console)
+
     `console.log(sum)`
+
 - Go to your terminal and run the `app.js` script
 - You should see the `utils` message and the `sum` value
 - Go to back to your editor and add a new file call `note.js` on the `notes-app` directory
@@ -228,9 +266,13 @@ Now we are going to use the `require` function to load the files that you create
     }
     ```
 - Export the `getNotes` function
+
     `module.exports = getNotes;`
+
 - Import the `getNotes` function on the `app.js` file
+
     `const getNotes = require('./notes');`
+
 - Add a constant call `notes` that it value will be the return string of the `getNotes` function and console it value
     ```js
     const notes = getNotes();
@@ -255,6 +297,7 @@ Let's begin with the process:
 - Use the `npm -v`
 - You will see the version that you got of `npm` (Usually this version doesn't matter; just make sure that you are over version 5)
 - Now initialize `npm` on your project with the following command:
+
     `npm init`
 
     This will create a single file that will help us to manage all the `npm` modules
@@ -267,21 +310,30 @@ Let's begin with the process:
 - Choose the first option
 - You will see the `npm` package page that has all the information of the package
 - Go back to your terminal and type the install command for the `validator` package (You will see on the package page that use a` i` instead of `install` but both are the same). This command will go to the `npm` servers; grab all the code for that package and add it to our application
+
     `npm install validator`
 
     You will see that a new file and a new directory are added to the `notes-app` directory. One is the `node_modules` directory that is the folder that will contain all the code of every dependency in this case you will see that inside of it you have a` validator` directory with all the code that you just install. We should not update any file in the `node_modules` directory and when we use` npm install` it will generate `node_modules` every time. The `package.lock.json` is a file that contains extra information that makes` npm` a little bit faster and secure and it will give you the exact code that you install the first time that you add a module and again this file should not update this will be maintained by the `npm` commands. Finally, if you see the `package.json` new property is added that is called `dependencies` and have the information of the `validator` package that we just installed
 - Now that we got the package installed; we can use it. Go to the `app.js` file
 - At the top of the file add the `require` function:` require (); `
 - Then we need to add the `package` name that we will use in this case` validator` as a parameter of the `require` function
+
     `require ('validator');`
+
 - As we did before we need a variable to store all the content that comes from `require`
+
     `const validator = require ('validator');`
+
 - In this case, we will use the `isEmail` function that will help us to know if a given` email` is valid. To add a `console.log` with the following
+
     `console.log (validator.isEmail ('test@example.com '));`
+
 - Go to your terminal and run the `app.js` script
 - You will see the `getNotes` output and below the value that returns the` isEmail` function that in this case is `true` because it is a valid` email` (You can test changing the `string` that you send to the function )
 - Now we will the `isURL` method and console it
+
     `console.log (validator.isURL ('https://mead.io'));`
+
 - Go to your terminal and run the `app.js` script
 - You will have the same outputs as before and a new one with the value of the `isURL`
 
@@ -294,6 +346,7 @@ Before we continue let's talk about the `node_modules` directory. This is a gene
 - Run the `app.js` script
 - You should see an error because you lose the functionality on the `node_modules` directory
 - To generate it again just use the `install` command:
+
      `npm install`
 
      This command will look at the content of the `package.json` and create the` node_modules` directory again
@@ -308,6 +361,7 @@ When we install a module `globally` we don't need to call it directly on our sou
 
 - Go to your terminal
 - Run the following command:
+
     `npm install nodemon -g`
 
     The `-g` flag is responsible of install the module `globally`
@@ -317,7 +371,9 @@ When we install a module `globally` we don't need to call it directly on our sou
 - You should see the `nodemon` version
 - Now go to the `notes-app` directory
 - Run the `app.js` script using `nodemon`
+
     `nodemon app.js`
+
 - You will see some logs then the output of the `app.js` script
 - On your editor go to the `app.js` file
 - Update one of the output messages and save
@@ -340,11 +396,14 @@ First, we are going to try to get the input from the terminal:
 
 - On your terminal; go to the `notes-app` directory
 - Run the `app.js` script but at the end add a new value like this:
+
     `node app.js test`
+
 - You should see the same out that before without any change but actually we add a new value that our program could choose to use in this case `test`
 - Now we need to have access to this new value and for this, we will use the `process` variable that we mentioned before when `node` was introduced. So on your editor; go to the `app.js`
 - Remove all the code except the `requires`
 - Log the `process.argv` variable
+
     `console.log(process.argv);`
 
     `argv` stands for `argument vector` that have an `array` will all `arguments` provided
@@ -354,12 +413,16 @@ First, we are going to try to get the input from the terminal:
     - The second is the path of the `app.js` file
     - The third one is the extra `argument` that we use(in my case `test`)
 - Now we are going to extract the `argument` that we need using the advantages of an `array`. Go back to the `app.js` and update the `process.argv` to get the correct `index` of the `array`
+
     `console.log(process.argv[2]);`
+
 - On your terminal run the `app.js` again with the same command as before
 - You should see just the `argument` that you just use in the output
 - In the case of the `notes-app` we will use the first value to be the `action` that we are going to take. This will be our command and will run some code depending on it. So go back to the `app.js` and remove the `console`
 - Add a new constant call command that have the `process.argv[2]` as it value
+
     `const command = process.argv[2];`
+
 - Our first command will be `add` that will represent that the user want to create a `note`. So bellow the `command` variable add a condition that check for the `add` string and `console` a text
     ```js
     if (command === 'add') {
@@ -367,7 +430,9 @@ First, we are going to try to get the input from the terminal:
     }
     ```
 - On your terminal run the `node` command but at the end put the `add` command
+
     `node app.js add`
+
 - You should see the input related to the `add` command
 - Go back to the `app.js` file and add the condition for the second command that will be `remove`
     ```js
@@ -381,7 +446,9 @@ First, we are going to try to get the input from the terminal:
 - You should see the `remove` command output
 - Now if someone `add` a `note` we will need some extra input like the `title` and the `body` of the `note` and for this, we will use the `command line options`(Those command with `-` like `node -v`; some have `--`). On the `app.js` file add a `console` with the `process.argv` again
 - Go to your terminal and run the `node` command with the `add` command and an option called `title` like this
+
     `node app.js add --title="This is my title"`
+
 - You should see the `add` command and the `title` option on the `array`. One thing you notice is that the option is not something that `parse` for us; we have the exact text that we add; so we will need to add some code to `parse` that and get the actual value that we need and for this, we will use an `npm` package for this next
 
 ### Argument parsing with Yargs: Part I
@@ -390,10 +457,14 @@ At this moment we know that we can pass `arguments` via `node` and read them usi
 
 - On your terminal; go to the `notes-app` directory
 - Use the `node install` command to install `yargs`
+
     `npm install yargs`
+
 - Go to your editor
 - Go to the `app.js` file and `require yargs`(At the top of the file; for convention, we put the package first then the file that we `require`)
+
     `const yargs = require('yargs');`
+
 - Remove all the code bellow the all the `requires`
 - Add 2 consoles; one for the `process.args` and the other for `yargs.argv`
     ```js
@@ -402,7 +473,9 @@ At this moment we know that we can pass `arguments` via `node` and read them usi
     ```
     The `yargs.argv` is the version of `process.argv` from `yargs`
 - Go to your terminal and run the `app.js` without `arguments`
+
     `node app.js`
+
 - You should see an output like this:
     ```bash
     [
@@ -415,7 +488,9 @@ At this moment we know that we can pass `arguments` via `node` and read them usi
         - `_`: Will be populated with an array of `arguments`
         - `$0`: Name of the file that we execute in this case `app.js`
 - Now run the `app.js` file sending `arguments`
+
     `node app.js add --title="Testing title"`
+
 - You will get an output like this:
     ```bash
     [
@@ -431,15 +506,21 @@ At this moment we know that we can pass `arguments` via `node` and read them usi
 By default `yargs` come with some useful behavior for example the `--help` option and some more.
 
 - On your terminal; run the `app.js` script but add the `--help` option at the end of the command(Don't add any `arguments`)
+
     `node app.js --help`
+
 - You will see some output of the application that define all the options that at this moment we have available on our app
 - As you see there is a `--version` option. Let's use it
+
     `node app.js --version`
+
 - This will output the `version` of the application(By default will be `1.0.0`)
 - Go back to the `app.js` file
 - Remove the `process.argv` console
 - Now we are going to change the `version` of the application using the `yargs version` method. So before the console add the following
+
     `yargs.version('1.1.0');`
+
 - Go back to your terminal and run the `version` option again
 - You should see the new `version` as an output
 
@@ -447,7 +528,9 @@ At this moment we can begin to set `yargs` to work with the `commands` that we n
 
 - On your editor; go to the `app.js` directory
 - Lets create the `add` command for the application. Use the `command` method of `yargs`(Bellow the `version` line)
+
     `yargs.command({});`
+
 - On the configuration object add the following
     ```js
     yargs.command({
@@ -462,10 +545,14 @@ At this moment we can begin to set `yargs` to work with the `commands` that we n
     - `describe` property: Describe the functionality of the `command`
     - `handler` property: Receive a function that will run when you use the `command`
 - Go to your terminal and run the `--help` option
+
     `node app.js --help`
+
 - You will see the new `add` command with the output of all `commands` available on our app
 - Now use the `add command` to run the app
+
     `node app.js add`
+
 - You will see the `add handler` function output
 - Now add the following `commands` for the app:
     ```js
@@ -559,9 +646,13 @@ Now that we have all our `commands`; we will make some `actions` that will be su
     ```
 - Then go to your terminal and get to the `notes-app` directory
 - Run the `app.js` script with the `add` command and the `title` option
+
     `node app.js add --title="Test title"`
+
 - You will see the `Adding notes` log and next to it will be the `argv` content(Remember that we got another console with the `yargs.argv` at the bottom of the file; remember it because is important and DO NOT DELETE IT )
+
     `Adding a new note { _: [ 'add' ], title: 'Test title', '$0': 'app.js' }`
+
 - At this moment the `title` option is not `require` so if you run the `add` command without the `title` option it will work but actually we will need that to be `require` so go to your editor on the `app.js` file and add the following option to the `title` object
     ```js
     yargs.command({
@@ -580,7 +671,9 @@ Now that we have all our `commands`; we will make some `actions` that will be su
     ```
     The `demandOption` is by default `false` and changing it to `true` will mean that this command is `require`
 - Go back to your terminal and run the `app.js` script with the `add` command and without a `title`
+
     `node app.js add`
+
 - An error will show up with the available `options` and you should see the `title` with the `require` message
 - At this moment if you provide the `title` option without a value it will return as a `boolean` but we actually always want that the `title` have a `string`. Go back to the `app.js` file on the editor
 - Add the following property to the `title` object
@@ -602,14 +695,18 @@ Now that we have all our `commands`; we will make some `actions` that will be su
     ```
     Now we will always have a `string` on the `title` command
 - Go back to your terminal and run the `app.js` script with the `add` command and with the empty `title` option
+
     `node app.js add --title`
+
 - You will see that the `title` log have an empty `string`
 - Now go back to your editor
 - On the `app.js` file delete the console at the bottom of the file that has the `yargs.argv` object
 - On your terminal run the `app.js` script with the `add` command and the `title` option
 - Now you won't see any output. This is because when we access the `argv` property on the console; `yargs` will know that it needs to `parse` the `arguments`
 - To actually `parse` the `arguments` without the console you will need to use the `parse` method so at the bottom of the `app.js` file add the following
+
     `yargs.parse()`
+
 - Get back to the terminal and run the previous command again
 - Now you will see the output that is expected
 - Go back to the `app.js` file and update the `log` to print the `title` on the `add` command
@@ -667,32 +764,54 @@ At this moment we need to see a little bit on how we are going to store the data
     }
     ```
 - Now that we got an object we need to figure out how to change the `book` object to a `string` since the `fs` module can only work with `strings`. So to convert the `book` object to a `string` we will use the `JSON.stringify` method. Bellow the `book` object add a new constant call `bookJSON` that will have the `JSON.stringify` method as its value and send the `book` object as its parameter
+
     `const bookJSON = JSON.stringify(book);`
+
 - Add a console to see the `bookJSON` value
+
     `console.log(bookJSON);`
+
 - Go to your terminal; get to the `playground` directory
 - Run the `1-json.js` with the `node` command
+
     `node 1-json.js`
+
 - You will see the `JSON` representation of the `book` object
 - Now we need the opposite of the `JSON.stringify` so we will recive `JSON` data and return an object. For this we will use the `JSON.parse` method. So below the `bookJSON` add a constant call `parseData` that it value will be the `JSON.parse` method sending the `bookJSON` as it value
+
     `const parseData = JSON.parse(bookJSON);`
+
 - Then console the `parseData` value
+
     `console.log(parseData.author);`
+
 - On your terminal; run the `1-json.js` script
 - You will see the `author` name after the previous logs
 - Get back to your editor
 - At the top of the `1-json.js`; require the `fs` module
+
     `const fs = require('fs');`
+
 - Bellow of the previous code; use the `writeFileSync` method to create a new file call `1-json.json` and the `bookJSON` as it content
+
     `fs.writeFileSync('1-json.json', bookJSON);`
+
 - Now we need to read the new `1-json.json` file that we will create so we will need the `readFileSync`; so create a new constant call `dataBuffer` that its value will be the `readFileSync` sending a `string` with the name of the file that we will create
+
     `const dataBuffer = fs.readFileSync('1-json.json');`
+
 - We can't directly read the information that the `readFileSync` method return because what comes back is a `buffer` that is a way of `node.js` to represent `binary` data so we will need to turn that data into a `string` and as you guess it we got a method called `toString` for that. Bellow the `dataBuffer` constant add a new one call `dataJSON` that will receive the value of the `toString` method
+
     `const dataJSON = dataBuffer.toString();`
+
 - Then we need to turn the `dataJSON` into an object that we can read so we will need the `parse` method
+
     `const data = JSON.parse(dataJSON);`
+
 - Finally log the `title` property of the `data` object
+
     `console.log(data.title);`
+
 - Get back to the terminal and run the `1-json.js`
 - You will see the previous logs and at the end, you will have the `title` property of `data`
 
@@ -702,7 +821,9 @@ Now we will add all the functionality of the `add` command.
 
 - On your editor; go to the `notes-app` directory and open the `notes.js` file
 - On the `notes.js` file bellow the `getNotes` function; add a new function call `addNotes`. This will be the function responsable of adding a note and will recive the `title` and the `body` options as parameters
+
     `const addNote = function(title, body) {}`
+
 - Now we need to `export` the newly created function and to do this; instead of sending just the `getNotes` function we will send an object with both functions like this
     ```js
     module.exports = {
@@ -712,7 +833,9 @@ Now we will add all the functionality of the `add` command.
     ```
 - Go to the `app.js` file
 - Update the `getNotes` name to `notes` on the `require` at the top
+
     `const notes = require('./notes');`
+
 - Now on the `handler` function of the add command; remove the consoles
 - Then use the `addNotes` function sending the `title` and the `body` values
     ```js
@@ -727,7 +850,9 @@ Now we will add all the functionality of the `add` command.
     ```
 - Get back to the `note.js` file
 - The first thing we need to do when we `add` a note is to `load` all the existing notes because we don't want `addNotes` to override any existing data and we will do this for multiples function so we will create a reusable function to do this. Below the `addNotes` function create a new function call `loadNotes`
+
     `const loadNotes = function() {}`
+
 - We will need to read a file so `require` the `fs` module at the top of the file
     `const fs = require('fs');`
 - Get back to the `loadNotes` function and add a variable call `dataBuffer` that it value will be the what the `fs.readFileSync` returns and the file that we are going to read is the `notes.json`(Does not exits yet) file
@@ -786,7 +911,9 @@ Now we will add all the functionality of the `add` command.
     }
     ```
 - The next thing will be to save the data and like the `loadNotes` function we will use this functionallity on multiple functions so bellow the `addNotes` function create a new function that will be call `saveNotes` that will recive the `notes`
+
     `const saveNotes = function(notes) {}`
+
 - On the newly create file add a new variable call `dataJSON` that will have the `JSON` representation of the `notes` array using `JSON.stringify`
     ```js
     const saveNotes = function(notes) {
@@ -813,7 +940,9 @@ Now we will add all the functionality of the `add` command.
     }
     ```
 - Go to your terminal and run the `app.js` script again
+
     `node app.js add --title="test" --body="testing, test"`
+
 - You should see that on the `notes-app` directory a new file is created called `notes.json`
 - Inside of that file you will see the `title` and `body` that you added when you run the `add` command
 - Now run the `add` command again with different inputs for the `title` and `body`
@@ -946,7 +1075,9 @@ Now that we have the `add` command we can continue with the `remove` one. So let
     });
     ```
 - Now on your terminal go to the `notes-app` directory and run the `app.js` script with the `remove` command and sending a `title`
+
     `node app.js remove --title="testing"`
+
 - You should see the `title` as the output
 - Now we need to do the `removeNote` function so get to the `notes.js`
 - On the `removeNote` function use the `loadNotes` function to get all existing notes and remove the log
@@ -1006,10 +1137,14 @@ Now that we have the `add` command we can continue with the `remove` one. So let
     }
     ```
 - Get to the terminal and install the [chalk package](https://www.npmjs.com/package/chalk)
+
     `npm install chalk`
+
 - Go back to the `notes.js` file
 - Require the `chalk` package bellow the `fs` module
+
     `const chalk = require('chalk');`
+
 - Now use `chalk` on the all logs of the `addNote` and `removeNote` to be `green` for affirmative message and `red` for negative one like this
     ```js
     const removeNote = function(title) {
@@ -1044,9 +1179,13 @@ Now we are going to make a quick stop to talk about a `js` feature that is calle
     ```
     This function receives a number then return the `square` of that number
 - Run and console the `square` function with sending a number
+
     `console.log(square(3));`
+
 - Now on your terminal; go to the `playground` directory and run the `2-arrow-function.js` script with `nodemon`
+
     `nodemon 2-arrow-function.js`
+
 - You should see the `square` of the number that you send to the `square` function
 - Now get back to the `2-arrow-function.js` file
 - Update the `square` function like the following
@@ -1059,12 +1198,16 @@ Now we are going to make a quick stop to talk about a `js` feature that is calle
 - Save the file and check the logs on the terminal
 - You should see the same output as before
 - Now we are going to take a look at the `arrow` function `shorthand syntax`. A lot of the functions that we use are pretty simple where we `return` immediately the value that we need. Now update the `square` function as the following:
+
     `const square3 = (x) => x * x;`
+
     If you `return` the value that you need immediately you can put that value after the `arrow` and that will be `retuned` after calling the function
 - On your terminal; you should see the same output as before
 - Now we are going to see the `arrow` function in the context of methods; in other words `arrow` functions as the properties of an object. Remove the previous code
 - Add an object call `event`
+
     `const event = {}`
+
 - Add a `name` property with the following message:
     ```js
     const event = {
@@ -1082,7 +1225,9 @@ Now we are going to make a quick stop to talk about a `js` feature that is calle
     ```
     To have access to the `name` property of the object we need to use the `this` binding that will have a reference to the `event` object
 - Now use the `printGuestList` function bellow the `event` definition
+
     `event.printGuestList();`
+
 - On your terminal you should see the following: `Guest list for Birthday party`
 - Now get back to the `event` object and remove the `function` keyword of the `printGuestList` property and add a `arrow`
     ```js
@@ -1095,6 +1240,7 @@ Now we are going to make a quick stop to talk about a `js` feature that is calle
     ```
 - Save the file and check your terminal
 - You should see the following:
+
     `Guest list for undefined`
 
     We got `undefined` because the `arrow` functions don't `bind` their own `this` value which means that we don't have access to the `this` biding as a reference of the `event` object so in this case is better to use a standard function
@@ -1193,7 +1339,9 @@ On the examples that we are doing on this repository, we will use `arrow` functi
 - Do the same for all the other commands
 - Now get to the `notes.js` file
 - Here we got a lot of functions that we can use `arrow` functions. So lets begin with the `addNote` function. Turn that function to a `arrow` function
+
     `const addNote = (title, body) => {...}`
+
 - Then inside of the `addNote` function we got a `filter` method that recive a function and that can be an `arrow` function and use the `shorthand syntax`
     ```js
     const addNote = (title, body) => {
@@ -1241,7 +1389,9 @@ Now we can continue with another command in this case the `list` command. The `l
 
 - On your editor; go to the `notes.js` file in the `notes-app` directory
 - On that file; bellow the `removeNote` function add a new function call `listNotes`
+
     `const listNotes = () => {}`
+
 - On this newly created function; load all notes using the `loadNotes` function
     ```js
     const listNotes = () => {
@@ -1299,7 +1449,9 @@ We use `filter` to track down potential `duplicates` and keep the notes that we 
 - On your editor; get to the `note.js` file in the `notes-app` directory
 - Update the `duplicateNotes` name to `duplicateNote`
 - Update the `filter` function using the `find` method
+
     `const duplicateNote = notes.find((note) => note.title === title);`
+
 - Update the condition to check if `duplicateNote` is `undefined`
     ```js
     const addNote = (title, body) => {
@@ -1345,7 +1497,9 @@ Now we can work with the final command that will be the `read` command. The `rea
     ```
 - Now get to he `notes.js` file
 - Bellow the `listNote` function; add a new one call `readNote` that recive a `title`
+
     `const readNote = (title) => {}`
+
 - Now load all notes on the `readNote` function
     ```js
     const readNote = (title) => {

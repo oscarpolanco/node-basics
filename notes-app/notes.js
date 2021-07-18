@@ -1,16 +1,6 @@
 const fs = require('fs');
 const chalk = require('chalk');
 
-// Goal: wire up read command
-//
-// 1. Setup --title option for read command
-// 2. Create readNote in note.js
-// - Search for note by title
-// - Find note and print title (styled) and body (plain)
-// - No note found? Print error in red
-// 3. Have the command handler call the function
-// 4. Test your work by running a couple commands
-
 const addNote = (title, body) => {
     const notes = loadNotes();
     const duplicateNote = notes.find((note) => note.title === title);
