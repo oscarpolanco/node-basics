@@ -1628,3 +1628,13 @@ Bellow the message you will have a `stracktrace` and this contains a `trace` of 
 
 Note: Remember to fix the issue of `dataJsON`
 
+## Section 5: Asynchronous node.js(Weather App)
+
+If you check some information on what `node` is maybe you found some of this thing:
+- Asynchronous
+- Non-blocking
+- Single-threaded
+- Event-driven
+
+All of those are correct when you are describing `node`. In this section, we will see all those terms and make an example that will help us to understand them. We will be working on a `weather` app that will have a `frontend` on the browser where the user will provide its `location` and begin the scenes we will have `node` communicating with third-party services to convert that `location` into a `forecast`; then we going to send the `forecast` to the browser so we can render the data for the user.
+
