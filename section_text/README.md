@@ -1608,3 +1608,23 @@ The other one is the `debugger` from `node` that is the `node's` built in `debug
 - Now shut down the `debugger` using `command + c` twice
 - Remove the `debugger` keyword on `notes.js` file
 
+### Error messages
+
+To talk about `errors` the first thing we are going to do is generate an` error`.
+
+- On your editor; go to the `note.js` file on the` notes-app` directory
+- Then on the `saveNotes` function update the` dataJSON` to `dataJsON` just one time; leave the other call as it is
+- Now get to your terminal and go to the `notes-app` directory
+- Run the `app.js` script with one of the commands that use the` saveNotes` function like the `add` command
+- You should get a big output that is an `error`
+
+You will need to scroll until you see a broken line; that is the important part of the `error` message in this case:
+
+`ReferenceError: dataJsON is not defined`
+
+This is the actual `error` message from` v8` that tells you why the program didn't run. In this case, is a `ReferenceError` that is one of the` error` categories and it have an explicit message. The message tells us why the program didn't run but it doesn't say why so is going to be up to the dev to identify what is producing the issue.
+
+Bellow the message you will have a `stracktrace` and this contains a `trace` of all functions that are running to get to the `error`. In this case, you will see a call to the `saveNotes` function pointing to the correct file and the line that the` error` happens. This will be the most useful line that you will get after the `error` message. As we go down the `trace` we will get less specific messages until you get to the` node` internals calls.
+
+Note: Remember to fix the issue of `dataJsON`
+
