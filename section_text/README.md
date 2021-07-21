@@ -1638,3 +1638,60 @@ If you check some information on what `node` is maybe you found some of this thi
 
 All of those are correct when you are describing `node`. In this section, we will see all those terms and make an example that will help us to understand them. We will be working on a `weather` app that will have a `frontend` on the browser where the user will provide its `location` and begin the scenes we will have `node` communicating with third-party services to convert that `location` into a `forecast`; then we going to send the `forecast` to the browser so we can render the data for the user.
 
+### Asynchronous basic
+
+Now we are going to make our first `non-blocking` example that will mean that we are going to make a code that will continue running while waiting for an `I/O` process to complete. Let's begin
+
+- On the root directory; create a new folder call `weather-app`
+- Inside of this newly created directory; add a file called `app.js`
+- Open to the `app.js` file
+- Add 2 consoles with the following messages
+    ```js
+    console.log('Staring');
+
+    console.log('Stopping');
+    ```
+    As you may know, we have a synchronous program where one line run after the other regardless of how long each line take to execute
+- Now we will use one of the basic `asynchronous` functions that `node` provides which is the `setTimeout`(it allow us to run some code after a specific amount of time). Use the `setTimeout` between the consoles like this:
+    ```js
+    console.log('Staring');
+
+    setTimeout(() => {
+        console.log('2 second timer');
+    }, 2000);
+
+    console.log('Stopping');
+    ```
+    The first argument of the `setTimeout` function is a function and the second is a number that represents the amount of time in milliseconds that will pass to run the function that we send as a first argument(`2000` ms === `2`s)
+- On your terminal; go to the `weather-app` directory
+- Use `node` to run the `app.js` file: `node app.js`
+- You will see the following:
+    ```bash
+    Staring
+    Stopping
+    2 second timer
+    ```
+    The `Staring` and `Stopping` logs appear immediately then the program hangs for `2` seconds and finally print the `2 second timer` message. This means our `node` app is a `no-blocking` because it can do other things when you run an `asynchronous function 
+- Now let's add another `setTimeout` with `0` ms
+    ```js
+    console.log('Staring');
+
+    setTimeout(() => {
+        console.log('2 second timer');
+    }, 2000);
+
+    setTimeout(() => {
+        console.log('0 second timer');
+    }, 0);
+
+    console.log('Stopping');
+    ```
+- Get to the terminal and run one more time the `app.js` script
+- You will get the following
+    ```bash
+    Staring
+    Stopping
+    0 second timer
+    2 second timer
+    ```
+You may ask why the `0 second timer` print after the 2 other consoles if it does not wait to run the function? The answer will be in the next section.
