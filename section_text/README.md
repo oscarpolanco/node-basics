@@ -1695,3 +1695,386 @@ Now we are going to make our first `non-blocking` example that will mean that we
     2 second timer
     ```
 You may ask why the `0 second timer` print after the 2 other consoles if it does not wait to run the function? The answer will be in the next section.
+
+### Call Stack, callback Queue, event loop
+
+In the last example we see strange behavior when we run an `asynchronous` function; that behavior will be address in this section where we are going to explore how `node` and `v8` run the `asynchronous` functions.
+
+On the example we will have a piece of code; the output of the terminal and a visual representation of what is happening behind the scenes on both `node` and `v8`(`Call Stack`, `Node APIs`, `Event Loop` and `Callback Queue`)
+
+But first, let define some terms:
+
+- `Call Stack`: This is a simple data structure provided by the `v8` engine and its job is to track the execution of the program and is does that keeping track of all the functions that are currently running. We actually saw a `call stack` before on the `error` section where we saw 2 things: the actual `error` message and bellow that we saw all the functions that are running that get to the point of the one that has the `error` on the program and that is a `call stack`. The `call stack` works by adding a function one on top of another so to get to the first one that you added you will need to remove the one above it.
+
+- `Node APIs`: Is the API that has some function implementation on `C++` that we can use on our `node` script 
+
+- `Callback Queue`: Maintain all the `callback` functions that are ready to get executed
+
+- `Event loop`: It looks at the `call stack` and the `callback queue`. If the `call stack` is empty it will run items on the `callback queue`
+
+
+Lets begin running the following `synchronous` example:
+
+```js
+const x = 1;
+const y = x + 2;
+console.log('Sum is ' + y);
+```
+
+The first thing that is going to happen is that our script will be wrap in a `main` function that `nodeJs` provide and that is the first function that is pushed to the `call stack`
+
+```
+--- Call Stack ---
+|     main()     |
+--- Call Stack ---
+```
+
+When something is pushed to the `call stack` this means that the function that is pushed will be executed. This means that the `main` function will be excuted at this moment and will begin to run the script.
+
+The `const x = 1;` will create the constant with the value of `1`; then the `y` constant is created with the `3` value finally we call the `console.log('Sum is ' + y);` but remember if you call a function this will be added to the `call stack`.
+
+```
+---- Call Stack ----
+|  log('Sum is 3') |
+|     main()       |
+---- Call Stack ----
+```
+
+When the `log` run we actually are going to see the output
+
+```
+---- Call Stack ----         --- output ---
+|  log('Sum is 3') |    =>   |  Sum is 3  |
+|     main()       |         --- output ---
+---- Call Stack ----
+```
+
+When a function finishes or returns a value will be removed from the `call stack`. Since the `log` function finish it will be removed
+
+```
+---- Call Stack ----
+|     main()       |
+---- Call Stack ----
+```
+
+Now that we run the last line of the script the `main` function will also be removed from the `call stack` and the program is done.
+
+For the next example we still have a `synchronous` function but a little more complex:
+
+```js
+const listLocations = (locations) => {
+    locations.forEach((location) => {
+        console.log(location);
+    });
+}
+
+const myLocations = ['Philly', `NYC`];
+listLocations(myLocations);
+```
+
+Now let's begin to run our script and as you may know the first thing that will happen is that the `main` function is pushed to the `call stack`
+
+```
+---- Call Stack ----
+|     main()       |
+---- Call Stack ----
+```
+
+This will begin the execution of the script and on the first line we will create the `listLocations` constant and create a function as its value but we are not calling this function just yet; then we move to the `myLocations` line where we create that constant and give an array of strings as its value; finally we get to the last line of the script where we call the `listLocations` function sending the `myLocations` array; since this is a function it will be added to the `call stack`
+
+```
+------ Call Stack ------
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+Now the `listLocations` function will begin to run and the only thing on this function is a loop on the `locations` parameter using `forEach` and `forEach` is a function so it will be added to the `call stack`
+
+```
+------ Call Stack ------
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+The `forEach` will run and for each `location` will run a function; since a function will run will be added to the `call stack`(The function don't have a name so it will be an `anonymous` function)
+
+```
+------ Call Stack ------
+|  anonymous('Philly') |
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+Inside of the `anonymous` function is the `log` function so it will be added to the `call stack` too. After the `log` run will be output a value
+
+```
+------ Call Stack ------      --- output ---
+| console.log('Philly') |     |   Philly   |
+|  anonymous('Philly')  |     --- output ---
+|     forEach(...)      | => 
+| listLocations([...])  |
+|      main()           |
+------ Call Stack ------
+```
+
+Since `log` finish will remove it from the `call stack`
+
+```
+------ Call Stack ------
+|  anonymous('Philly') |
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+The `anonymous` finish after the `log` so it will also remove it from the `call stack`
+
+```
+------ Call Stack ------
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+The `forEach` function will run again another `anonymous` function will the next value of the array and that will be added to the `call stack`
+
+```
+------ Call Stack ------
+|   anonymous('NYC')   |
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+Inside of the `anonymous` function is the `log` function so it will be added to the `call stack` too. After the `log` run will be output a value
+
+```
+------ Call Stack ------     --- output ---
+| console.log('NYC')   |     |   Philly   |
+|  anonymous('NYC')    |     |    NYC     |
+|     forEach(...)     | =>  --- output ---
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+Since the `log` finish we pop up from the `call stack` and it was the only thing that is on the `anonymous` function so it will remove it as well
+
+```
+------ Call Stack ------
+|     forEach(...)     |
+| listLocations([...]) |
+|      main()          |
+------ Call Stack ------
+```
+
+At this point the `forEach` is done with all items on the array so it will remove it from the `call stack` and since is the only thing that is running on the `listLocations` function it will remove it as well
+
+```
+------ Call Stack ------
+|      main()          |
+------ Call Stack ------
+```
+
+Now we are back to the script the last line so this means that the `main` function finishes its execution and will be removed from the `call stack`
+
+This is a little long but it will help us to understand the process that we follow when we execute a script with `node`. Now we will add our final example that is the `asynchronous` code that we saw in the previews section:
+
+```js
+console.log('Staring');
+
+setTimeout(() => {
+    console.log('2 second timer');
+}, 2000);
+
+setTimeout(() => {
+    console.log('0 second timer');
+}, 0);
+
+console.log('Stopping');
+```
+
+Like the other examples the first thing that is added to the `call stack` is the `main` function
+
+```
+------ Call Stack ------
+|       main()         |
+------ Call Stack ------
+```
+
+The first line of the script is run and that is a `log` function that will output the first message
+
+```
+------- Call Stack -------     --- output ---
+| console.log('Staring') |  => |  Staring   |
+|         main()         |     --- output ---
+------- Call Stack -------
+```
+
+Since the `log` finish its execution it will pull out of the `call stack`
+
+```
+------ Call Stack ------
+|       main()         |
+------ Call Stack ------
+```
+
+Now the execution moves to the first `setTimeout` and it will push to the `call stack`
+
+```
+------ Call Stack ------
+| setTimeout(..., 2000) |
+|        main()         |
+------ Call Stack ------
+```
+
+Now `setTimeout` is not part of the `javascript` programing language instead is `node` that create an implementation on `C++` and provide it to your `nodeJs` script to use so when we call `setTimeout` we are registering an event with `nodeJs` API
+
+```
+------ Call Stack ------     ---- Node APIs ----
+|        main()        |  => | setTimeout(2sec) |
+------ Call Stack ------     ---- Node APIs ----
+```
+
+At this part of the process, the `2 seconds` clock starts to count and while we are waiting we can continue using the `call stack`. As we mentioned before `javascript` is `single threaded` and the `call stack` enforce that but `node` use some other `threats` in `C++` to begin the scenes to manage events and that is what allows us to continue to run our application while we are waiting those `2 seconds`. So we continue running our script and will get to the other `setTimeout` line
+
+```
+------ Call Stack ------     ---- Node APIs ----
+|   setTimeout(..., 0) |     | setTimeout(2sec) |
+|        main()        |  => ---- Node APIs ----
+------ Call Stack ------
+```
+
+When we run the `setTimeout` it will register another event
+
+```
+------ Call Stack ------     ---- Node APIs ----
+|        main()        |     | setTimeout(2sec) |
+------ Call Stack ------  => | setTimeout(0sec) |
+                             ---- Node APIs ----
+```
+
+Since the clock of the `setTimeout` begin at the moment that we register the event and one of them already finish because is `0 seconds` we actually need to run the function associate with that `setTimeout` and here is when the `event loop` and `callback queue` enter in action. The `callback queue` will add a `callback` function when a given event is done in this case the `0 seconds` timer. Here we will execute the functions top throw bottom
+
+```
+------ Call Stack ------     ---- Node APIs ----      --- Callback Queue ---
+|        main()        |     | setTimeout(2sec) |     |    callback(0sec)   |
+------ Call Stack ------  => ---- Node APIs ----  =>  --- Callback Queue ---
+           ^                                                    ˅
+| ------------------------------ Event loop ------------------------------- |
+```
+
+Before executing the `0 seconds` timer function we will need to add it on the `call stack` and that is where the `event loop` enters to action. It will look at the `call stack` and will see that is not empty so we can't run the `o seconds` timer function so `main` continue with its execution and it will run the last `log` of the script
+
+```
+------- Call Stack -------      --- output ---    ---- Node APIs ----      --- Callback Queue ---
+| console.log('Stopping') |     |  Staring   |    | setTimeout(2sec) |     |    callback(0sec)   |
+|         main()          | =>  |  Stopping  | => ---- Node APIs ----  =>  --- Callback Queue ---
+------- Call Stack -------      --- output ---
+           ^                                                                        ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+Since the `log` finish it will pull out from the `call stack`
+
+```
+------- Call Stack -------      --- output ---    ---- Node APIs ----      --- Callback Queue ---
+|         main()          |     |  Staring   |    | setTimeout(2sec) |     |    callback(0sec)   |
+------- Call Stack -------  =>  |  Stopping  | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                --- output ---
+           ^                                                                        ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+Since the `main` function get to the last line of the script it will consider that its finish it execution
+
+```
+------- Call Stack -------      --- output ---    ---- Node APIs ----      --- Callback Queue ---
+|                         |     |  Staring   |    | setTimeout(2sec) |     |    callback(0sec)   |
+------- Call Stack -------  =>  |  Stopping  | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                --- output ---
+           ^                                                                        ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+On a regular `synchronous` script this will mean that the execution finishes but this is not the case on our `asynchronous` program because now the `event loop` can do its job because it seems that the `call stack` is empty. It will move the `callback` to the ` call stack` to run
+
+```
+------- Call Stack -------      --- output ---    ---- Node APIs ----      --- Callback Queue ---
+|      callback(0sec)     |     |  Staring   |    | setTimeout(2sec) |     |                     |
+------- Call Stack -------  =>  |  Stopping  | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                --- output ---
+           ^                                                                        ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+The only thing on the `callback` is a `log` function and that will be added to the `call stack` too
+
+```
+------- Call Stack -------      ----- output -----    ---- Node APIs ----      --- Callback Queue ---
+|     console.log('0...') |     |    Staring     |    | setTimeout(2sec) |     |                     |
+|      callback(0sec)     | =>  |    Stopping    | => ---- Node APIs ----  =>  --- Callback Queue ---
+------- Call Stack -------      | 0 second timer |
+                                ----- output -----
+           ^                                                                              ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+Because the `event loop` doesn't send the `callback` function before the `main` function end is the reason for seeing the `0 second timer` message after the other `logs`. Since the `log` finish and is the only thing on the `callback` both pull out of the `call stack`
+
+```
+------- Call Stack -------      ----- output -----    ---- Node APIs ----      --- Callback Queue ---
+|                         |     |    Staring     |    | setTimeout(2sec) |     |                     |
+------- Call Stack -------  =>  |    Stopping    | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                | 0 second timer |
+                                ----- output -----
+           ^                                                                              ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+But the program is not finished yet but the `call stack` and `callback queue` are empty so it will sit there until the `2 seconds` are done. When the `2 seconds` are done it will add the function of the timer to the `callback queue`
+
+```
+------- Call Stack -------      ----- output -----    ---- Node APIs ----      --- Callback Queue ---
+|                         |     |    Staring     |    |                  |     |   callback(2sec)   |
+------- Call Stack -------  =>  |    Stopping    | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                | 0 second timer |
+                                ----- output -----
+           ^                                                                              ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+The `event loop` will see that the `call stack` is empty so will take the `callback` to the `call stack`
+
+```
+------- Call Stack -------      ----- output -----    ---- Node APIs ----      --- Callback Queue ---
+|      callback(2sec)    |      |    Staring     |    |                  |     |                     |
+------- Call Stack -------  =>  |    Stopping    | => ---- Node APIs ----  =>  --- Callback Queue ---
+                                | 0 second timer |
+                                ----- output -----
+           ^                                                                              ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+The only thing on the `callback` is a `log` so it will be added to the `call stack`
+
+```
+------- Call Stack -------      ----- output -----    ---- Node APIs ----      --- Callback Queue ---
+|   console.log('2...')  |      |    Staring     |    |                  |     |                     |
+|      callback(2sec)    |  =>  |    Stopping    | => ---- Node APIs ----  =>  --- Callback Queue ---
+------- Call Stack -------      | 0 second timer |
+                                | 2 second timer |
+                                ----- output -----
+           ^                                                                              ˅
+| --------------------------------------- Event loop ------------------------------------------ |
+```
+
+Since the `log` finishes and was the only thing on the `callback` both are removed from the `call stack` and the program will finish its execution.
