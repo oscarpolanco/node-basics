@@ -2078,3 +2078,110 @@ The only thing on the `callback` is a `log` so it will be added to the `call sta
 ```
 
 Since the `log` finishes and was the only thing on the `callback` both are removed from the `call stack` and the program will finish its execution.
+
+### Making HTTP requests
+
+Now we will make an `HTTP` request from our `node` application and this is an important milestone for us because this will be the way that our application will be able to communicate with the outside world in the case of this section; if we need real-time `weather` data we will need to make an `HTTP` request.
+
+In this section we will have an application making `HTTP` request to another company servers to get some task done in other words that somewhere on our code you will specify the URL that we wanna make the request to(provided by the API documentation); we are to fire that request; sending some data possibly and getting a response back. In our case, we will send a `location` and will get back a `weather` information that I can use.
+
+#### Weather API
+
+For our application, we will use the [weatherstack](https://weatherstack.com/) API to get the real-time `weather` data that we need. You can use the free trial that gives us 1000 requests a month that is more than enough for our example app.
+
+- On your browser go to [weatherstack](https://weatherstack.com/)
+- Click on the `sign up free` button at the top right
+- Click `Sign up` on the `Free` option
+- Fill the form and submit the data
+- You will be redirected to a quick start guide
+- Choose a copy of your `API` key(This is a randomly generated `string` that will help us to authenticate to make a request to `weatherstack`). DO NOT SHARE THIS API KEY
+- Below you will see some endpoints docs that are worth checkout
+- Now we will make our first request in order to get real-time `weather` data. Open a new tab on your browser
+- Add the base URL of `weatherstack` that is `http://api.weatherstack.com/`
+- To access the current `weather` data we need to add `current` on the base URL: `http://api.weatherstack.com/current`
+- Now we need to provide the `API key` so we can get access to our `weatherstack` account. To provide the key we will send a `query` string with a key/value pair with the following format: `?access_key=my_access_key_number`(Change `my_access_key_number` with your `API key` number). So the URL is this to this moment:
+
+    `http://api.weatherstack.com/current?access_key=my_access_key_number`
+
+- Then we need to add the location that we want to obtain the `weather` information and for this, we need to add another `query` param and for this, we first need to add `&` before adding the second param
+
+    `http://api.weatherstack.com/current?access_key=my_access_key_number&`
+
+- Add a param call `query` that will have the coordinate of `Alcatraz; San Francisco`(The value is the `longitude` and `latitude`)
+
+    `http://api.weatherstack.com/current?access_key=my_access_key_number&query=37.8267,-122.4233`
+
+- Click enter and you should see a `JSON` response with a lot of information
+
+As you see we make a request to an API and get a `JSON` as a response and when we got that response `JSON` on our code we can take it; parse it and get access to all the information that it provides.
+
+#### Make the weather API request from our code
+
+Now we will make the same request that we did before on the browser from our code. Let's get into it:
+
+- On your editor; go to the `weather-app` directory and open the `app.js`
+- Remove all content of that file
+
+To make an `HTTP` request they are a few different things that we can do. We can use the `node` core modules(We will covert later), but these are a very low level and require making a lot of unnecessary code to get everything working together. There are a lot of `npm modules` that are wrappers around that core module making it easier to make an `HTTP` request and that is what we are using for this example. We will use the [request](https://www.npmjs.com/package/request) package(This package is deprecated and will remove it later; you can follow the example that we will remove it later).
+
+- Now get to your terminal and go to the `weather-app` directory
+- Initialize the project with `npm init -y`(The `-y` allow us to answer `yes` to every question)
+- Install the `request` module using: `npm install request`
+- On your editor; go to the `app.js` file on the `weather-app` directory
+- Require the `request` module
+
+    `const request = require('request');`
+
+- Store the URL that you use on your browser to access the `weatherstack` API information
+
+    `const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number&query=37.8267,-122.4233';`
+
+- Now use the `request` module sending an object as a first value and an `arrow` function as the second one
+
+    `request({}, () =>  {});`
+
+    - The first parameter is an optional object that outlines what we like to do; that is where we provide the URL and other information
+    - The second argument is a function to run when we actually got a response
+
+- Set a `URL` property on the options object with the `weatherstack` URL as it value
+
+    `request({ url: url }, () =>  {});`
+
+- Add the `error` and `response` parameters to the function argument of the request. The `error` parameter will tell us if we got some kind of `error` when we do the request and the `response` will have all sources of information including the actual data return by the API
+
+     `request({ url: url }, (error, response) =>  {});`
+
+- Console the `response` on the function
+
+    ```js
+    request({ url: url }, (error, response) =>  {
+        console.log(response);
+    });`
+    ```
+
+- Go to your terminal and run the `app.js` file using: `node app.js`
+- You will see a lot of information output on your terminal. You will see a large string on green color and that is our `JSON` data on the `body` property
+- Let parse the `body` property. So get back to the `app.js` file
+- Add a constant call `data` and use `JSON.parse` on the `body` property as it value
+
+    ```js
+    request({ url: url }, (error, response) =>  {
+        const data = JSON.parse(response.body);
+        console.log(data);
+    });
+    ```
+
+- Get back to your terminal and run the `app.js` script
+- You will see a lot of data output to the terminal related to the `weather`
+- For the moment we just have interest in the `current` property so let's log just this property
+
+    ```js
+    request({ url: url }, (error, response) =>  {
+        const data = JSON.parse(response.body);
+        console.log(data.current);
+    });
+    ```
+
+- On your terminal run the `app.js` script again
+- You will see the `current weather` information of the `location` that we provide
+
