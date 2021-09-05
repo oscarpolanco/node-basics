@@ -2185,3 +2185,84 @@ To make an `HTTP` request they are a few different things that we can do. We can
 - On your terminal run the `app.js` script again
 - You will see the `current weather` information of the `location` that we provide
 
+#### Customizing HTTP request
+
+Now we will explore some options to customize the request so we can have some more information from the API and make us easier handle the response data on our code. First, we will automatically `parse` the response.
+
+- On your editor; go to the `app.js` and get on the `weather-app` directory
+- On the configuration object of the `request` function add the `json` property and set it to `true`
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        const data = JSON.parse(response.body);
+        console.log(data.current);
+    });
+    ```
+
+    The `JSON` property when is set to `true` will automatically `parse` the response of the request to an object. By default is `false`
+
+- Now we can remove the `JSON.parse` from the function because is already an object and print the `body` property of the `response`
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        console.log(response.body);
+    });
+    ```
+
+- On your terminal go to the `weather` directory and run the `app.js` script with `node app.js`
+- You should see the same response as before
+- Now we will need to use some more information to use it on our code and for this will be easier for us to check it on the browser instead of the terminal. So go to the browser and put the same URL that we use before to get a response
+- But is difficult to see so you will need an extension to have a better view of the data in my case; on `chrome`; I use [JSON formatter](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=en). Install one extension of your choosing on the browser that you are using to continue
+
+    As you see on the response we will have: 
+    - A `request` property with contains information about the request that `weatherstack` process
+    - A `location` property that tells us information from the `location` that we are viewing the `weather` data
+    - A `current` property that contains the `current weather` data
+
+    We will use the `weather_description`; the `temperature on Fahrenheit` and the `feels like temperature on Fahrenheit` 
+
+- Now get back to the `app.js` file
+- Remove the console
+- Add a new variable call `currentWeather` that its value will be the `current` property of the response
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        const currentWeather = response.body.current;
+    });
+    ```
+- Now we will need a console to add the message that we need. The first thing that we will add if the `weather_descriptions` property and that property as you see on the response in the browser is an `array` and we will need to put the first position
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        const currentWeather = response.body.current;
+
+        console.log(currentWeather.weather_descriptions[0]);
+    });
+    ```
+- Then we will need to access the current `temperature` with the following message 
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        const currentWeather = response.body.current;
+
+        console.log(currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out.');
+    });
+    ```
+
+- At this moment we just missing to add the `feels like temperature` that will be on the `feelslike` property
+
+    ```js
+     request({ url: url, json: true }, (error, response) =>  {
+        const currentWeather = response.body.current;
+
+        console.log(currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
+    });
+    ```
+
+- Finally, we need to change the `temperature` from `celsius` to `Fahrenheit`. For this, we will need to check the `weatherstack` documentation. On your browser open a new tab and go to this [url](https://weatherstack.com/documentation)
+- On the left sidebar search for the `units` option and click on it
+- You will see all the information of the `units query param` that we can use
+- Get back to the `app.js` file on the
+- At the end of the `url` value add the following: `&units=f`
+- On your terminal re-run the `app.js` script
+- You should see the message that we set

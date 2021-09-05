@@ -1,7 +1,7 @@
 const request = require('request');
 const keys = require('./key');
 
-const url = 'http://api.weatherstack.com/current?access_key=' + keys.weatherstackAPIKey + '&query=37.8267,-122.4233';
+const url = 'http://api.weatherstack.com/current?access_key=' + keys.weatherstackAPIKey + '&query=37.8267,-122.4233&units=f';
 
 // Goal Print a small forecast to the user
 //
@@ -10,5 +10,5 @@ const url = 'http://api.weatherstack.com/current?access_key=' + keys.weatherstac
 
 request({ url: url, json: true }, (error, response) =>  {
     const currentWeather = response.body.current;
-    console.log('Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
+    console.log(currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
 });
