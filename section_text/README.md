@@ -2266,3 +2266,74 @@ Now we will explore some options to customize the request so we can have some mo
 - At the end of the `url` value add the following: `&units=f`
 - On your terminal re-run the `app.js` script
 - You should see the message that we set
+
+### Using mapbox api
+
+Now we will use the [mapbox](https://www.mapbox.com/) API that will provide a `geocoding` service. The `geocoding` service is the process to take an `address` and covert it into a `latitude` and `longitude`. When we have those coordinates we can combine them with the `weatherstack` API to get the `weather` from a determined location but for the moment we will do the request separate to test.
+
+- On your browser; go to the [mapbox page](https://www.mapbox.com/). `Mapbox` have a lot of services but we will be using the `geocode` service
+- Click on the `sign in` button at the top right
+- Fill the form and submit it
+- You will be redirected to a getting start page
+- Copy the `public token` and store it for later
+- Search for the `Mapbox services` link and click on it. This will let you the request documentation of `mapbox`
+- On the left sidebar click on the `Search service` dropdown
+- Then click on `Geocoding`
+
+    You will see that we have to type of `geocoding`:
+    - `Forward geocoding`: We provide an `address` and get back the `latitude` and the `longitude`(This is what we are going to use)
+    - `Reverse geocoding`: We provide a `latitude` and `longitude` and get back an `address`
+
+- Scroll down to the `endpoint` section. Get to the `forward geocoding` section
+
+    As you see in the table we will have 2 required parameters:
+    - `endpoint`: `Mapbox` type of service and we have `mapbox.places` that is the main one or `mapbox.places-permanent` that is for enterprises and customers
+    - `search_text`: This is where we provide the `address`
+
+- Continue scrolling until you get to the `Example request: Forward geocoding` example
+- Copy the URL without the quotes(Already have your access token)
+- Open a new browser tab
+- Paste the URL that you just copy
+
+    As you see on the browser you will get a `JSON` response with 4 properties: `type`, `query`, `features`, and `attribution`. The `query` property will let us know what we provide via the URL. The `features` contain an array with the data that we want. By default the `features` array will have the 5 more relevant results for your `search term` and the most relevant one is the first one. You can see that each item on the features array is an object and for use, the `place_name`(Contains the name of the location) and the `centers`(Contains the `longitude` and `latitude`) properties are the ones that we are interested
+
+- Now get back to the documentation tab
+- Get to the optional parameters of the `forward geocoding`
+- Search for `limit`
+
+    As you see the `limit` parameter will help us to specify the maximum of results that returns the `api`. In our case, we will specify that return just the most relevant one
+
+- Get back to the tap that we see the `JSON` result
+- At the end of the URL add the following: `&limit=1`
+- Click enter
+- You should see that the `features` array just have one item
+
+#### Using request with mapbox
+
+- On your editor get to the `app.js` file on the `weather-app` directory
+- Bellow the `URL` constant; add a new constant call `geoCodeUrl` that its value will be the URL that you use before to see the `JSON` response of `mapbox`
+- Now at the button use the `request` method sending the configuration object(URL and JSON parse option) and a callback function
+
+    ```js
+    request({ url: url, json: true }, (error, response) =>  {});
+    ```
+
+- On the callback function; create a new constant call `coordinatesInfo` that its value will be the coordinates of the location(`latitude` and `longitude`)
+
+    ```js
+    request({ url: url, json: true }, (error, response) =>  {
+        const coordinatesInfo = response.body.features[0].center;
+    });
+    ```
+
+- Print the `latitude` and `longitude`
+
+    ```js
+    request({ url: url, json: true }, (error, response) =>  {
+        const coordinatesInfo = response.body.features[0].center;
+        console.log('The latitude is ' + coordinatesInfo[1] + ' and the longitude is ' + coordinatesInfo[0]);
+    });
+    ```
+- On your terminal; go to the `weather-app` directory
+- Run the `app.js` script using: `node app.js`
+- You should see the correct `latitude` and `longitude` print on the console
