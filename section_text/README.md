@@ -2337,3 +2337,132 @@ Now we will use the [mapbox](https://www.mapbox.com/) API that will provide a `g
 - On your terminal; go to the `weather-app` directory
 - Run the `app.js` script using: `node app.js`
 - You should see the correct `latitude` and `longitude` print on the console
+### Handling Errors
+
+We need to think that not always we are going to have the best-case scenario when we do a request to an `API` because plenty of things can go wrong so in this section we will check how to handle a couple of those` errors` that can happen.
+
+One of the most common things that can happen is when we don't have any network available. Let's check how to handle this
+
+- On your editor go to the `app.js` file on the `weather-app` directory
+- Comment the `geocoding` code
+- On your computer turn off your internet connection
+- On your terminal; go to the `weather-app` directory
+- Run the `app.js` script with:` node app.js`
+- You should see a big `error` message
+- Now get back to the `app.js` file
+- On the `weatherstack` request callback; console the `error` parameter and comment on the other code
+
+    ```js
+    request ({url: url, json: true}, (error, response) => {
+        console.log (error);
+        // const currentWeather = response.body.current;
+        // console.log (currentWeather.weather_descriptions [0] + '. Its is currently' + currentWeather.temperature + 'degrees out. Its feels like' + currentWeather.feelslike + 'degrees out.');
+    }
+    ```
+- Go back to your terminal and run the `app.js` script
+- You should see an object print on the console
+
+    This object contains some information about the `error` that happen but still, we don't have a lot of understandable things to show
+
+- Go back to the `app.js` file
+- Delete de console of the `error` and uncomment the other code block
+- Add a new condition that checks if the `error` exits
+
+    ```js
+    request ({url: url, json: true}, (error, response) => {
+        if (error) {}
+        const currentWeather = response.body.current;
+        console.log (currentWeather.weather_descriptions [0] + '. Its is currently' + currentWeather.temperature + 'degrees out. Its feels like' + currentWeather.feelslike + 'degrees out.');
+    }
+    ```
+
+- Add the following message if we got an `error`
+
+    ```js
+    request ({url: url, json: true}, (error, response) => {
+        if (error) {
+            console.log ('Unable to connect to weather service!')
+        }
+        const currentWeather = response.body.current;
+        console.log (currentWeather.weather_descriptions [0] + '. Its is currently' + currentWeather.temperature + 'degrees out. Its feels like' + currentWeather.feelslike + 'degrees out.');
+    }
+    ```
+
+- Add the other code to an `else` statement
+
+    ```js
+    request ({url: url, json: true}, (error, response) => {
+        if (error) {
+            console.log ('Unable to connect to weather service!')
+        } else {
+            const currentWeather = response.body.current;
+            console.log (currentWeather.weather_descriptions [0] + '. Its is currently' + currentWeather.temperature + 'degrees out. Its feels like' + currentWeather.feelslike + 'degrees out.');
+        }
+    }
+    ```
+
+- On your terminal; run the `app.js` script again
+- You should see the `error` message that you put on the log
+- Turn on your internet connection
+- Run the `app.js` script again
+- You should see that work correctly
+- We got 2 types of `error` for this request; one is from our local machine like the one we see before and the other is for `user` input so instead of having the `error` parameter we actually will have a `response` so we need to handle it. Go to your browser
+- Get the complete `weatherstack` URL to get the `JSON` response and use it on the browser
+- Remove the value of `query` on the URL
+- You will get a `response` but with an `error` message
+- Go back to the `app.js` file
+- On the `weatherstack` request callback add an `else if` statement that checks if we got an `error` property on the `body`
+
+    ```js
+    request({ url: url, json: true }, (error, response) =>  {
+        if(error) {
+            console.log('Unable to connect to weather service!')
+        }  else if(response.body.error) {
+
+        } else {
+            const currentWeather = response.body.current;
+            console.log(currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
+        }
+    }
+    ```
+
+- On the `else if` block add the following message
+
+    ```js
+    request({ url: url, json: true }, (error, response) =>  {
+        if(error) {
+            console.log('Unable to connect to weather service!')
+        }  else if(response.body.error) {
+            console.log('Unable to find location');
+        } else {
+            const currentWeather = response.body.current;
+            console.log(currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
+        }
+    }
+    ```
+
+- On the `url` constant break the `url` as you did before on the browser
+- On your terminal; run the `app.js` script
+- You should see the error message that you just add
+- Now we will do the same to the `geocoding` block. Uncomment the `geocoding` block
+- Add the following conditions and messages to the `geocoding` request
+
+    ```js
+    request({ url: geoCodeUrl, json: true }, (error, response) => {
+        if(error) {
+            console.log('Unable to connect to location service!');
+        } else if(response.body.features.length === 0) {
+            console.log('Unable fo find location. Try another search.');
+        } else {
+            const coordinatesInfo = response.body.features[0].center;
+            console.log('The latitude is ' + coordinatesInfo[1] + ' and the longitude is ' + coordinatesInfo[0]);
+        }
+    });
+    ```
+
+    To test the `geocoding error` we need to mess with the URL that we did before changing the text after the `place/` and before of `.json`(In the case of the example `Los%20Angeles`) with some random text. You will see that the `features` array is empty that is why we check if the `features` array have `length`
+
+- Test the `error` cases and if the correct request continue working
+
+
+
