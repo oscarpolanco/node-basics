@@ -68,3 +68,15 @@ This is a folder with some mini examples outside of the applications that are bu
         { text: 'Film course', completed: false }
     ]
     ```
+
+#### 4. Callback functions
+
+- On your terminal; get to the `playground` directory
+- Run the `4-callback.js` script with the following command: `node 4-callback.js` script
+- You should see 4 different examples of the `callback` pattern with the following output
+
+    ```bash
+    Two seconds are up
+    { latitude: 0, longitude: 0 }
+    5
+    ```

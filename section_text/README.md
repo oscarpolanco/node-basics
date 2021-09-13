@@ -2464,5 +2464,130 @@ One of the most common things that can happen is when we don't have any network 
 
 - Test the `error` cases and if the correct request continue working
 
+### Callback functions
 
+In this section, we will explore a little bit about `callback` functions where we are going to see how they work and how can we use them. This is important because is part of the core of the `nodeJs asynchronous` development.
 
+- On your editor; go to the `playground` directory
+- Create a new file call `4-callback.js`
+- On this newly created file we will use a `callback` function with an old friend call `setTimeout`(Put a 2 seconds time)
+
+    `setTimeout(() => {}, 2000);`
+
+    The first parameter of the `setTimeout` is the `callback` function and it will run to the after the time we put on the second parameter
+
+- Add a log on the `callback` function
+
+    ```js
+    setTimeout(() => {
+        console.log('Two seconds are up');
+    }, 2000);
+    ```
+
+    The `callback` function is a function that provides an argument to another function with the intention that runs it later. In this case, we are using the `callback` pattern in an `asynchronous` way but this is not the rule you can use the `callback` pattern on a `synchronous` functions; for example `array's filter`
+
+- Create a constant call `names` with the following values
+
+    `const names = ['Andrew', 'Jen', 'Jess'];`
+
+- Then create a new variable call `shortNames` that it value will be the `filter` result of the `name` that have less or equal `4` letters
+
+    ```js
+    const shortNames = names.filter((name) => {
+        return name.length <= 4;
+    });
+    ```
+
+    The `callback` function is the parameter that we sent to the `filter` function and will run for each item on the `array` of names. In this case, we use the `callback` function on a `synchronous` function. To this moment we use the `callback` functions on functions that we don't define such as `filter` and `setTimeout` but we can define our custom function and still use the `callback` pattern if we need to
+
+- Create a constant that will be called `geocode` with a function as its value. The function we will receive an `address` and a `callback`
+
+    `const geocode = (address, callback) => {}`
+
+    Here we will intend to reproduce the `geocode` functionality but use it in different places that is why we create a new function that will contain the request block and run a function when we have the data
+
+- On the `geocode` function define a `data` constant that will have some example `longitude` and `latitude`
+
+    ```js
+    const geocode = (address, callback) => {
+        const data = {
+            latitude: 0,
+            longitude: 0
+        };
+    }
+    ```
+
+    There are 2 ways that we can receive the data from the `geocode` function; one is that we return the value from the function and the other is to provide the `callback` and use the data there. Since we already have the data like we have to this moment the choice will be easy; just return the value
+
+- Return `data` on the `geocode` function
+
+    ```js
+    const geocode = (address, callback) => {
+        const data = {
+            latitude: 0,
+            longitude: 0
+        };
+
+        return data;
+    }
+    ```
+
+- Below the `geocode` function create a new `data` constant that it value will be the return value of the `geocode` function sending `Philadelphia` as an argument and log the value
+
+    ```js
+    const data = geocode('Philadelphia');
+    console.log(data);
+    ```
+
+- On your terminal; go to the `playground` directory and run the `4-callback.js` script: `node 4-callback.js`
+- You should see the `data` value on the logs. As you see this is a `synchronous` function but later we will need to add the `geocode` request that we already know is `asynchronous` so let use a `setTimeout` to simulate an `asynchronous` code
+- Put all the code inside of the `geocode` function and put it inside of a 2 seconds `setTimeout`
+
+    ```js
+    const geocode = (address, callback) => {
+        setTimeout(() => {
+            const data = {
+                latitude: 0,
+                longitude: 0
+            };
+
+            return data;
+        }, 2000);
+    }
+    ```
+
+- Get back to your terminal and run the `4-callback.js` again
+- You should see `undefined` instead of the `data` value. The problem here is that we don't return anything on the function because the actual return statement is inside of the `callback` function of the `setTimeout`; the same thing will happen with the `geocode` request. Let's fix this
+- Remove the `data` constant below of the `geocode` function(Leave the `geocode` call) and log
+
+    `geocode('Philadelphia');`
+
+- Add a second parameter to the `geocode` call that will be a `callback` function
+
+    `geocode('Philadelphia', () => {});`
+
+- Now eliminate the return statement on the `setTimeout` and call the `callback` function sending the piece of data that we need; in this case `data`
+
+```js
+const geocode = (address, callback) => {
+    setTimeout(() => {
+        const data = {
+            latitude: 0,
+            longitude: 0
+        };
+
+        callback(data);
+    }, 2000);
+}
+```
+
+- Get back to the `gecode` call and now that we know the piece of that that we are going to use let's finish the `callback` function
+
+    ```js
+    geocode('Philadelphia', (data) => {
+        console.log(data);
+    });
+    ```
+
+- Get back to your terminal and run the `4-callback.js` script
+- You should see the `data` value after the 2 seconds
