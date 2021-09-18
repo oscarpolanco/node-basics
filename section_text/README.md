@@ -2591,3 +2591,175 @@ const geocode = (address, callback) => {
 
 - Get back to your terminal and run the `4-callback.js` script
 - You should see the `data` value after the 2 seconds
+
+### Callback Abstraction
+
+At this moment we can improve a little bit the code of the `weather-app` using the `callback` pattern where we will have a reusable code and easy to maintain in other words we will have some functions that we can call multiple times and make it easy for us do one thing before another and we will need this to send the `geocode` result to the `weatherstack` API so we can have the `weather` of a specific place. Let's begin the process
+
+- On your editor; go to the `app.js` on the `weather-app` directory
+- Now comment all the code of the `app.js` file
+- At the bottom of the file add a `geocode` constant that its value is a function
+
+    `const geocode = () => {}`
+
+- Now we will add what we need to trigger the request; in our case the `address` and the `callback` that we want to run after the request finish
+
+    `const geocode = (address, callback) => {}`
+
+- Now below the `geocode` constant; call the function sending the following parameters
+
+    `geocode('Boston', () => {});`
+
+- Then on the callback function we will need to add the parameters that we need. As you can see before we will receive an `error` and the `data` of the `response` and that is what we will add as parameters of the `callback`
+
+    `geocode('Boston', (error, data) => {});`
+
+- At this moment we will need to make sure that the `callback` is called with the correct parameters so copy the `geocode` URL that you use before
+- On the `geocode` function add a new constant call `url` and paste the `geocode` URL as its value
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/philadelphia.json?access_token=your_access_key&limit=1';
+    }
+    ```
+
+- Now remove the `address` part of the URL and use the `address` parameter on it
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + address + '.json?access_token=your_access_key&limit=1';
+    }
+    ```
+
+- Since is a URL we will need to `encode` the value that we receive from the `address` parameter to handle the special characters and for this, we will use the `encodeURIComponent` function
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+    }
+    ```
+
+- Now that we have a dynamic URL we can fire the request. So add the `request` method with its corresponding parameters
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+
+        request({ url: url, json: true }, (error, response) => {});
+    }
+    ```
+
+- Then we need to add the conditions to handle the `errors`
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+
+        request({ url: url, json: true }, (error, response) => {
+             if(error) {
+             } else if(response.body.features.length === 0) {
+             } else {
+             }
+        });
+    }
+    ```
+
+- To show the message we need to use a reusable function so the user can use the message as it wants; so we will use the `callback` function to send the correct arguments. First for the first condition using the same message as before
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+
+        request({ url: url, json: true }, (error, response) => {
+             if(error) {
+                 callback('Unable to connect to location service!');
+             } else if(response.body.features.length === 0) {
+             } else {
+             }
+        });
+    }
+    ```
+
+    Since is an `error` we actually don't want to send a value for `data` so we don't send any value that will be equal to `undefined`
+
+- Then we add the second message to the second condition as we use before
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+
+        request({ url: url, json: true }, (error, response) => {
+             if(error) {
+                 callback('Unable to connect to location service!');
+             } else if(response.body.features.length === 0) {
+                 callback('Unable fo find location. Try another search.');
+             } else {
+             }
+        });
+    }
+    ```
+
+- Get to the `geocode` function call and log the `error` and `data` parameters
+
+    ```js
+    geocode('Boston', (error, data) => {
+        console.log('Error', error);
+        console.log('Data', data);
+    });
+    ```
+
+- Now we can test the functions. Turn off your internet connection
+- Get to your terminal and go to the `weather-app` directory
+- Run the `app.js` script using: `node app.js`
+- You should see the correct `error` message
+- Turn on your internet connection
+- Now get to the `app.js` file on the `weather-app` directory
+- Change the string of the address to another that you know doesn't exist
+- Get back to your terminal and run the `app.js` script
+- You should see the correct `error` message
+- Now get back to the `app.js` file on your editor and add the correct `address` on the `geocode` function call
+- On the `else` clause of the `geocode` function add the following
+
+    ```js
+    const geocode = (address, callback) => {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(address) + '.json?access_token=your_access_key&limit=1';
+
+        request({ url: url, json: true }, (error, response) => {
+             if(error) {
+                 callback('Unable to connect to location service!');
+             } else if(response.body.features.length === 0) {
+                 callback('Unable fo find location. Try another search.');
+             } else {
+                 callback(undefined, {
+                    latitude: response.body.features[0].center[1],
+                    longitude: response.body.features[0].center[0],
+                    location: response.body.features[0].place_name
+                });
+             }
+        });
+    }
+    ```
+
+    Here we send `undefined` to the first parameter because we don't have an `error` then we choose the information that we will send to the user in this case the `longitude`; `latitude` and the `place name`
+
+- Go to your terminal and run the `app.js` script again
+- You should see the correct information of the `location`
+- Now we will move the code that we just made to its own file. On the `weather` add directory create a new folder call `utils`
+- On the newly created directory; create a new file call `geocode.js`
+- In the new file; require `request`
+
+    `const request = require('request');`
+
+- Go to the `app.js` file and cut the `geocode` function(Do not remove the function call)
+- Get to the `geocode.js` file and paste the function
+- Bellow the function export it
+
+    `module.exports = geocode;`
+
+- Get back to the `app.js` file and `require` the `geocode` function
+
+    `const geocode = require('./utils/geocode');`
+
+- Now go to your terminal and run the `app.js` file
+- You should see the correct output
+- Remember to remove the old `geocode` block that you comment on at the beginning of this section
