@@ -2763,3 +2763,78 @@ At this moment we can improve a little bit the code of the `weather-app` using t
 - Now go to your terminal and run the `app.js` file
 - You should see the correct output
 - Remember to remove the old `geocode` block that you comment on at the beginning of this section
+
+#### Callback abstraction (weatherstack function)
+
+Now we are going to do the same abstraction that we did with the `geocode` functions. Let's begin with the process.
+
+- On your editor; go to the `app.js` file on the` weather-app` directory
+- Comment the `weatherstack` code
+- Now on the `weather-app` directory create a new file call` forecast.js`
+- On this newly created file; require the `request` module
+
+    `const request = require ('request');`
+
+- Then create a function call `forecast` that receive` latitude`, `longitude`, and` callback` as a parameter
+
+    `const forecast = (latitude, longitude, callback) => {}`
+
+- On the `forecast` function create a constant call` URL` and add the `weatherstack` URL that you use on the` app.js` file
+
+    `` `js
+    const forecast = (latitude, longitude, callback) => {
+        const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number&query=37.8267,-122.4233';
+    }
+    `` ''
+
+- Now we will need to add the `latitude` and` longitude` so we can have a dynamic `URL` for our function
+
+    `` `js
+    const forecast = (latitude, longitude, callback) => {
+        const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =' + latitude + ',' + longitude + '& units = f';
+    }
+    `` ''
+
+- Then we can use the `request` function sending the` callback` and the correct parameters
+
+    `request ({url: url, json: true}, (error, response) => {});`
+
+- Get the same conditions that are on the `app.js` file relate to the` weatherstack` code and add it to the `request` function
+
+    `` `js
+    const forecast = (latitude, longitude, callback) => {
+        const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =' + latitude + ',' + longitude + '& units = f';
+
+        request ({url: url, json: true}, (error, response) => {
+            if (error) {
+                callback ('Unable to connect to weather service!');
+            } else if (response.body.error) {
+                callback ('Unable to find location');
+            } else {
+                const currentWeather = response.body.current;
+                callback (undefined, currentWeather.weather_descriptions [0] + '. Its is currently' + currentWeather.temperature + 'degrees out. Its feels like' + currentWeather.feelslike + 'degrees out.');
+            }
+        });
+    }
+    `` ''
+
+- Export the `forecast` function
+
+    `module.exports = forecast;`
+
+- Go to the `app.js` file and import the` forecast` function
+
+    `const forecast = require ('./ utils / forecast');`
+
+- Add the following example call of the `forecast` function at the end of the file
+
+    `` `js
+    forecast (44.1545, -75.7088, (error, data) => {
+        console.log ('Error', error);
+        console.log ('Data', data);
+    });
+    `` ''
+
+- Test the different types of errors and if everything goes well as we did with the `geocode` function
+- You should have the correct results
+- Remove all code comment at the old `weatherstack` code and the` request` require at the top
