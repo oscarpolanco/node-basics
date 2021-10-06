@@ -2781,19 +2781,19 @@ Now we are going to do the same abstraction that we did with the `geocode` funct
 
 - On the `forecast` function create a constant call` URL` and add the `weatherstack` URL that you use on the` app.js` file
 
-    `` `js
+    ```js
     const forecast = (latitude, longitude, callback) => {
         const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number&query=37.8267,-122.4233';
     }
-    `` ''
+    ```
 
 - Now we will need to add the `latitude` and` longitude` so we can have a dynamic `URL` for our function
 
-    `` `js
+    ```js
     const forecast = (latitude, longitude, callback) => {
         const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =' + latitude + ',' + longitude + '& units = f';
     }
-    `` ''
+    ```
 
 - Then we can use the `request` function sending the` callback` and the correct parameters
 
@@ -2801,7 +2801,7 @@ Now we are going to do the same abstraction that we did with the `geocode` funct
 
 - Get the same conditions that are on the `app.js` file relate to the` weatherstack` code and add it to the `request` function
 
-    `` `js
+    ```js
     const forecast = (latitude, longitude, callback) => {
         const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =' + latitude + ',' + longitude + '& units = f';
 
@@ -2816,7 +2816,7 @@ Now we are going to do the same abstraction that we did with the `geocode` funct
             }
         });
     }
-    `` ''
+    ```
 
 - Export the `forecast` function
 
@@ -2828,13 +2828,185 @@ Now we are going to do the same abstraction that we did with the `geocode` funct
 
 - Add the following example call of the `forecast` function at the end of the file
 
-    `` `js
+    ```js
     forecast (44.1545, -75.7088, (error, data) => {
         console.log ('Error', error);
         console.log ('Data', data);
     });
-    `` ''
+    ```
 
 - Test the different types of errors and if everything goes well as we did with the `geocode` function
 - You should have the correct results
 - Remove all code comment at the old `weatherstack` code and the` request` require at the top
+
+### Callback chaining
+
+Now we will use the `callback chaining` pattern to combine the 2 functions that operate independently from each other but we actually want to use the result of one of the functions in the other one. Let's begin with the process!!
+
+- On your editor; go to the `app.js` file in the `weather-app` directory
+- Take the `forecast` function and put it inside of the `callback` of the `geocode` function
+
+    ```js
+    geocode('Boston', (error, data) => {
+        console.log('Error', error);
+        console.log('Data', data);
+
+        forecast(44.1545, -75.7088, (error, data) => {
+            console.log('Error', error);
+            console.log('Data', data);
+        });
+    });
+    ```
+
+    Here we will start calling `geocode` that start an `asynchronous I/O` operation and when its done the `event loop` will make sure that the `callback` is a call from there we are going to trigger another `asynchronous I/O` operation then we are going to wait for that `callback` to finish and inside of that last `callback` we will have access to the complete `data` and that is `callback changing`
+- We need to make sure that the `data` that `geocode` sends to the `callback` is used by the `forecast` function. So remove the parameters of the `forecast` function and replace it with the `longitude` and `latitude` that is on the `data` object
+
+    ```js
+    geocode('Boston', (error, data) => {
+        console.log('Error', error);
+        console.log('Data', data);
+
+        forecast(data.latitude, data.longitude, (error, data) => {
+            console.log('Error', error);
+            console.log('Data', data);
+        });
+    });
+    ```
+
+- Now on the terminal; get to the `weather-app` directory and run the `app.js` file
+- You should see the `data` from the `geocode` function and the result of the `forecast` of `Boston`
+- We need to still handle `errors` in case that `geocode` fails and does not run the `forecast` function. Remove the consoles that are before the `forecast` function and add a condition that checks if we got any `data` on the `error` parameter
+
+    ```js
+    geocode('Boston', (error, data) => {
+        if(error) {}
+
+        forecast(data.latitude, data.longitude, (error, data) => {
+            console.log('Error', error);
+            console.log('Data', data);
+        });
+    });
+    ```
+- Then we need to make sure that we don't run the `forecast` function so we will add a `return` inside of the `error` condition printing the `error`
+
+    ```js
+    geocode('Boston', (error, data) => {
+        if(error) {
+            return console.log(error);
+        }
+
+        forecast(data.latitude, data.longitude, (error, data) => {
+            console.log('Error', error);
+            console.log('Data', data);
+        });
+    });
+    ```
+
+- Now we need to do the same `error` handling on the `forecast` function
+
+    ```js
+    geocode('Boston', (error, data) => {
+        if(error) {
+            return console.log(error);
+        }
+
+        forecast(data.latitude, data.longitude, (error, data) => {
+            if(error) {
+                return console.log(error);
+            }
+        });
+    });
+    ```
+
+- At this moment we need to do the code that will run when the `forecast` doesn't have an `error`. We will print de `name` of the place that we receive from `geocode` and the `forecast` that we get for that place but as you may notice we can't use the result from one function in the other because both of them place it on the `data` variable so we need to replace the name of one of than to do what we want. Change the `data` from the `callback` of the `forecast` function to `forecastData`
+
+    ```js
+    geocode('Boston', (error, data) => {
+        if(error) {
+            return console.log(error);
+        }
+
+        forecast(data.latitude, data.longitude, (error, forecastData) => {
+            if(error) {
+                return console.log(error);
+            }
+        });
+    });
+    ```
+
+- Now print the `location` of the `data` parameter and the `forecastData`
+
+    ```js
+    geocode('Boston', (error, data) => {
+        if(error) {
+            return console.log(error);
+        }
+
+        forecast(data.latitude, data.longitude, (error, forecastData) => {
+            if(error) {
+                return console.log(error);
+            }
+
+            console.log(data.location);
+            console.log(forecastData);
+        });
+    });
+    ```
+
+- Go to your terminal and run the `app.js` file
+- You should see the `location` name and it `forecast`
+- Finally, we will use the command line to change the static `location` that we use as a parameter of the `geocode` function. first, create a constant call `address` that contains one parameter of the `argv` array
+
+    `const address = process.argv[2];`
+
+- Now create a condition to check if the `address` exists
+
+    ```js
+    const address = process.argv[2];
+    if(address) {}
+    ```
+
+- Inside of the condition add the functions
+
+    ```js
+    const address = process.argv[2];
+    if(address) {
+        geocode('Boston', (error, data) => {
+            if(error) {...}
+
+            forecast(data.latitude, data.longitude, (error, forecastData) => {...});
+        });
+    }
+    ```
+
+- Add the `address` as a parameter of `geocode`
+
+    ```js
+    const address = process.argv[2];
+    if(address) {
+        geocode(address, (error, data) => {
+            if(error) {...}
+
+            forecast(data.latitude, data.longitude, (error, forecastData) => {...});
+        });
+    }
+    ```
+
+- Add an `else` clause that prints a message when the user doesn't provide the `address`
+
+    ```js
+    const address = process.argv[2];
+    if(address) {
+        geocode(address, (error, data) => {
+            if(error) {...}
+
+            forecast(data.latitude, data.longitude, (error, forecastData) => {...});
+        });
+    } else {
+        console.log('Please provide a location');
+    }
+    ```
+
+- Test on the terminal; sending a location like `Boston` or `"New York"`(Need to use quotes when you have space)
+- You should see the correct output
+
