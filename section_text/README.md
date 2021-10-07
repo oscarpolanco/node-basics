@@ -3010,3 +3010,142 @@ Now we will use the `callback chaining` pattern to combine the 2 functions that 
 - Test on the terminal; sending a location like `Boston` or `"New York"`(Need to use quotes when you have space)
 - You should see the correct output
 
+### ES6 Aside: Object property shorthand and destructuring
+
+Here we are going to check some features of `es6` that will make us the life easy when we are using objects. Here we will see:
+
+- The object property shorthand syntax: This will allow us to add values on to an object with a shorthand syntax in certain conditions
+- Object destructuring:
+
+#### Examples:
+
+- On your editor; go to the `playground` directory
+- Create a new file call `5-es6-object.js`
+- Inside of this newly created file add 2 constants: `name` and `userAge`(with a `string` for the `name` and a number for `userAge`)
+
+    ```js
+    const name = 'test';
+    const userAge = 27;
+    ```
+
+- Now define an `user` object with an `name` and `age` properties(Use the `name` and `userAge` to define the values of the properties)
+
+    ```js
+    const user = {
+        name: name,
+        age: userAge,
+        location: 'Philadelphia'
+    };
+    ```
+
+- Print the object using `console.log`
+- On your terminal go to the `playground` directory and run the `5-es6-object.js` file
+- You should see the object with the correct values on it properties
+- Now we will use the `object property shorthand syntax`. Add the following changes to the `user` object
+
+    ```js
+    const user = {
+        name,
+        age: userAge,
+        location: 'Philadelphia'
+    };
+    ```
+
+    As you see we change from `name: name` to just `name` and this will have the same effect than before thanks to the `object property shorthand syntax` that came to play when we set a property that it value came from a variable from the same name(The name need to match exatcly)
+
+- Go back to your terminal and run the `5-es6-object.js` file again
+- You should see the correct values of the `user` object
+- Now remove the `userAge` variable from the `user` object
+
+    ```js
+    const user = {
+        name,
+        age,
+        location: 'Philadelphia'
+    };
+    ```
+
+- Go to your terminal and re run the `5-es6-object.js` file
+- You should see an error because we don't have an `age` variable that it can use to define the `age` property
+- Now we are going to test the `object destructuring`. Remove the code on the `5-es6-object.js`
+- Then create a new object call `product` with the following properties and values
+
+    ```js
+    const product = {
+        label: 'Red notebook',
+        price: 3,
+        stock: 201,
+        salePrice: undefined
+    };
+    ```
+
+- If we need to have individual values of the properties of those objects like the following
+
+    ```js
+    const label = product.label;
+    const stock = product.stock;
+    ```
+
+- Print the values of `label` and `stock` using `console.log`
+- Go to your terminal and run the `5-es6-object.js` file
+- You should see the correct values for the `label` and `stock` variables
+- We can do it a different way to get variables of the `product` object property but first eliminate the `label` and `stock` variables
+- Now add the following bellow the `product` object
+
+    `const {} = product;`
+
+    We are trying to pull properties of the `product` object and we are going to put it on the brackets
+- Inside of the `brackets` add `label` and `stock`
+
+    `const {label, stock} = product;`
+
+    This will create 2 variable call `label` and `stock` variables with the value of the properties with the same name of the `product` object
+
+- Print the `label` and `stock` property
+- On your terminal run the `5-es6-object.js` file
+- You should see the correct value of the `label` and `stock` properties
+- You also can put variable of properties that doesn't exist on the object but it value will be `undefined`. Add a `rating` variable
+
+    `const {label, stock, rating} = product;`
+
+- Print the `rating` value
+- On your terminal run the `5-es6-object.js` file
+- You should see `undefined` for the `rating`
+- We can also rename the variable if we need it. Add the following to change the `label` variable name
+
+    `const {label:productLabel, stock, rating} = product;`
+
+    Now you can use a variable call `productLabel` and have the same value that the `product.label` property
+- Sustitude the `label` variable on the console with the `productLabel`
+- On your terminal run the `5-es6-object.js` file
+- You should see the correct value for the `productLabel` variable
+- You can add default values in the case that we define a variable of a property that doesn't exist. Add the following to the `rating` variable
+
+    `const {label:productLabel, stock, rating = 5} = product;`
+
+- On your terminal run the `5-es6-object.js` file
+- You should see the default values for the `rating`
+- Also you can use destructuring on a function. Now create a function call `transaction` that recive `type` and `product` as it parameters
+
+    `const transaction = (type, product) => {}`
+
+- Add the `transaction` call bellow
+
+    `transaction('order', product);`
+
+- We can us destructuring like we see before but we are going to do it on the `parameters` in this case `product`
+
+    `const transaction = (type, { label, stock }) => {}`
+
+- Now print the variables
+
+    ```js
+    const transaction = (type, { label, stock }) => {
+        console.log(type, label, stock);
+    }
+    ```
+
+- On your terminal run the `5-es6-object.js` file
+
+
+

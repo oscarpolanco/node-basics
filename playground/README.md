@@ -72,11 +72,26 @@ This is a folder with some mini examples outside of the applications that are bu
 #### 4. Callback functions
 
 - On your terminal; get to the `playground` directory
-- Run the `4-callback.js` script with the following command: `node 4-callback.js` script
+- Run the `4-callback.js` script with the following command: `node 4-callback.js`
 - You should see 4 different examples of the `callback` pattern with the following output
 
     ```bash
     Two seconds are up
     { latitude: 0, longitude: 0 }
     5
+    ```
+
+#### 5. ES6 Aside: Object property shorthand and destructuring
+
+- On your terminal; get to the `playground` directory
+- Run the `5-es6-object.js` script with the following command: `node 5-es6-object.js`
+- You should see the following outputs
+
+    ```bash
+    { name: 'test', age: 27, location: 'Philadelphia' }
+    { name: 'test', age: 27, location: 'Philadelphia' }
+    Red notebook
+    201
+    5
+    order Red notebook 201
     ```
