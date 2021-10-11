@@ -2185,7 +2185,7 @@ To make an `HTTP` request they are a few different things that we can do. We can
 - On your terminal run the `app.js` script again
 - You will see the `current weather` information of the `location` that we provide
 
-#### Customizing HTTP request
+### Customizing HTTP request
 
 Now we will explore some options to customize the request so we can have some more information from the API and make us easier handle the response data on our code. First, we will automatically `parse` the response.
 
@@ -3425,3 +3425,7 @@ Like it mentioned before when we start to use the `request` library; we will che
 - You should see an `error` object print
 
 You may ask yourself; why does `node` make these `core` modules easier to use? The reason is that the `node core` modules are supposed to provide this low-level implementation and `node` comes bundled with `npm` because you are suppose to use these modules to build your application.
+
+## Section 5: Web Servers(Weather App)
+
+At this moment all the applications that we created are only accessible via the command line and that is not realistic for the common users it will be much better if the user types an `URL` on the browser to interact with our application. In this section we will see the `express` module that makes it extremely easy to create `web servers` with `node` and these `servers` will allow us to `serve` all the `assets` of our application(`html`, `css` and `js`) so we can set some features for user interactions also we will able to `serve` some `JSON` data that will allow us to get the `location` from the user; get the `forecast` then send the `forecast` back to the browser to render on the screen.
