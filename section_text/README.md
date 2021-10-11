@@ -3147,5 +3147,80 @@ Here we are going to check some features of `es6` that will make us the life eas
 
 - On your terminal run the `5-es6-object.js` file
 
+### Using destructuring and property shorthand on the weather-app
+
+- On your editor go to the `app.js` on the `weather-app` directory
+- First; we need to update the `data` variable that we receive on the `geocode` callback to use destructuring with the variables that we need
+
+    `geocode(address, (error, { latitude, longitude, location }) => {...});`
+
+- The previews update will not be enough because we can have an `error` return by the `geocode` request in other words the `callback` will be called with the `error` property and will try to destructure an `undefined` object that will break the app for this we will need to provide a default value for those variables
+
+    `geocode(address, (error, { latitude, longitude, location } = {}}) => {...});`
+
+- Now we can use the new variables on the `geocode` and `forecast` functions
+
+    ```js
+    geocode(address, (error, { latitude, longitude, location } = {}) => {
+        if(error) {...}
+
+        forecast(latitude, longitude, (error, forecastData) => {
+            if(error) {
+                return console.log(error)
+            }
+
+            console.log(location);
+            console.log(forecastData);
+        });
+    });
+    ```
+
+- On your editor; go to the `geocode.js` file on the `weather-app` directory
+- Since we have a `url` constant that we use on the `request` function; we can the `shorthand` syntax on the configuration object of `request`
+
+    `request({ url, json: true }, (error, response) => {...}`
+
+- Now we are using the `body` property on all the code of the `callback` function so we can use destructuring on the `response` object
+
+    `request({ url, json: true }, (error, { body }) => {...}`
+
+- Then we need to replace the `response` object and use `body`
+
+    ```js
+    request({ url, json: true }, (error, { body }) => {
+        if(error) {
+            callback('Unable to connect to location service!');
+        } else if(body.features.length === 0) {
+            callback('Unable fo find location. Try another search.');
+        } else {
+            callback(undefined, {
+                latitude: body.features[0].center[1],
+                longitude: body.features[0].center[0],
+                location: body.features[0].place_name
+            });
+        }
+    });
+    ```
+
+- On your editor; go to the `forecast.js` file
+- This file is very similar to the `geocode` function so we will do the same as we see here
+
+    ```js
+    request({ url, json: true }, (error, { body }) =>  {
+        if(error) {
+            callback('Unable to connect to weather service!');
+        } else if(body.error) {
+            callback('Unable to find location');
+        } else {
+            const currentWeather = body.current;
+            callback(undefined, currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out.');
+        }
+    });
+    ```
+
+- Finally on your terminal run the `app.js` file and test the `weather-app` application
+- You should see the same output without any issue
+
+
 
 
