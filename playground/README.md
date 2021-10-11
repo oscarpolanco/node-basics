@@ -95,3 +95,18 @@ This is a folder with some mini examples outside of the applications that are bu
     5
     order Red notebook 201
     ```
+
+#### 6. HTTP requests without a library
+
+- On your editor; go to the `playground` directory
+- On this directory; create a new file call `keys.js`
+- Inside of this newly created file add the following(If you don't have a `weatherstack API key`; [here](https://weatherstack.com/) you can get a free `key`):
+
+    ```js
+    module.exports = {
+        weatherstackAPIKey: 'your_weatherstack_api_key',
+    };
+    ```
+- Now on your terminal; go to the `playground` directory
+- Run the `6-raw-http.js` file using: `node 6-raw-http.js`
+- You should see an object print with the `weather` information of `Cinnaminson` in the `United States of America`. All done with `node core modules`

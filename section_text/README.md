@@ -3221,6 +3221,207 @@ Here we are going to check some features of `es6` that will make us the life eas
 - Finally on your terminal run the `app.js` file and test the `weather-app` application
 - You should see the same output without any issue
 
+### HTTP requests without a library
 
+Like it mentioned before when we start to use the `request` library; we will check how to perform a request without an `npm` module. We see in this section that we can do the task that we need; like take commands from the terminal; without a library but the libraries make what you need easier to do. Let's get to it!!!
 
+- On your editor; go to the `playground` directory and create a new file call `6-raw-http.js`
+- Now get to the browser and get to the [node.js](https://nodejs.org/en/) page
+- Click on the `docs` option at the top
+- On the sidebar choose your `node` version(In the case of the example is the `16`)
+- Scroll down until you see `HTTP` and `HTTPS`. As you see here we got 2 libraries for each protocol that you are using and where you'll see an advantage to use an `npm` module because it will make it easy to switch between protocols without using a separate library and behind the scenes
+- Click on the [HTTP](https://nodejs.org/dist/latest-v16.x/docs/api/http.html) module. As you can see we can use this module to create a `server`(We gonna address this in a later section) and to do requests
+- Scroll down until you see the `http.request` function and that is what we are going to use to make the `request`. If you see the `HTTPS` module will see the same type of function but for that protocol. Since the `weatherstack` API use the `HTTP` protocol on it the free version that is the protocol that we are going to use
+- On your editor; go to the `6-raw-http.js` file
+- Since `HTTP` module is from `node`; you can `require` without installing anything because is already there. On the first line `require` it
 
+    `const http = require('http');`
+
+- Then; go to the `forecast.js` file and copy the entire `url` constant
+- Paste the `url` constant after the `HTTP` require
+
+    ```js
+    const http = require('http');
+    const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =' + latitude + ',' + longitude + '& units = f'; 
+    ```
+
+- Since we don't have the `latitude` and `longitude`; remove those variables and replace them with a `40,-75`
+
+    ```js
+    const http = require('http');
+    const url = 'http://api.weatherstack.com/current?access_key=my_access_key_number' + '& query =40,-75& units = f'; 
+    ```
+
+- Now use the `request` function of the `HTTP` module sending `URL` and a `callback` that have a `response` parameter
+
+    ```js
+    http.request(url, (response) => {});
+    ```
+
+     On the `request` callback we don't have access to the complete `request` body instead we can catch the individual `chunks` that comes throw because the `HTTP` data could be `stream` on multiple parts so we will need to listen to the individual `chunks` to come in and we need to listen when all `chunk` has arrived that means the request is done
+
+- Since we are using a `node` core module we will need to work something on a very low level so on the `callback` so add the following
+
+    ```js
+    http.request(url, (response) => {
+        response.on();
+    });
+    ```
+
+    The `on` is a function that allows us to `register` a handle for an `event`
+
+- To register a handle we need to specify the `event` then add the `callback` that will trigger when the `event` happens. In this case, we will listen to the `data` event
+
+    ```js
+    http.request(url, (response) => {
+        response.on('data', (chunk) => {});
+    });
+    ```
+
+    The `callback` will be trigger when new `data` comes in and we access this `data` via the first argument of the `callback` commonly call `chunk` that will be a part of the complete response depending on how the `server` is setup
+
+- The other thing that we need to do is know when the `response` finish and we will do this listening to the `end` event and as the `data` event will trigger a `callback`
+
+    ```js
+    http.request(url, (response) => {
+        response.on('data', (chunk) => {});
+
+        response.on('end', () => {});
+    });
+    ```
+
+- As mentioned before the `data` event can be trigger multiple or one time so we will need to store it in a place to concatenate the different `chunks` of `data` or use it when only have a single `chunk` to create a `let` variable call `data` that have an empty `string` as it a default value
+
+    ```js
+    http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {});
+
+        response.on('end', () => {});
+    });
+    ```
+
+- Now on the `data` handler `console.log` the `chunk`
+
+    ```js
+    http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            console.log(chunk)
+        });
+
+        response.on('end', () => {});
+    });
+    ```
+
+- On your terminal; go to the `playground` directory and run the `6-raw-http.js` file
+- You will see that the program doesn't finish. This is because we to complete the `request`
+- Get back to the `6-raw-http.js` file
+- We need the value of the actual request so create a constant call `request` that its value will be the return value of the `http.request` function
+
+    ```js
+    const request = http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            console.log(chunk)
+        });
+
+        response.on('end', () => {});
+    });
+    ```
+
+- Bellow of the `request` definition call the `end` function
+
+    ```js
+    const request = http.request(url, (response) => {...});
+
+    request.end();
+    ```
+
+- Now get to the terminal and run the `6-raw-http.js` file
+- You will see that multiple `chunks` of `data` are print on the terminal and all of them are `buffers`
+- Get back to the `6-raw-http.js` on your editor
+- We will need to store each `chunk` on the `data` variable and turn every `chunk buffer` into a `string`
+
+    ```js
+    const request = http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            data = data + chunk.toString();
+        });
+
+        response.on('end', () => {});
+    });
+
+    request.end();
+    ```
+
+    Now we have the complete `body` of the `response` on the `data` variable
+
+- Now we can access the `response` on the `end` handler. So print the `data` variable
+
+    ```js
+    const request = http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            data = data + chunk.toString();
+        });
+
+        response.on('end', () => {
+            console.log(data);
+        });
+    });
+
+    request.end();
+    ```
+
+- Get back to your terminal and run the `6-raw-http.js` file
+- You will see a large `string` print on the terminal
+- Get back to the `6-raw-http.js` on your editor
+- Now we will need to turn into a `json` data that we actually can use so on the `end` handle create a constant call `body` that its value will be the `JSON.parse` of `data` and print the result
+
+    ```js
+    const request = http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            data = data + chunk.toString();
+        });
+
+        response.on('end', () => {
+            const body = JSON.parse(data);
+            console.log(body);
+        });
+    });
+
+    request.end();
+    ```
+
+- Get back to your terminal and run the `6-raw-http.js` file
+- You will see the actual object that you can pull values from
+- We still need to handle the errors so get back to the `6-raw-http.js` file on your editor
+- Bellow of the `request` definition create a new listener for the event `error` and print the result
+
+    ```js
+    const request = http.request(url, (response) => {
+        let data = '';
+        response.on('data', (chunk) => {
+            data = data + chunk.toString();
+        });
+
+        response.on('end', () => {
+            const body = JSON.parse(data);
+            console.log(body);
+        });
+    });
+
+    request.on('error', (error) => {
+        console.log('An error', error);
+    });
+
+    request.end();
+    ```
+- Now produce an `error` like turn off your wi-fi
+- Get back to your terminal and run the `6-raw-http.js` file
+- You should see an `error` object print
+
+You may ask yourself; why does `node` make these `core` modules easier to use? The reason is that the `node core` modules are supposed to provide this low-level implementation and `node` comes bundled with `npm` because you are suppose to use these modules to build your application.
