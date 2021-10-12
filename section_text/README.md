@@ -3429,3 +3429,111 @@ You may ask yourself; why does `node` make these `core` modules easier to use? T
 ## Section 5: Web Servers(Weather App)
 
 At this moment all the applications that we created are only accessible via the command line and that is not realistic for the common users it will be much better if the user types an `URL` on the browser to interact with our application. In this section we will see the `express` module that makes it extremely easy to create `web servers` with `node` and these `servers` will allow us to `serve` all the `assets` of our application(`html`, `css` and `js`) so we can set some features for user interactions also we will able to `serve` some `JSON` data that will allow us to get the `location` from the user; get the `forecast` then send the `forecast` back to the browser to render on the screen.
+
+### Hello express!
+
+In this section you will run your first `node.js` base `server`; this will give the user a new way to interact with your application because they won't need to interact with the terminal instead they will use the browser. With a `node server`, we can serve what our application needs like the `assets` will need to load; like the `HTML` documents, `css` files to style the page; client-side `js` or some images; or we can take the other approach that is to serve up an `HTTP JSON` based API similar to the `mapbox` or the `weatherstack` API that we exchange `JSON` data back and forward with the `server`. We are going to begin serving the `asset` that the browser needs.
+
+The tool that we are going to use to create the `server` is one of the originals `npm` package call [express](http://expressjs.com/) that will help us to do easily a web `server` that functions as a `backend` of our applications.
+
+Let's begin to create our first `server`!!!!
+
+- On your editor; go to the root of the project and create a new directory call `web-server`
+- In your terminal; go to this newly created directory
+- Initialize the `package.json` using: `npm init -y`
+- Now install `express` using: `npm install express`
+- Go back to your editor and create a new folder call `src` on the `web-server` directory. As you see here we are going to begin to be more organized to we will have a new directory where we are going to put the files instead of put everything of the root directory to scale the application a little better as the application grows
+- Inside of the newly created directory; create a new file call `app.js`. This file will be the starting point of the application
+- On the `app.js` file; we will need to load the `express` function so create a constant call `express` and `require` the package
+
+    `const express = require('express');`
+
+    The `express` library exposes a single function and that is what we call to create a new `express` application
+
+- Bellow the `require`; create a new constant call `app` that its value will be the returning object of the `express` function
+
+    `const app = express();`
+
+    The `express` function doesn't take any arguments instead we configure the `server` using the various methods provided on the `app` object itself
+
+Now we need to tell what the `server` needs to do. Imagine that we have these `URLs`: 
+- `app.com` 
+- `app.com/help`
+- `app.com/about`
+
+Here we have a single domain that will be run on the `express server` with multiple `routes` in this case: '', '/help' and '/about'. We just need to set the `server` to set a `response` when it reaches one of the `routes` using one of the `apps` methods in this case `get`. The `get` method will help users to configure what the `server` will do when someone wants to get the resource of a specific `url`; like `html` or `JSON`.
+
+- Bellow the `app` definition; call the `get` method
+
+    `app.get();`
+
+- The `get` method receives 2 arguments; the first one is the `route` or partial `URL` and the second is a `callback` that will run when the user reaches that `route`(In this case the `route` will be an empty `string` because we are trying to configure `app.com`)
+
+    `app.get('', () => {});`
+
+- The `callback` receive 2 parameters: `request`(Normally know as `req`) and `response`(Normally know as `res`)
+
+    `app.get('', (req, res) => {});`
+
+    - `req`: Object that has information of the incoming `request` to the `server`
+    - `res`: Object that contains a lot of methods that will allow us to customize what we send back to the requester
+
+- Now we will send a text message that will display on the browser
+
+    ```js
+    app.get('', (req, res) => {
+        res.send('Hello express!!');
+    });
+    ```
+
+    The `send` method will allow us to `send` something back to the requester. If the user is using something like the `request` or `Axios` library this text message is what it will get back or if they are using a browser this text message is what will be displayed on the window
+
+- We will need to run our `server` and to do this we need to use the `listen` method(Bellow the `get` method):
+
+    `app.listen();`
+
+    The `listen` method will be using a single time on the application and this will start the `server` and listen on a specific `port`
+
+- The `listen` method will receive 2 arguments: the `port` that the `server` will listen to and a `callback` function that will run when the `server` starts. We will use the `port` 3000 and put a message on the `callback` function
+
+    ```js
+    app.listen(3000, () => {
+        console.log('Server is up on port 3000.'); 
+    });
+    ```
+
+    The `port` 3000 is a common developer `port` and this is not a `port` that we use on real sites later we will see how to handle this for production sites. We put the message on the `callback` to let know the user that the `server` is running on the terminal
+
+- On your terminal; go to the `web-server` directory
+- Run the `app.js` script using: `node src/app.js`
+- You should see immediately the message that we set on the `listen` method and will stay on that message because the `server` is running
+- Get to your browser and go to `http://localhost:3000/`(This `URL` will only be accessible locally on your machine)
+- You will see the `Hello express!!` message on the screen
+- Let's do the `help` browser. Get back to the `src/app.js` file on the `web-server` directory
+- Bellow the first `get` method that you define; add another one for the `/help` route with a message that represents the `help` page
+
+    ```js
+    app.get('/help', (req, res) => {
+        res.send('Help page');
+    });
+    ```
+
+- Go back to your terminal; we will need to restart the `server` for the changes to take effect so stop the `server` and restart it again(If you install `nodemon` use it and you will not need to restart the `server` every time you update something on the `server`)
+- Get back to your browser and refresh the page
+- Go to the `/help`: `http://localhost:3000/help`
+- You should see the `help` page message
+- Now if you go to a `route` that doesn't exist it will give you an `error` because we just set 2 `routes`(Late we will set a `404 route` for this kind of page)
+- Get back to the `app.js` file on your editor and add `weather` and `about` routes
+
+    ```js
+    app.get('/about', (req, res) => {
+        res.send('About page');
+    });
+
+    app.get('/weather', (req, res) => {
+        res.send('Weather page');
+    });
+    ```
+
+- Restart your `server` if you are not using `nodemon`
+- Test the new `routes` on your browser and you should see the correct messages for each page
