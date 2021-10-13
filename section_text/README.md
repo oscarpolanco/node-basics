@@ -3537,3 +3537,77 @@ Here we have a single domain that will be run on the `express server` with multi
 
 - Restart your `server` if you are not using `nodemon`
 - Test the new `routes` on your browser and you should see the correct messages for each page
+
+### Serving up HTML and JSON
+
+At this moment we set our `express server` and `routes` and return a text message for each `route` but on a real application, we will return `HTML` design to render on the browser or `JSON` design to be consumed by an application. To do this we will need another functionality of the `send` function.
+
+- On your editor; go to the `app.js` file on the `web-server/src` directory
+- Update the first `route` like this:
+
+    ```js
+    app.get('', (req, res) => {
+        res.send('<h1>Weather</h1>');
+    });
+    ```
+
+    If we send valid `HTML` tags with the message; where `express` is going to detect that and send the `response` correctly
+
+- Next, we can send `JSON`; on the `help route` update the value of the `send` function like this:
+
+    ```js
+    app.get('/help', (req, res) => {
+        res.send({
+            name: 'Test',
+            age: 27
+        });
+    });
+    ```
+
+    If we send an object to the `send` function `express` will detect this; `stringify` de object and send a `JSON response` correctly
+
+- On your terminal; get to the `weather-app` directory
+- Run the `app.js` file: `nodemon src/app.js`
+- On your browser; go to `http://localhost:3000/`
+- You should see the `weather` message on the page(Use your browser inspector to see that it also is on an `h1` tag)
+- Go to the `help` page and you should see the `JSON` on the page
+- We can also send an `array` of objects to the `send` function that will send a `JSON response`
+
+    ```js
+    app.get('/help', (req, res) => {
+        res.send([{
+            name: 'Test',
+            age: 27
+        }, {
+            name: 'Testing',
+            age: 28
+        }]);
+    });
+    ```
+
+- Go to the `help` page and refresh the page
+- You should see both objects on the `JSON`
+- Now we will need to update the `about route` sending an `h1` tag with a message
+
+    ```js
+    app.get('/about', (req, res) => {
+        res.send('<h1>About page</h1>');
+    });
+    ```
+
+- Then change the `weather route` to return a `JSON` with 2 properties: `forecast` and `location`
+
+    ```js
+    app.get('/weather', (req, res) => {
+        res.send({
+            forecast: 'Is always sun in Philadelphia',
+            location: 'Philadelphia'
+        });
+    });
+    ```
+
+- Refresh the page on your browser
+- Go to the `about` page
+- You should see the message that you put on the `about route`
+- Go to the `weather` page
+- You should see the object that you send on the `weather route`
