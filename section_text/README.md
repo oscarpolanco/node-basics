@@ -3611,3 +3611,168 @@ At this moment we set our `express server` and `routes` and return a text messag
 - You should see the message that you put on the `about route`
 - Go to the `weather` page
 - You should see the object that you send on the `weather route`
+
+### Serving up static assets
+
+At this moment we are sending a `string` with the `HTML` that we need on `app.js` file for some of the pages but typing `HTML` on a `Js` file in a `string` will go out of hand quickly as we add more content that is why we will write the `HTML` on separate files and made `express` serve them up(Not only `HTML` files also `Js`, `images` and other statics assets that we need on the page). Let's begin with the process.
+
+- On your editor; go to the `web-server` directory
+- Inside of this directory create a new folder call `public`(This directory is where all the assets that we are going to serve up will live)
+- On this newly created directory; create a new file call `index.html`. The `index.html` is a special file that the name means that will be serving up by default and the page that will be shown on the root of our website
+- Let's create a basic `HTML` structure for this file. At the top of the file add a `DOCTYPE` tag that will specify the type of file; in this case `HTML`
+
+    `<!DOCTYPE html>`
+
+- Then add the `HTML` tag to create the document itself
+
+    ```html
+    <!DOCTYPE html>
+    <html></html>
+    ```
+
+- Inside of the `HTML` tag; add a `head` tag(we will use the `head` tag to configure some things later like setting the `stylesheet` of this document)
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head></head>
+    </html>
+    ```
+
+- Bellow the `head` tag but still inside of the `HTML` tag add a `body` tag(here we are going to put everything that is going to be shown on the screen)
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head></head>
+        <body></body>
+    </html>
+    ```
+
+- For the moment we are going to display one `h1` title with a message that helps us to identify that the content is served from this file
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head></head>
+        <body>
+            <h1>From a static file</h1>
+        </body>
+    </html>
+    ```
+
+Now our goal is to teach up `express` how to serve the content of the `public` directory. To do this we need an important piece of information that is the `path` to the `public` folder and can't be a `relative path` needs to be an `absolute path` from the root of your machine.
+
+`Node` provide us with 2 variables that will help us to achieve our goal that are:
+- `__dirname`
+- `__filename`
+
+Let's see what these variables provide to us by default:
+
+- On your editor; go to the `app.js` file on the `web-server/src` directory
+- Print the following variables below the `express require` definition
+
+    ```js
+    console.log(__direname);
+    console.log(__filename);
+    ```
+
+- On your terminal; go to the `web-server` directory
+- Run the `app.js` file with `nodemon src/app.js`
+- You will see 2 paths on your terminal:
+    - The first one from `__direname` is the path from the root of the `hard drive` to the directory that the current `script` live
+    - The second one from `__filename` is the path from the root of the `hard drive` to the file itself
+
+It's important to know that both of these values are provided by the wrapper function that we see before in the `debug` section. We will use the `__direname` to get the actual path that we need with some `string` manipulation using another `node` core module call [path](https://nodejs.org/dist/latest-v16.x/docs/api/path.html). The `path` core module will provide us with a lot of functions but we are going to use the `join` function. Let's get to it!!!
+
+- On your editor; in the `app.js` file on the `web-server/src` directory `require` the `path` module at the top(We put the `node` core modules at the top as a convention)
+
+    ```js
+    const path = require('path');
+    const express = require('express');
+    ```
+
+- Remove the `__filename` console
+- Then print the result of using the `join` function of `path` below the `__direname` console
+
+    ```js
+    console.log(__direname);
+    console.log(path.join());
+    ```
+
+- You need to provide some arguments to the `join` function; for now send the `__direname` variable
+
+    ```js
+    console.log(__direname);
+    console.log(path.join(__direname));
+    ```
+
+- Save the file
+- Check your terminal and you will see the same `path` for the `__direname` console and the `path` one since we are providing the same `path` as the `__direname` on the parameter of the `join` function
+- Get back to the `app.js` file
+- Add a second parameter to the `join` function; in this case `..`(The double dots mean that you will go up a folder)
+
+    ```js
+    console.log(__direname);
+    console.log(path.join(__direname, '..'));
+    ```
+
+- Save the file and check the terminal
+- You should see that `__direname` points to `src` and the `join` function point to the `web-server` directory
+- Get back to the `app.js` file
+- On the `join` second parameter complete the `path` to the `public` directory
+
+    ```js
+    console.log(__direname);
+    console.log(path.join(__direname, '../public'));
+    ```
+
+- Save the file and check your terminal
+- You will see that the `join path` will be a point to the `public` directory
+
+Now we will need to configure `express` to serve the `public` directory
+
+- On the `app.js` directory; below the consoles create a new constant call `publicDirectoryPath` that its value will be the result of the `join` function that you use before
+
+    `const publicDirectoryPath = path.join(__dirname, '../public');`
+
+- Remove the consoles
+- Then we will need to call the `use` function of the `app` object
+
+    ```js
+    const publicDirectoryPath = path.join(__dirname, '../public');
+    app.use();
+    ```
+
+    The `use` function is something that we are going to see in more detail on a future section for the moment just think of it as a way to customize your server in this case to serve the `public` directory
+
+- As a parameter of the `use` function we will need to call an `express` function call `static`
+
+    ```js
+    const publicDirectoryPath = path.join(__dirname, '../public');
+    app.use(express.static());
+    ```
+
+    The `static` function specify the root which to serve the `statics` assets
+
+- Now send the `publicDirectoryPath` variable as a parameter of the `static` function
+
+    ```js
+    const publicDirectoryPath = path.join(__dirname, '../public');
+    app.use(express.static(publicDirectoryPath));
+    ```
+
+- Save the file
+- On your browser; go to http://localhost:3000/ or refresh the page if you already are in it
+- You should see the `index.html` message
+- You can also visit http://localhost:3000/index.html
+- You should see the same result. Since `index.html` has a special meaning for the web servers it will also show as the root page as you see before
+- Get back to the `app.js`
+- Remove the empty `string route handler` because it will not work anymore. This is because `express` will go throw the application until it finds a match for a `route` and in the case of the `static` call it will find a match on `index.html` that is the root `route` so the empty `string route` will never going to run
+- Now lets create 2 more `HTML` files: `help.html` and `about.html` in the `public` directory(Same content of the `index` page just change the `h1` content)
+- Go to the `app.js` file and remove the `help` and `about` handlers
+- Save the file
+- On your browser; refresh the page and go to http://localhost:3000/help.html
+- You should see the content of the `help.html` file
+- Go to http://localhost:3000/about.html
+- You should see the content of the `about.html` file
