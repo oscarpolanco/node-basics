@@ -3776,3 +3776,176 @@ Now we will need to configure `express` to serve the `public` directory
 - You should see the content of the `help.html` file
 - Go to http://localhost:3000/about.html
 - You should see the content of the `about.html` file
+
+### Serving up CSS, JS, Images and more
+
+We have set up the `express` server to serve up our `public` directory but we only serve the `HTML` files without any other `assets` so on this section we will serve some different `assets`; like `css`, `js` and `images`; before continue setting our `express` server.
+
+- let's add some `CSS`; on your editor go to the `web-server/public` directory
+- Create a new folder call `css`
+- Inside of the newly created folder; create a new file call `style.css`
+- On the `style.css` we are going to add our first rule in this case to change the only thing that we have on the pages that is the `h1` title
+
+    ```css
+    h1 {
+        color: grey;
+    }
+    ```
+
+    Here we add the element that we need to add the rule in this case the `h1` tag then we add the `color` property that will update the `h1` color to its value in this case `grey`. Create and save this file is not enough to actually see the result on the page; we need to do another step on our `HTML` files
+
+- Go to the `index.html` file
+- Inside of the `head` tag; add a `link` tag(The `link` tag is a self-closing tag; no need to put a closing tag like the others)
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- Now we need to set some attributes on the `link` tag so it can be related to our `stylesheet`. Add the following on the `link` tag
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="">
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+    - `rel="stylesheet"`: Is short for relationship and define what exactly are we linking it; in this case a `stylesheet`
+    - `href=""`: The path of the file that we are trying to load. Is important to know that the path is `relative` to our current location and the `absolute` start is the `public` directory
+
+- On the `href` property add the following:
+
+    `<link rel="stylesheet" href="./css/styles.css">`
+
+    The dot means that we stay on our current directory then we navigate to the `styles.css` file
+
+- On your terminal; go to the `web-server` directory and run the `app.js` file: `nodemon src/app.js`
+- On your browser go to `http://localhost:3000/`
+- You should see that the title of the page is `grey`. This `style` is available using the `relative` path but we can use the `absolute` path to do the same
+- Get back to the `index.html` file
+- Update the `href` of the `link` tag like the following:
+
+    `<link rel="stylesheet" href="/css/styles.css">`
+
+    The `absolute` path starts with `/` and typically when you start a path with a `/` on your machine it means that it will bring you to the root of the hard drive but this is access by the browser and it doesn't have access to your hard drive; otherwise anyone can put files on your website that you don't want in your page so the `/` will be `relative` to the webserver root that we set up is the `public` folder. Finally, we navigate to the `styles` path normally and that is the path that we are going to use
+
+- Save the file
+- Go to your browser and refresh the page
+- You should see the `style` still is on the title
+- Go back to the `index.html` tag and copy it
+- Go to the `about.html` and `help.html` files and paste the `link` tag inside of the `head` tag
+- Go to your browser and refresh the page
+- Navigate to the `about` and `help` page and you should see the correct `style` on the `h1` title
+
+Now let's add some `client-side js`
+
+- On the `public` directory; add a new folder call `js`
+- Inside of the newly created folder; create a new file call `app.js`(Later we are going to add more functionality to this files)
+- On the `app.js` file print a message
+
+    `console.log('Client-side javascript file is loaded!');`
+
+- Get to the `index.html` file
+- We need to add the `app.js` file using a `script` tag. On the `head` tag add the following:
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+            <script></script>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- Now as we did with the `link` tag; we need to add the path of the `js` that we are going to need to load with the page and we do that with the `src` property of the `script` tag
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+            <script src="/js/app.js"></script>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- Save the file
+- Get to your browser and refresh the page
+- Open the developer tools and get to the `console` tap
+- You should see the message that we add on the `app.js` file
+
+Finally, we will add an `image` on the page; in this case, it will be a profile `image` on the `about` page so get an image that you like on your profile.
+
+- On the `public` directory; add a new folder call `img`
+- Inside of this newly created folder add the `image` that you will use on your page
+- Now get to the `about.html` page
+- Below the `h1` tag add an `img` tag(Is a self-closing tag so no need to close it as the other tags)
+
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            <h1>About</h1>
+            <img />
+        </body>
+    </html>
+    ```
+
+- As the `script` tag we will need to add the `src` property with the path of the `image`(Remember you need to put the exact name and extension of the `image` in order to work)
+
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            <h1>About</h1>
+            <img src="/img/your_image_name.your_image_extension" />
+        </body>
+    </html>
+    ```
+
+- Save the file
+- On your browser refresh the page
+- Go to the `about` page
+- You should see the `image` on the page
+- The `image` has a size that may be too big or small so we will control this with the `stylesheet`. So get to the `style.css` file
+- Below the `h1` rule add the following
+
+    ```css
+    h1 {...}
+
+    img {}
+    ```
+
+    This will target all the `img` tags but we only have one on the `about` page
+
+- Now we need to have a `250` pixel wide so we will use the `with` property for this
+
+    ```css
+    h1 {...}
+
+    img {
+        width: 250px;
+    }
+    ```
+
+- Save the file
+- On your browser refresh the page
+- In the `about` page you should see that the `image` change it side
