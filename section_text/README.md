@@ -3949,3 +3949,213 @@ Finally, we will add an `image` on the page; in this case, it will be a profile 
 - Save the file
 - On your browser refresh the page
 - In the `about` page you should see that the `image` change it side
+
+### Dynamic pages with templating
+
+At this moment we set up `express` to serve our `statics` files of the `public` directory; the `js`, `image`, `css` and `HTML` files but as its name implies their content does not change when they serve. There are times that we need `static` pages but this not always is the case. In this section, we are going to set up a `template engine` using `express` to `render dynamic` pages and we will be using [handlebars](https://handlebarsjs.com/). `Handlebars` will allow us to create `dynamic` documents and easily create code that we can reuse between pages; like a `header` or `footer` that we can share with all pages instead of copy the same code on every page.
+
+There are 2 `npm` modules:
+- [handlebars](https://www.npmjs.com/package/handlebars): Is a low level library that implement `handlebars` in `js`.
+- [hbs](https://www.npmjs.com/package/hbs): Module that uses `handlebars` behind the scenes and helps to integrate it with `express`
+
+The `handlebars` module is not going to be enough because we are going to use `handlebars` with `express` that is why we will use the `hbs` module that we can think of a plugin for `express` that implement `handlebars`. Let's begin with the process
+
+- On your terminal; go to the `web-server` directory
+- Install the `hbs` module using: `npm install hbs`
+- Now on your editor; go to the `app.js` file
+- We will need to tell `express` which `template engine` we will use and for this, we use the `set` function of the `app` object. Below the `publicDirectoryPath` add the following:
+
+    `app.set();`
+
+- Then we will need to add the parameters for the `set` function that are: the setting name and the value
+
+    `app.set('view engine', 'hbs');`
+
+    The setting name will be `view engine`(Needs to be written like this with the spacing and letters in order to work) that will specify `express` that we are setting a `view engine` and the second parameter is the name of the module that we installed that is `hbs`. With this `express` will know that we are using `hbs` as our `template engine`
+
+- When we are working with `express` it will expect that all our `views` in this case the `handlebars views` live in a specific folder on the root of the project call `views`. So on the `web-server` directory create a new folder call `views`
+- Now in our case, we need to specify that we are targeting the `views` directory correctly and not the root of the repository so we will need to `set` the path of the `views` directory as we did with the `public` folder for the `statics`. Go to the `app.js` file
+- Before setting the `view engine` add the following:
+
+    ```js
+    app.set('views', path.join(__dirname, '../views'));
+    app.set('view engine', 'hbs');
+    app.use(express.static(publicDirectoryPath));
+    ```
+
+    This will tell `express` that the `views directory` that we are going to be using is the `views` folder inside of the `web-server` directory
+
+- Now inside of the `views` directory; create a new file call `index.hbs`(`hbs` is the `handlebars` file extension)
+- Then go to the `index.html` in the `public` directory and copy its content
+- Paste the `index.html` content on the `index.hbs` file
+- On the `index.hbs` update the `h1` to `Weather` to see the difference with the `index.html` file
+- Since we have the `index.hbs` we don't need the `index.html` file anymore. Delete the `index.html` file on the `public` directory
+- To actually serve the `index.hbs` file we need to create a `route` so go to the `app.js` file on the `src` directory
+- Below of the `express.static` config; add a `route` for the default route
+
+    `app.get('', (req, res) => {}):`
+
+- To this moment every time we set a `route` we use the `send` function for the `response` but now we will need to use the `render` function that will allow us to `render` one of our `views`. On the newly created `route` add the following
+
+    ```js
+    app.get('', (req, res) => {
+        res.render('index');
+    }):
+    ```
+
+    It receives the exact name of the `view` that is on the `views` directory without the extension
+
+- On your terminal; go to the `web-server`
+- Run the `app.js` file using: `nodemon src/app.js`
+- On your browser; go to http://localhost:3000/
+- You should see the message that you set on the `index.hbs` file
+
+By calling `res.render`; `express` go and get the `view` then convert it to `HTML` and make sure that the `HTML` gets back to the requester.
+
+At this point, we still have a `static` document so let's pass value to it.
+
+- The first thing we are going to do is update the `index.hbs` value sending it from `node` instead of having a fixed value. So get to the `app.js` file on the `src` directory
+- We will need to pass a second parameter to the `render` function and this second parameter will be an object(This object contains all values that you need that the template have access to)
+
+    ```js
+    app.get('', (req, res) => {
+        res.render('index', {});
+    }):
+    ```
+
+- On the object add a `title` property with the `Weather app` value to see the difference that the actual page
+
+    ```js
+    app.get('', (req, res) => {
+        res.render('index', {
+            title: 'Weather App',
+        });
+    }):
+    ```
+
+- Now get to the `index.hbs` file on the `views` directory
+- Remove the content of the `h1` and add the following
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>... </head>
+        <body>
+            <h1>{{title}}</h1>
+        </body>
+    </html>
+    ```
+
+    If you need to inject a value on a `handlebars` file; you will need to put the name of the actual value; in this case `title`; and put `curly brackets around it
+
+- Save all the files
+- Get to the browser and refresh the page
+- You should see the `title` that you specify on the `render` function
+- Go to the `app.js` file and let's create a second parameter call `name`
+
+    ```js
+    app.get('', (req, res) => {
+        res.render('index', {
+            title: 'Weather App',
+            name: 'Testing'
+        });
+    }):
+    ```
+
+- Now get back to the `index.hbs` file
+- Below the `h1` tag; add a `p` tag with the following content
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>... </head>
+        <body>
+            <h1>{{title}}</h1>
+            <p>Created by {{name}}</p>
+        </body>
+    </html>
+    ```
+
+- Save all the files
+- Get to your browser and refresh the page
+- You should see the new content on the page
+- Now let do the same with the `about` page. Go to the `about.html` and copy its content
+- Then create a new file call `about.hbs` and paste the content of the `about.html` file
+- Delete the `about.html` from the `public` directory
+- In the `about.hbs` remove the content of the `h1` and add the `title` property
+
+    ```hbs
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>...</head>
+        <body>
+            <h1>{{title}}</h1>
+            <img src="/img/robot.png" />
+        </body>
+    </html>
+    ```
+
+- Below the `img` tag add a `p` tag with the following content
+
+    ```hbs
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>...</head>
+        <body>
+            <h1>{{title}}</h1>
+            <img src="/img/robot.png" />
+            <p>Created by {{name}}</p>
+        </body>
+    </html>
+    ```
+
+- Get to the `app.js` in the `src` directory
+- Below the default route add a new one for the `about` page injecting the following properties
+
+    ```js
+    app.get('/about', (req, res) => {
+        res.render('about', {
+            title: 'About Me',
+            name: 'Testing'
+        });
+    });
+    ```
+
+- Save all the files
+- Go to your browser and refresh the page
+- Go to http://localhost:3000/about
+- You should see the correct content on the page
+- Now go to the `help.html` file on the `public` directory and copy its content
+- On the `views` directory create a new file call `help.hbs`
+- Below the `h1` tag add a `p` tag with the following content
+
+    ```hbs
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            <h1>Help</h1>
+            <p>{{message}}</p>
+        </body>
+    </html>
+    ```
+
+- Go to the `app.js` file in the `src` directory
+- Below the `about` route; create a route for the `help` page sending the `message` value that we are going to inject
+
+    ```js
+    app.get('/help', (req, res) => {
+        res.render('help', {
+            message: 'This is some helpful message'
+        });
+    });
+    ```
+
+- Save all the files
+- Go to your browser and refresh the page
+- Go to http://localhost:3000/help
+- You should see the correct content of the page
+
+
