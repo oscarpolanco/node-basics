@@ -4184,3 +4184,122 @@ We already see how to set that `express` know the path of the `views` directory 
 - Save the file
 - Get to your browser and refresh the page
 - You should see that everything begin to work normally
+
+### Advance templating
+
+At this moment we are going to begin to work with `partials`. As it name subjects the `partials` are little `templates` that are part of a bigger web page in other words little `templates` that we can reuse on pages across the site like the `header` or `footer` that are things that you want exactly the same on every page. Now let's begin with the process of setup and using `partials`
+
+- On your editor; go to the `app.js` file in the `web-server/src` directory
+- The first thing we need to do is load the `hbs` module so `require` it below the `express` statement
+
+    `const hbs = require('hbs');`
+
+- Now we will need to organize a little bit our `template` directory so we have the files of the `views` separated from the `partials` so create 2 folders on the `templates` directory; one call `views` and the other call `partials`
+- Then move the `index`, `about` and `help` files to the `views` directory
+- Get back to the `app.js` file on the `src` directory
+- Update the `viewsPath` value-adding `/views` at the end of the path that we are joining with the `__dirname`
+
+    `const viewsPath = path.join(__dirname, '../templates/views');`
+
+- Save the file
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon src/app.js`
+- On your browser; go to http://localhost:3000/
+- You should see that the page works as expected
+- Get back to the `app.js` file
+- We need to create another variable that has the `partials` path so below the `viewsPath` variable; create a new constant call `partialsPath` that its value will be the result of the `join` function using the `__direname` variable and the path of the `views` directory
+
+    `const partialsPath = path.join(__dirname, '../templates/partials');`
+
+- Now we need to `register` the `partials` that we need and we do this with the `register` function of `hbs` that receive the `partials` path that we defined before so add the following below the setting of the `views` path
+
+    `hbs.registerPartials(partialsPath);`
+
+- Go to the `partials` directory on the `templates` folder and create a new file call `header.hbs`(This will be the `header` that we show on all pages)
+- Inside the newly create file add the following `h1`
+
+    `<h1>Static Header.hbs Text</h1>`
+
+- Go to the `help.hbs` file
+- Before the `h1` on the `body` tag; add the following
+
+    ```hbs
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            {{>header}}
+            <h1>Help</h1>
+            <p>{{message}}</p>
+        </body>
+    </html>
+    ```
+
+    To add a `partial` on a `template` like the properties we use the `curly brackets` and in the content, we put `>` before the name of the file
+
+- Save the files
+- Go to your browser and refresh the page
+- Go to the `help` page
+- You should see an `error`. This is because `nodemon` at the moment just restart the `app` when a file that has a `js` extension change
+- Go to your terminal and stop the `nodemon` process
+- Now restart the server using the following:
+
+    `nodemon src/app.js -e js,hbs`
+
+    The `-e` flag is short for `extension` and this allows us to define a common set of `extensions` that `nodemon` should watch in this case `js` and `hbs`
+
+- Get back to your browser and refresh the page
+- On each page(`about`, `index` and `help`) remove the `h1` tag
+- Then on the `index` and `about` files add the `header partial` as the first element inside of the `body` tag
+- Go to the `app.js` file
+- On the `help` route add the `title` and `name` properties
+
+    ```js
+    app.get('/help', (req, res) => {
+        res.render('help', {
+            message: 'This is some helpful message',
+            title: 'Help',
+            name: 'Testing'
+        });
+    });
+    ```
+- Get to the `header partial` file
+- Remove the content of the `h1` tag and use the `title` property as we used before
+
+    ```hbs
+    <h1>{{title}}</h1>
+    ```
+
+- Save all the files
+- Get to the browser and refresh the page
+- You should see the correct title on the page
+- Get back to the `header partial` file
+- We now are going to add a `navigation` bar with links that will help us to navigate between the pages. Add a `div` element with the following content below the `h1` tag
+
+    ```hbs
+    <h1>{{title}}</h1>
+
+    <div>
+        <a href="/">Weather</a>
+        <a href="/about">About</a>
+        <a href="/help">Help</a>
+    </div>
+    ```
+
+- Save the page
+- Go to the browser and refresh the page
+- You should see a `navigation` bar and you can navigate between all the current pages
+- Now we will add a `footer` for all pages. On the `partials` directory; create a new file call `footer.hbs`
+- On this newly created file add a `p` tag and use the `name` property like the following:
+
+    ```hbs
+    <p>Created by {{name}}</p>
+    ```
+
+- Go to the `index` and `about` files and eliminate the `p` tag
+- Then on the `index`, `about` and `help` files use the `footer partial`
+- Save all the files
+- Go to your browser and refresh the page
+- Navigate on all pages and you should see that the `footer` is on all pages
