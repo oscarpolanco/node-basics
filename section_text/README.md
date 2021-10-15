@@ -3975,11 +3975,11 @@ The `handlebars` module is not going to be enough because we are going to use `h
 
 - When we are working with `express` it will expect that all our `views` in this case the `handlebars views` live in a specific folder on the root of the project call `views`. So on the `web-server` directory create a new folder call `views`
 - Now in our case, we need to specify that we are targeting the `views` directory correctly and not the root of the repository so we will need to `set` the path of the `views` directory as we did with the `public` folder for the `statics`. Go to the `app.js` file
-- Before setting the `view engine` add the following:
+- Bellow the setting of the `view engine` add the following:
 
     ```js
-    app.set('views', path.join(__dirname, '../views'));
     app.set('view engine', 'hbs');
+    app.set('views', path.join(__dirname, '../views'));
     app.use(express.static(publicDirectoryPath));
     ```
 
@@ -4158,4 +4158,29 @@ At this point, we still have a `static` document so let's pass value to it.
 - Go to http://localhost:3000/help
 - You should see the correct content of the page
 
+### Customizing the views directory
 
+We already see how to set that `express` know the path of the `views` directory but actually you can customize this some more and we will need it on the next section because we are going to work with `handlebars partials`. At this moment we mentioned that the `templates` need to be on the `views` directory and need to be on the root of the project but we can change these 2 things if we want it. Let's get on it!!!
+
+- Rename the `views` directory to `templates` on the `web-server` directory
+- On your terminal; go to the `web-server` directory
+- Run the `app.js` script using: `nodemon src/app.js`
+- In your browser; go to http://localhost:3000/
+- You should see an `error`. This `error` is because `express` is trying to look for the `views` directory and we change the name to `template`
+- On your editor; go to the `app.js` file in the `web-server/src` directory
+- Below the `publicDirectoryPath` variable; create a new variable call `viewsPath` that will have the following value:
+
+    ```js
+    const publicDirectoryPath = path.join(__dirname, '../public');
+    const viewsPath = path.join(__dirname, '../templates');
+    ```
+
+    Here we use the `__dirname` variable that has the `path` of the folder that the `app.js` live and `join` with the `templates` directory `paths`
+
+- Now update the `views` set up on the `use` function that we set before using the `viewsPath` variable
+
+    `app.set('views', viewsPath);`
+
+- Save the file
+- Get to your browser and refresh the page
+- You should see that everything begin to work normally
