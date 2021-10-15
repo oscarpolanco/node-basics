@@ -2,12 +2,6 @@ const path = require('path');
 const express = require('express');
 const hbs = require('hbs');
 
-// Goal: Create a partial for the footer
-//
-// 1. Setup the template for the footer partial "Created by some name"
-// 2. Render the partial at the bottom of all three pages
-// 3. Test your work by visiting all three pages
-
 const app = express();
 
 // Define paths for Express config
@@ -51,6 +45,31 @@ app.get('/weather', (req, res) => {
         location: 'Philadelphia'
     });
 });
+
+app.get('/help/*', (req, res) => {
+    res.render('404', {
+        title: '404',
+        name: 'Testing',
+        errorMessage: 'Help article not found'
+    });
+});
+
+app.get('*', (req, res) => {
+    res.render('404', {
+        title: '404',
+        name: 'Testing',
+        errorMessage: 'Page not found'
+    });
+});
+
+// Goal: Create and render 404 page with handlebars
+//
+// 1. Setup the template to render the header and footer
+// 2. Setup the template to render the error message in a paragraph
+// 3. Render the template for both 404 routes
+//      - Page not found
+//      - Help article not found
+// 4. Test your work. Visit /what and /help/units
 
 app.listen(3000, () => {
    console.log('Server is up on port 3000.'); 

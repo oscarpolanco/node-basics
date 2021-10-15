@@ -4303,3 +4303,167 @@ At this moment we are going to begin to work with `partials`. As it name subject
 - Save all the files
 - Go to your browser and refresh the page
 - Navigate on all pages and you should see that the `footer` is on all pages
+
+### 404 pages
+
+In this section, we will build a `404` page for the application to show when we are not quite sure what page to show when the user uses a `URL` that is not part of the current `route handlers`.
+
+- On your editor; go to the `app.js` file on the `web-server/src` directory
+- The first thing we need to do in order to set a `404` page adds a new `route handler`. After the last `route handler` that we set add a new one(Need to be the last `route handler` in a bit we explain why)
+
+    `app.get('', (req, res) => {});`
+
+- Now we need to set the `string` that will match. Previously we put the actual `URL` that will match but this will bit different because it will be everything else that is not on the other `route handlers` and for this `express` give a `wild card` character that means; match everything that is not matched so far. Add the following:
+
+    `app.get('*', (req, res) => {});`
+
+- For the moment we will send a message with the `send` function
+
+    ```js
+    app.get('*', (req, res) => {
+        app.send('My 404 page');
+    });
+    ```
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser go to http://localhost:3000/what
+- You should see the message that you send on the `wild card route handler`
+
+Is important to know why this is working without interfering with the `route handlers` that we set before? This is because we put the `wild card` last. When `express` receive an incoming request it tries to look for a match checking how you set the application in order. For example: 
+
+Imagine that a user goes to http://localhost:3000/help
+
+- The first thing `express` will see is there is a match on the `public` folder; because in this example I set this line first:
+
+    `app.use(express.static(publicDirectoryPath));`
+
+- Then will look for my first `route handler` that is the `root handler`
+
+    `app.get('', (req, res) => {...});`
+
+- Since it's not the `root` will check my next `route handler` that is the `about` page
+
+    `app.get('/about', (req, res) => {...});`
+
+- Is not the `about` page neither so will go to the next one that is the `help handler` and finally will find a match and `render` the `help` template
+
+Imaging the same as before but the user go to http://localhost:3000/what
+
+- The first thing `express` will see is there is a match on the `public` folder; because in this example I set this line first:
+
+    `app.use(express.static(publicDirectoryPath));`
+
+- Then will look for my first `route handler` that is the `root handler`
+
+    `app.get('', (req, res) => {...});`
+
+- Since it's not the `root` will check my next `route handler` that is the `about` page
+
+    `app.get('/about', (req, res) => {...});`
+
+- Is not the `about` page neither so will go to the next one that is the `help handler` and will not found a match so it will continue
+
+    `app.get('/help', (req, res) => {...});`
+
+- Look my next `handler` that is the `weather handler` and will not find a match so move to the next one
+
+    `app.get('/weather', (req, res) => {...});`
+
+- Finally, get to the `wild card handler` that will match anything that gets to it so will send the message that we set
+
+The `wild card` could be not alone; you can combine it with some other `URL`. For example, imaging that we have a set of articles for the `help` page with a starting point is our current `help` page so we have:
+
+- `/help`(current page)
+- `/help/data`(example if a `data` article exists)
+- `/help/test`(example that a `test` article doesn't exists)
+
+For the moment we are going to add a `404` for everything that is an article of `help` because we don't have any `help` article but we are going to put a more specific message for the `help` articles.
+
+- On your editor; go to the `app.js` file
+- Before the `wild card` route handler add a new `route handler`
+
+    `app.get('', (req, res) => {});`
+
+- On the `string` to match we will use the `/help URL` combine it with the `wild card` character
+
+    `app.get('/help/*', (req, res) => {});`
+
+    This will match with everything that is not matched so far that begin with `/help/`
+
+- For the moment we will use the `send` function to show a message
+
+    ```js
+    app.get('/help/*', (req, res) => {
+        app.send('Help article is not found');
+    });
+    ```
+
+- Save the file
+- On your browser go to http://localhost:3000/help/test
+- You should see the message that you send on the `help wild card handler`
+
+Now we will add a `404` page to show on the `handlers` that are for the `not found pages`
+
+- On the `views` directory; create a new file call `404.hbs`
+- Add the following to this newly created file
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            {{>header}}
+            {{>footer}}
+        </body>
+    </html>
+    ```
+
+- Add a new property between the `header` and `footer` to send a custom `error` message call `errorMessage` inside of a `p` tag
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <link rel="stylesheet" href="/css/styles.css">
+        </head>
+        <body>
+            {{>header}}
+            <p>{{errorMessage}}</p>
+            {{>footer}}
+        </body>
+    </html>
+    ```
+
+- Go to the `app.js` file
+- On the `help wild card handler`; use the `render` function to call the `404` template and send all the properties that it needs
+
+    ```js
+    app.get('/help/*', (req, res) => {
+        res.render('404', {
+            title: '404',
+            name: 'Testing',
+            errorMessage: 'Help article not found'
+        });
+    });
+    ```
+
+- Now on the `wild card handler`; use the `render` function to call the `404` template and send all the properties that it needs
+
+    ```js
+    app.get('*', (req, res) => {
+        res.render('404', {
+            title: '404',
+            name: 'Testing',
+            errorMessage: 'Page not found'
+        });
+    });
+    ```
+
+- Save all the files
+- On your browser; go to http://localhost:3000/what
+- You should see the `404` page with the `wild card handler` message
+- Now go to http://localhost:3000/help/test
+- You should see the `404` page with the `wild card handler` message
