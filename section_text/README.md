@@ -4731,3 +4731,187 @@ Now let's continue to add the correct `style` for the `footer`
 
 - Save the file and refresh the page
 - You should see that the `links` of the `header` update it `color`, have some spacing between them, and don't have the `underline`
+
+### Styling the application: Part II
+
+We gonna continue styling our templates. Let's get on it!!!
+
+- On your editor go to the `styles.css` file on the `web-server/public` directory
+
+If you remember the `styles` before the previews section we control the `image` of the `about` page but we eliminate that so we will need to put some `style` again to control its size but we can't do as we did before creating an `img` rule because we will target all images to prevent this we will use a `class` so we target directly the element that we want.
+
+- On the `styles.css` at the bottom; add a rule for a `portrait` class(We are assuming that is a `portrait image`)
+
+    `.portrait {}`
+
+    To set a class rule you will need to put a `dot` before the class name
+
+- Add the `width` property with a `250 pixel` value on the `portrait` class
+
+    ```css
+    .portrait {
+        width: 250px;
+    }
+    ```
+
+- Now we will need to add the `portrait` class on the `about` template so go to the `about.hbs` file on the `templates/views` directory
+- On the `img` tag add the following
+
+    `<img class="portrait" src="/img/your_image_name.your_image_extension" />`
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/about
+- You should see that the `image` get back to the size that it had before
+
+At this moment we are going to focus on the `footer` that we want that stick to the bottom of the page no matter the size of the content on the page but for this, we need to make some changes to the `HTML` structure of the files combine with some `styles`
+
+- Go to the `index.hbs` file
+- Wrap the `header` in a `div` with a class called `main-content`(This class can be different but as a convention, we use class names that specify its purpose)
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+            </div>
+            {{>footer}}
+        </body>
+    </html>
+    ```
+
+- For the moment we will add a `p` tag for some content on the homepage
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+                <p>Use this site to get your weather!</p>
+            </div>
+            {{>footer}}
+        </body>
+    </html>
+    ```
+
+- Now get to the `styles.css` file
+- At the bottom of the properties of the `body` rule; we need to enable [flexbox](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox)(A different way to layout your items) using the `display` property
+
+    ```css
+    body {
+        ...
+        display: flex;
+    }
+    ```
+
+- Save the file
+- On your browser; go to http://localhost:3000/
+- You will see that the `footer` gets to the right of the content of the page.
+- Get back to the `styles.css` file
+- Below the `display` property on the `body` rule; add the following
+
+    ```css
+    body {
+        ...
+        display: flex;
+        flex-direction: column;
+    }
+    ```
+
+    By default, the `flex-direction` value is `row` that means that everything goes from `left` to `right` but we actually want that the elements go `top` to `bottom` and we achieve that using the `column` value
+
+- Save the file and refresh the page
+- You should see that the `footer` get to the bottom
+- Get back to the `styles.css` file
+- Now we need to set that the `height` of the `body` has the entire browser sizes so we can push the `footer` to the bottom and we can do this set a `minumun height`
+
+    ```css
+    body {
+        ...
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    ```
+
+    Now the `body` can have a `minimum height` of `100 viewport height` that means `100%` of the `viewport`(The `viewport` is the size of the inner window of your browser not counting the bar at the top)
+
+- Then below of the `body` rule add the following
+
+    ```css
+    .main-content {
+        flex-grow: 1;
+    }
+    ```
+
+    The `flex-grow` property allows a given element to take as much space as it needs and we set this to `1` that will tell `flexbox` all the leftover space
+
+- Save the file and refresh the page
+- You should see that the `footer` stick to the bottom of the page
+- We need to add on the other pages the structure to make the `footer` stick to the bottom so wrap everything on every on the `body` of the page in a `main-content div` except the `footer`
+- Test every page and should work like the `index` page
+- Now let's add a `title` for the tab of each tab
+- Go to the `index.hbs` file
+- On the `head` tag; add a `title` tag with the following content
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Weather</title>
+            <link rel="stylesheet" href="/css/styles.css">
+            <script src="/js/app.js"></script>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- Save the file
+- On your browser go to http://localhost:3000/
+- You should see the `title` that you use on the tab of the current page
+- Now on each page add the `title` tag on the `head` tag with the following content
+
+    ```
+    404 page => 404
+    about page => About
+    help page => Help
+    ```
+
+- Save all the files
+- Test on all the pages
+- You should see all the `titles` that you add on the tab of each page
+- This will be the last thing that we will add and is the `favicon` of the pages(Icon on the tab of the page). Grab an `image` that you like and put it on the `img` folder in the `web-server/public` directory
+- Now go to the `index.hbs` file
+- On the `head` tag below the `title` add a `link` tag
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Weather</title>
+            <link rel="" href="">
+            <link rel="stylesheet" href="/css/styles.css">
+            <script src="/js/app.js"></script>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- On the `link` tag that you just added add `icon` for the `relationship`(`rel`) and the path of the `image` that you just add in the `href` property
+
+    `<link rel="icon" href="/img/name_of_your_icon.extension_of_your_icon">`
+
+- Save the file
+- On your browser go to http://localhost:3000/
+- You should see the `image` that you added on the tab of the current page
+- Now copy the `link` tag that you just added on the `index.hbs` file
+- Paste the `link` tag on every page
+- Save all the files
+- You should see that the `image` appear on the tab of each page
+
+
+
