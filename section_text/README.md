@@ -4467,3 +4467,267 @@ Now we will add a `404` page to show on the `handlers` that are for the `not fou
 - You should see the `404` page with the `wild card handler` message
 - Now go to http://localhost:3000/help/test
 - You should see the `404` page with the `wild card handler` message
+
+### Styling the application: part I
+
+In this section, we will add some style for the application but will not be a lot because we want to focus on the `backend` side of the application and we will walk throw every style that we add/
+
+- On your editor; go to the `style.css` file on the `web-server/public` directory
+- We will use the `index` page to test all the `styles` that we are adding. First, we will add some `style` for the `body` of the application so delete all the current content of the `style.css` file
+- Then add a rule for the `body`
+
+    `body {}`
+
+    This rule will allow us to add `styles` for all the application
+
+- We are going to start with some `font` related `styles` so on the `body` rule add the `color` property with the following value
+
+    ```css
+    body {
+        color: red;
+    }
+    ```
+
+    This will set the `color` of the entire site not just a single piece of text. We use the `red` color to test
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/
+- You should see all text with a `red` color except the `links` because the `links` have their own custom `style` to handle the `color` of the text
+- Get back to the `style.css`
+- On the `color` property add the following `color`
+
+    ```css
+    body {
+        color: #333333;
+    }
+    ```
+
+    This is a `hex` representation of a `color`. You can use a tool to give you the `hex` representation of a `color` like `photoshop` then use it on your `stylesheet`. Using this `hex` you will have a pretty close `black` but not quite `black` as before
+
+- Save the file
+- Refresh your browser and you should see that the `title` and `footer` text update it `color`
+- Now we are going to add `style` to the individual characters using `font-family`. In this case, we are going to use the `arial font` that is available by default
+
+    ```css
+    body {
+        color: #333333;
+        font-family: arial;
+    }
+    ```
+
+- Save the file
+- Refresh your browser and you should see that the letters of the text update it form
+- Now we will `center` the content of the page and for this, we will use a different set of properties. First, we will set a `maximum width` of the content of the `body` in this case `650 pixels`
+
+    ```css
+    body {
+        color: #333333;
+        font-family: arial;
+        max-width: 650px;
+    }
+    ```
+
+    Now the content will not take all wide of the screen it will take just a portion of it
+
+- We will evenly distribute the space at the left and the right of the `body` using the `margin` property
+
+    ```css
+    body {
+        color: #333333;
+        font-family: arial;
+        max-width: 650px;
+        margin: 0 auto;
+    }
+    ```
+
+    The first value of the `margin` property has to do with the space at the `top` and `bottom` of the `body` and we don't want to add any space there and the second parameter is the space on the `left` and `right` and we use the `auto` value to evenly distribute the space
+
+- Save the file
+- Go to the browser and refresh the page
+- You should see the content is in the middle of the page
+- Now resize your browser left to right and you will see that the content will be stick to the left without space. To fix this we will add some space in the actual content of the `body`
+- Get back to the `style.css` file
+- Below the `margin` property add the `padding` property with the following value
+
+    ```css
+    body {
+        color: #333333;
+        font-family: arial;
+        max-width: 650px;
+        margin: 0 auto;
+        padding: 0 16px;
+    }
+    ```
+
+    Like the `margin` property the first value will represent the `top` and `bottom` of the content and we don't want to add any space there; then we will add `16 pixels` of space at each side of the content
+
+- Save the file and refresh your browser
+- Resizes again like you did before and you will see that have some space and will not stick the content at the size of the window
+- Now we will add some `styles` to the `footer` but we need to make some changes on the `partial` file so get to the `footer.hbs` file on the `partials` directory
+- `HTML` give us a `footer` tag that we can use to wrap the actual content of the `footer.hbs` file inside of the `footer` tag
+
+    ```hbs
+    <footer>
+        <p>Created by {{name}}</p>
+    </footer>
+    ```
+
+- Get back to the `style.css` file
+- Below the `body` rule add a `footer` rule
+
+    `footer {}`
+
+Now we are going to address some of the differences of the `padding` and `margin` properties and the best way to do this is by adding a `background` so we can see the difference.
+
+- Add the following `background` property to the `footer` rule
+
+    ```css
+    footer {
+        background: blue;
+    }
+    ```
+
+- Save the file
+- Go to your browser and refresh the page
+- You will see that the `footer` have a `blue background` and all the text inside it
+
+The difference between the `padding` and `margin` is that the `padding` add space inside of the element and the `margin` add space outside of the element
+
+- Get back to the `style.css` file
+- On the `footer` rule add the `padding` property with the following value
+
+    ```css
+    footer {
+        background: blue;
+        padding: 16px;
+    }
+    ```
+
+- Save the file
+- Refresh the page and you will see that a space is added between the text of the `footer` and the edges of the box
+- Get to the `style.css` file
+- Add the `margin` property to the `footer` rule with the following value
+
+    ```css
+    footer {
+        background: blue;
+        padding: 16px;
+        margin: 16px;
+    }
+    ```
+
+- Save the file
+- Refresh your browser
+- You will see that a space is added outside of the box that separates the `header` and the content of the `footer` and each side in terms of the with of the `body`
+
+Now let's continue to add the correct `style` for the `footer`
+
+- Get back to the `style.css` file
+- Remove the content of the `footer` rule
+- Add the `color` property to the `footer` rule with the following value
+
+    ```css
+    footer {
+        color: #888888;
+    }
+    ```
+
+- Then we will add some `style` to the `top` border of the `footer` so it can be visible using the `border-top` property
+
+    ```css
+    footer {
+        color: #888888;
+        border-top: 1px solid #eeeeee;
+    }
+    ```
+
+    The first value of the `border-top` property will be the `width` of the `border` in this case `1 pixel`; the second is the `type of border` that is `solid`(`solid` line but can be a `dash` line) and the `color` of the `border`
+
+- Save the file
+- Refresh the page and you will see a line on the `top` of the `footer`
+- Now we will add some spacing; add some space to the `top` of the `footer` to separate it from the `header` using the `margin-top` property
+
+    ```css
+    footer {
+        color: #888888;
+        border-top: 1px solid #eeeeee;
+        margin-top: 16px;
+    }
+    ```
+
+- Then we will add some spacing ad the `top` and `bottom` inside of the `footer` content using the `padding` property
+
+    ```css
+    footer {
+        color: #888888;
+        border-top: 1px solid #eeeeee;
+        margin-top: 16px;
+        padding: 16px 0;
+    }
+    ```
+
+- Save the file and refresh the page
+- You should see correct spacing on the `footer`
+- Now that we have the `footer` changes we will continue with the `header` but the `header` template need a couple of changes to go to the `header.hbs` file on the `partials` directory
+- `HTML` give us a `header` tag that we can use to wrap all the content of the `header` file in a `header` tag
+
+    ```hbs
+    <header>
+        <h1>{{title}}</h1>
+
+        <a href="/">Weather</a>
+        <a href="/about">About</a>
+        <a href="/help">Help</a>
+    </header>
+    ```
+
+- Now get to the `style.css` file
+- Add a rule for the `header` below the `footer` rule
+
+    `header {}`
+
+- On the `header` rule we are going to add some spacing at the `top` and `bottom` so we can separate the `header` from the `top` of the window and the `footer`
+
+    ```css
+    header {
+        margin-top: 16px;
+        margin-bottom: 48px;
+    }
+    ```
+
+- Save the file and refresh the page
+- You should see that some space is added on the `header`
+- Get to the `style.css` file
+- Now we will target the `h1` element; adding some spacing and a bigger `font size`
+
+    ```css
+    h1 {
+        font-size: 64px;
+        margin-bottom: 16px;
+    }
+    ```
+
+- Save the file and refresh the page
+- You should see that the `title` of the page is bigger and have some spacing between the `links` and `title`
+- Get back to the `style.css`
+- We will update the `styles` of the `links` of the `header` but we need to be specific because we want to update just the `links` inside of the `header` no all `links` of the application so we will add the following specific rule
+
+    `header a {}`
+
+    This rule only will target the `anchors` tag on the `header` of the application
+
+- Add the following properties
+
+    ```css
+    header a {
+        color: #888888;
+        margin-right: 16px;
+        text-decoration: none;
+    }
+    ```
+
+    We will update the `color` of the `links`, adding some space between each `link` at the `right` and eliminate the `underline` that is set by default for `links`
+
+- Save the file and refresh the page
+- You should see that the `links` of the `header` update it `color`, have some spacing between them, and don't have the `underline`
