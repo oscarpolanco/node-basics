@@ -4913,5 +4913,6 @@ At this moment we are going to focus on the `footer` that we want that stick to 
 - Save all the files
 - You should see that the `image` appear on the tab of each page
 
+## Section 7: Accessing API from the browser(Weather App)
 
-
+In this section; we will see how to create our own `API` endpoints and access them from the browser. At this moment we have 2 distinct applications on the side is the `frontend` and the other is the `backend` but we don't have much interaction between then just the rendering part but we will need that the browser passes an `address` to the server then the server needs to convert that `address` into a `forecast` and past it back to the browser so the browser can render that data and that is what we are going to work across these sections.
