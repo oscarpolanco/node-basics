@@ -5056,3 +5056,121 @@ Now we will work with the `weather route handler` where we are going to send an 
 - Save the file
 - On your browser; go to http://localhost:3000/weather?address=philadelphia
 - You should see the `JSON` now with the `address` included
+
+### Building a JSON HTTP endpoint
+
+At this moment you have the `weather` endpoint created and we already `geocode` and `forecast` functions in the `weather-app` in the past so in this section, we will put together all that code to have a functional endpoint that converts an `address` send via `query param` and return the `forecast` data of that `address`.
+
+- On your editor; go to the `weather-app` directory
+- Copy the `utils` folder
+- Now get to the `web-server/src` directory
+- Paste the `utils` folder on the `src` directory
+- Since we are using `request`; we will need to install it for the new app. On your terminal; go to the `web-server` directory
+- Install `request` using: `npm install request`
+- Get to the `app.js` file on the `web-server/src` directory
+- Require the `geocode` and the `forecast` functions below the `hbs` require
+
+    ```js
+    const geocode = require('./utils/geocode');
+    const forecast = require('./utils/forecast');
+    ```
+
+- Now get to the `weather route handler`
+- Below the `address` condition call the `geocode` function with all its parameters except that the `address` will be the one that we receive from the `req` object the others are equal than before
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {...}
+
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {});
+
+        res.send({...});
+    });
+    ```
+
+- Now add a condition in case an `error` happen on the `geocode` function and on the condition send a `JSON` respond that have the `error` that you get from `geocode` as its value
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {...}
+
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+            if(error) {
+                return res.send({ error });
+            }
+        });
+
+        res.send({...});
+    });
+    ```
+
+- Now let's call the `forecast` function inside of `geocode` with all it parameters(Like the one that we did before)
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {...}
+
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+            if(error) {
+                return res.send({ error });
+            }
+
+            forecast(latitude, longitude, (error, forecastData) => {}
+        });
+
+        res.send({...});
+    });
+    ```
+
+- Like the `geocode` function; add an `error` condition in the case the `forecast` function fail sending a `JSON` response
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {...}
+
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+            if(error) {
+                return res.send({ error });
+            }
+
+            forecast(latitude, longitude, (error, forecastData) => {
+                if(error) {
+                    return res.send({ error });
+                }
+            }
+        });
+
+        res.send({...});
+    });
+    ```
+
+- Cut the last `res.send` and paste it below the `error` condition on the `forecast` function
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {...}
+
+        geocode(req.query.address, (error, { latitude, longitude, location } = {}) => {
+            if(error) {
+                return res.send({ error });
+            }
+
+            forecast(latitude, longitude, (error, forecastData) => {
+                if(error) {
+                    return res.send({ error });
+                }
+
+                res.send({
+                    forecast: forecastData,
+                    location,
+                    address: req.query.address
+                });
+            }
+        });
+    });
+    ```
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/weather?address=philadelphia
+- You should see the `JSON` with the correct `forecast` of `Philadelphia`
