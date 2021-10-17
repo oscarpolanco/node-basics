@@ -4916,3 +4916,143 @@ At this moment we are going to focus on the `footer` that we want that stick to 
 ## Section 7: Accessing API from the browser(Weather App)
 
 In this section; we will see how to create our own `API` endpoints and access them from the browser. At this moment we have 2 distinct applications on the side is the `frontend` and the other is the `backend` but we don't have much interaction between then just the rendering part but we will need that the browser passes an `address` to the server then the server needs to convert that `address` into a `forecast` and past it back to the browser so the browser can render that data and that is what we are going to work across these sections.
+
+### The query string
+
+Before we continue with all the topics that we are going to address is good for us to have the big picture for these sections. The goal will be to the user give a `location` and fetch a `forecast` on the `weather` website so the user will go into a `URL` on the browser; fill a form; click a button and in a couple of seconds the `weather` information will show up. To get our goal done we need to actually fill the `weather route` that we previously did; as you remember when we get to the `/weather` URL it will return a `JSON`. The code inside of this `route handler` will be in charge to call the `geocode` and `weatherstack` API then return the data that we need in form of a `JSON`.
+
+Before adding anything else we need to talk about how the browser will send data to the server so the `weather router` know which `location` need to work with and we will do this using a `query string`; where the browser will provide a `query string` as part of a `url` then the server will read the `query string` value to get the `address` information. Let's do an example to get on the correct track.
+
+- On your editor; go to the `app.js` file on the `web-server/src` directory
+- Below the `weather route handler`; add a new `route handler` for `/products`
+
+    `app.get('/products', (req, res) => {});`
+
+- For the moment send the following `JSON` on the `products route`
+
+    ```js
+    app.get('/products', (req, res) => {
+        res.send({
+            products: []
+        });
+    });
+    ```
+
+- On your terminal; get to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/products/
+- You should see the `JSON` that you just set for `products`
+
+As you remember the `query string` are defined at the end of the `URL` starting with a `question mark` then adding `key value` pairs to pass additional information to the server; for example, imaging that we are `searching` for a specific `product` in this case `games` will be like this:
+
+`http://localhost:3000/products?search=games`
+
+Since we are setting our `backend`; we can set as many or few `query params` that we like. If you need to add another `param` you will separate one for the other using `&`. Imagine that on the `search` of the `product` we don't only want the `games`; we want the `games` for a determined `rating`. for example(the number in the `rating` will be the number of stars and 5 will be the biggest):
+
+`http://localhost:3000/products?search=games&rating=5`
+
+Now the question will be how the server will receive the data sent via the `query params`. Since we are using an `express` server we already have these values available when we call the `route` on the `request` object(`req`). Let see this in action
+
+- Get back to the `app.js` file
+- On the `products route handler` add print the following
+
+    ```js
+    app.get('/products', (req, res) => {
+        console.log(req.query);
+
+        res.send({
+            products: []
+        });
+    });
+    ```
+
+    The `query` property has an object that contains all the `query string` information
+
+- Save the file
+- On your browser; go to http://localhost:3000/products?search=games&rating=5
+- On the terminal, you will see an object with the `query param` information
+
+This will be the way to get the data on our server but imaging that we need always need to provide at least one of the `query params` of the `url`; we will need to add some extra logic to handle this case. For this example, the `search param` will be obligatory and the `rating` will be optional.
+
+- Get back to the `app.js` file
+- Go to the `products handler` and add an `if` statement asking `if` the `search param` exits
+
+    ```js
+    app.get('/products', (req, res) => {
+        if(!req.query.search) {}
+
+        res.send({
+            products: []
+        });
+    });
+    ```
+
+- Use the `send` function on the condition to let know the user that needs to provide the `param` like this
+
+    ```js
+    app.get('/products', (req, res) => {
+        if(!req.query.search) {
+            res.send({
+                error: 'You must provide a search term'
+            });
+        }
+
+        res.send({
+            products: []
+        });
+    });
+    ```
+
+- Save the file
+- On your browser; go to http://localhost:3000/products
+- You should see the `JSON` with the `error`
+- Get to your terminal and you should see an `error`. This `error` is because we are using the `send` function twice in the `products` handler and we can't do that so we will need to prevent this to happen
+- Get to the `app.js` file
+- On the `products route handler` on the `search param` condition `return` the `send` function
+
+    ```js
+    app.get('/products', (req, res) => {
+        if(!req.query.search) {
+            return res.send({
+                error: 'You must provide a search term'
+            });
+        }
+
+        res.send({
+            products: []
+        });
+    });
+    ```
+
+    This is a common pattern of `express` to prevent this type of `errors` happen
+
+- Save the file
+- Refresh the page
+- Get to your terminal and you should not see the `error`
+- Go back to your browser and get to http://localhost:3000/products?search=games&rating=5
+- You should see that continue working as expected
+
+Now we will work with the `weather route handler` where we are going to send an `address query param` that have the `location` that we want the `forecast` and this `param` will be `require` and we will return it as part of the `JSON` that we send to the user
+
+- Go to the `app.js` file
+- Update the `weather handler` like the following
+
+    ```js
+    app.get('/weather', (req, res) => {
+        if (!req.query.address) {
+            return res.send({
+                error: 'You must provide an address!'
+            });
+        }
+
+        res.send({
+            forecast: 'Is always sun in Philadelphia',
+            location: 'Philadelphia',
+            address: req.query.address
+        });
+    });
+    ```
+
+- Save the file
+- On your browser; go to http://localhost:3000/weather?address=philadelphia
+- You should see the `JSON` now with the `address` included
