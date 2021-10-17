@@ -5174,3 +5174,103 @@ At this moment you have the `weather` endpoint created and we already `geocode` 
 - Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
 - On your browser; go to http://localhost:3000/weather?address=philadelphia
 - You should see the `JSON` with the correct `forecast` of `Philadelphia`
+
+### ES6 Aside: Default functions parameters
+
+We talk about this before but let's take a minute to check this out.
+
+- On your editor; go to the `playground` directory
+- Create a new file call `7-default-params.js`
+- On this newly created file; create a function call `greeter` that receive a name and will print a message
+
+    ```js
+    const greeter = (name) => {
+        console.log('Hello ' + name);
+    }
+    ```
+
+- Below the function add 2 calls to the `greeter` function like this
+
+    ```js
+    greeter('Test');
+    greeter();
+    ```
+
+- On your terminal; get to the `playground` directory
+- Run the `7-default-params.js` file using: `nodemon 7-default-params.js`
+- You should see `Hello Test` then `Hello undefined`
+
+The `undefined` that we see is because we don't pass any value to the function and the `name` variable will get an `undefined` value; to fix this we will use a `default value` for the `name` parameter.
+
+- Get back to `7-default-params.js` file
+- After the `name` parameter on the `greeter`; function add the following
+
+    ```js
+    const greeter = (name = 'user') => {
+        console.log('Hello ' + name);
+    }
+    ```
+
+    This will mean that the `name` variable will have `user` as it value when the `greeter` function is called without sending any parameter
+
+- Save the file
+- Get to your terminal and you will see `Hello Test` then `Hello user`
+- Now get back to the `7-default-params.js`
+- Below the `greeter` calls; add the following object
+
+    ```js
+    const product = {
+        label: 'Red notebook',
+        price: 3,
+        stock: 201,
+        salePrice: undefined
+    };
+    ```
+
+- Then add the following function; below the `product` object
+
+    ```js
+    const transaction = (type, { label, stock }) => {
+        console.log(type, label, stock);
+    }
+    ```
+
+    Here we have the `transaction` function that will print the `type` of `transaction` and the `label` and the amount of a `product` that it has on `stock` and we obtain the `label` and `stock` destructuring the `product` object
+
+- Add the following calls below the `transaction` function
+
+    ```js
+    transaction('order');
+    transaction('order 2', product);
+    ```
+
+- Save the file
+- Get to your terminal and you will see an `error` because on the first `transaction` call we don't send the `product` object and it trying to destructure an `undefined` value
+- To fix the `error` let's add a `default value` to the object of the `transaction` function
+
+   ```js
+    const transaction = (type, { label, stock } = {}) => {
+        console.log(type, label, stock);
+    }
+    ```
+
+- Save the file
+- Get to your terminal and you will see `order undefined undefined` and `order 2 Red notebook 201`
+
+Now you are destructuring an empty object so the `label` and `stock` don't exist that is why you obtain the `undefined` value and don't break the script. You can also add a `default value` to prevent that the `label` or `stock` is `undefined`.
+
+- Get back to `7-default-params.js` file
+- On the `stock` param; add a value of `0` if we don't have any of that `product` on `stock`
+
+   ```js
+    const transaction = (type, { label, stock = 0 } = {}) => {
+        console.log(type, label, stock);
+    }
+    ```
+
+- Save the file
+- Get to your terminal and you will see `order undefined 0` and `order 2 Red notebook 201`
+
+Now on the `transaction` function, you are destructuring an empty object if you don't send the `product` and since the empty object doesn't have any `stock` property it will take `0` as a `default value` of that property.
+
+

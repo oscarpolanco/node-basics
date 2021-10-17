@@ -69,7 +69,7 @@ This is a folder with some mini examples outside of the applications that are bu
     ]
     ```
 
-#### 4. Callback functions
+### 4. Callback functions
 
 - On your terminal; get to the `playground` directory
 - Run the `4-callback.js` script with the following command: `node 4-callback.js`
@@ -81,7 +81,7 @@ This is a folder with some mini examples outside of the applications that are bu
     5
     ```
 
-#### 5. ES6 Aside: Object property shorthand and destructuring
+### 5. ES6 Aside: Object property shorthand and destructuring
 
 - On your terminal; get to the `playground` directory
 - Run the `5-es6-object.js` script with the following command: `node 5-es6-object.js`
@@ -96,7 +96,7 @@ This is a folder with some mini examples outside of the applications that are bu
     order Red notebook 201
     ```
 
-#### 6. HTTP requests without a library
+### 6. HTTP requests without a library
 
 - On your editor; go to the `playground` directory
 - On this directory; create a new file call `keys.js`
@@ -110,3 +110,16 @@ This is a folder with some mini examples outside of the applications that are bu
 - Now on your terminal; go to the `playground` directory
 - Run the `6-raw-http.js` file using: `node 6-raw-http.js`
 - You should see an object print with the `weather` information of `Cinnaminson` in the `United States of America`. All done with `node core modules`
+
+### 7. ES6 Aside: Default functions parameters
+
+- On your terminal; go to the `playground` directory
+- Run the `7-default-params.js` file using `node 7-default-params.js`
+- On your terminal; you will see:
+
+    ```bash
+    Hello Test
+    Hello user
+    order undefined 0
+    order 2 Red notebook 201
+    ```
