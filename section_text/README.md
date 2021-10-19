@@ -5273,4 +5273,88 @@ Now you are destructuring an empty object so the `label` and `stock` don't exist
 
 Now on the `transaction` function, you are destructuring an empty object if you don't send the `product` and since the empty object doesn't have any `stock` property it will take `0` as a `default value` of that property.
 
+### Browser HTTP request with fetch
+
+Now that we have the `JSON HTTP` endpoint we can begin the process of getting data on the browser using `client-side JS`. Let's start the process
+
+- On your editor; go to the `app.js` file in the `js` folder of the `web-server/public` directory
+
+As you may notice the `app.js` file is only call on the `index` page and this is the only page that we will get the `forecast` functionality and we will do the first example where we get the information of the `weather` endpoint with a fixed `url` on other section we will send values from the browser to the server.
+
+- On the `app.js` file; below the `console.log` add the following
+
+    `fetch('');`
+
+    The `fetch` is not part of `js`; is a browser-based `API` which mean that we can use it on all modern browsers but is not accessible on `node.js` and this function receive an `URL`
+
+- On the `fetch` function add the `weather URL`
+
+    `fetch('/weather?address=Boston');`
+
+    You can put the complete `URL` but if you put it this way will take the base `URL` of the current page that is `http://localhost:3000/`
+
+- Now add the following after the `fetch` function
+
+    ```js
+    fetch('/weather?address=Boston').then((response) => {});
+    ```
+
+    Trigger the `fetch` function will kick off an `asynchronous` I/O` operation like `request` on the `backend` this means that we don't have the `response` right away instead we provide a function that will run sometime in the future when the data available and to provide the function we use the `then` method and the first and only parameter will be the `response`. The `then` method is part of a much bigger `API` call `promises` that we will see in future sections
+
+- Now we will turn it into an object using the `json` method that is part of the `response` object
+
+    ```js
+    fetch('/weather?address=Boston').then((response) => {
+        response.json();
+    });
+    ```
+
+- The `json` function is also design to use with the `then` method so add it and send a callback
+
+    ```js
+    fetch('/weather?address=Boston').then((response) => {
+        response.json().then((data) => {});
+    });
+    ```
+
+- Now we will handle if the `data` object has an `error` property using a condition and print the `error`
+
+    ```js
+    fetch('/weather?address=Boston').then((response) => {
+        response.json().then((data) => {
+            if(data.error) {
+                return console.log('Error:', data.error);
+            }
+        });
+    });
+    ```
+
+- Finally, we will print the `location` and `forecast`
+
+    ```js
+    fetch('/weather?address=Boston').then((response) => {
+        response.json().then((data) => {
+            if(data.error) {
+                return console.log('Error:', data.error);
+            }
+
+            console.log('Location:', data.location);
+            console.log('Forecast:', data.forecast);
+        });
+    });
+    ```
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/
+- Open the `dev tools`
+- Choose the `console` tab
+- You should see the correct `forecast` data for the `Boston`
+- Get back to the `app.js` file
+- Change the `url` of the `fetch` function to `/weather?address=!`
+- Save the file
+- Refresh the page
+- You should see an `error` message on the console
+- Get back to the `app.js` file and put `/weather?address=Boston` on the `fetch` function
+
 
