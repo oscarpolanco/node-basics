@@ -5357,4 +5357,298 @@ As you may notice the `app.js` file is only call on the `index` page and this is
 - You should see an `error` message on the console
 - Get back to the `app.js` file and put `/weather?address=Boston` on the `fetch` function
 
+### Creating a search form
 
+Now we are in a good shape to build our `search form` so the user can send to the `backend` the `location` so it can retrieve the `forecast`. Let's get to it
+
+- On your editor go to the `index.hbs` file in the `web-server/templates` directory
+- Below the `p` tag; add a `form` tag
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+                <p>Use this site to get your weather!</p>
+
+                <form></form>
+            </div>
+            {{>footer}}
+
+            <script src="/js/app.js"></script>
+        </body>
+    </html>
+    ```
+
+- Inside of the `form` tab add an `input` and `button` element
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+                <p>Use this site to get your weather!</p>
+
+                <form>
+                    <input />
+                    <button></button>
+                </form>
+            </div>
+            {{>footer}}
+        </body>
+    </html>
+    ```
+
+- Inside of the `button` tab; add the following text
+
+    `<button>Search</button>`
+
+- On your terminal; go to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to `http://localhost:3000/`
+- You should see an `input` and a `button` on the page
+- Get back to the `index.hbs` file
+- On the `input` element; add a `placeholder` property with the following value
+
+    `<input placeholder="Location" />`
+
+At this moment if you click the `button` of the `form` nothing happen so we will need to add some more code to actually make the `form` works as expected and we will use `js` functions to do it and the place that we can add `js` for our `client side` is the `app.js` file that we add before on the `public` directory that already loads on the `index` page
+
+- On your editor; go to the `app.js` file on the `public/js` directory
+- Now we need to select the element from our `HTML` document that we are trying to work with and the element will be the `form` that we add before. So bellow of the  `fetch` function add the following
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    document.querySelector();
+    ```
+
+    The `document` object is a representation of the `HTML` document that have some functions that we can use like `querySelector` that will select an element that we need from the `HTML` document
+
+- Pass a string with the name of the element that you need to select in this case the `form` element
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    document.querySelector('form');
+    ```
+
+    What comes back from the `querySelector` function is a `JS` representation of the element and we can use that to manipulate the element or to things when the user interacts with the element
+
+- Catch the `querySelector` return value on a constant call `weatherForm`
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+    ```
+Now we are going to run a code when someone `submits` the `form` because that code is going to be responsible for `fetching` the `weather`; to do this we are going to use an `event listener`. The `event listener` subscribe you to an `event` that happens on an element in the `HTML` document such as `click` an element, `hover` an element, or `submit` a `form`
+
+- Below the `weatherForm` add the following
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+
+    weatherForm.addEventListener();
+    ```
+
+- The `addEventListener` receive 2 arguments; a string with the name of the `event`(in this case `submit`) and a `callback`. Add the parameters to the function
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+
+    weatherForm.addEventListener('submit', () => {});
+    ```
+
+    The `callback` function will run every time that the `event` happen
+
+- Now print a message to test inside of the `callback` function
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+
+    weatherForm.addEventListener('submit', () => {
+        console.log('testing!!');
+    });
+    ```
+
+- Save the file
+- Refresh the page
+- Open the `dev tools`
+- You should see an `error`
+
+The `error` is not produced by the `JS` code in fact the `error` is produced by the position of the `script` on the `index.hbs` this is because the `script` loads before the actual element render on the page so the `script` will not found the element with the `querySelector` function then we are trying to subscribe to an `event` on an `undefined` value.
+
+- Get to the `index.hbs` file
+- Cut the `script` tag and add it at the bottom of the `body`
+
+    ```hbs
+    <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+                <p>Use this site to get your weather!</p>
+
+                <form>
+                    <input placeholder="Location" />
+                    <button>Search</button>
+                </form>
+            </div>
+            {{>footer}}
+
+            <script src="/js/app.js"></script>
+        </body>
+    </html>
+    ```
+
+    Now the `script` will run after all the elements render on the page
+
+- Save the file
+- Refresh the page
+- Check on the console of the `dev tools` and you should not see an `error`
+- Click on the `search` button(take a look in the `dev tools` console at the same time you click on the button)
+- You will see the `testing!!` message for a second on the console. This is because the browser refresh completely when you `submit` the `form` that is the default behavior of the browser(That make sense a long time ago before you access to `client site js`)
+- Get to the `app.js` file
+- On the `addEventListener` in the `callback` function; add the parameter that send us by default `addEventListener` that is a `JS` representation of the `event`
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+
+    weatherForm.addEventListener('submit', (e) => {
+        console.log('testing!!');
+    });
+    ```
+
+    Normally we name the `event` object `e`
+
+- Before the console; call the `preventDefault` method of the `e` object
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        console.log('testing!!');
+    });
+    ```
+
+    The `preventDefault` method will prevent the default behavior of the browser
+
+- Save the file
+- Refresh the browser
+- Click the `search` button
+- Check the console of the `dev tools` and you should see the `testing!!` message
+- Get back to the `app.js` file
+- Now we need to grab the value of the `input` so we will select the element with the `querySelector` function and store the value on a constant call `search`
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+    const search = document.querySelector('input');
+
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        console.log('testing!!');
+    });
+    ```
+
+- Inside of the `addEventListener callback`; get the `value` of the `input` using the `value` property of the `search` object and store that value on a constant call `location` and print it value
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+    const search = document.querySelector('input');
+
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+
+        console.log('testing!!');
+        console.log(location);
+    });
+    ```
+
+- Save the file
+- Refresh the page
+- Type something on the `input` and click the `search` button
+- You should see the `input` value on the console of the `dev tools`
+- Get back to the `app.js` file
+- Cut all the `fetch` code
+- Inside of the `addEventListener callback`; delete the console
+- On the same `callback` function paste the `fetch` function
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+    const search = document.querySelector('input');
+
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+
+        fetch('/weather?address=Boston').then((response) => {
+            response.json().then((data) => {
+                if(data.error) {
+                    return console.log('Error:', data.error);
+                }
+
+                console.log('Location:', data.location);
+                console.log('Forecast:', data.forecast);
+            });
+        });
+    });
+    ```
+
+- Change the `url` of the `fetch` function to use the `location` value
+
+    ```js
+    console.log('Client side javascript file is loaded!');
+    fetch('/weather?address=' + location).then((response) => {...});
+    const weatherForm = document.querySelector('form');
+    const search = document.querySelector('input');
+
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+
+        fetch('/weather?address=' + location).then((response) => {
+            response.json().then((data) => {
+                if(data.error) {
+                    return console.log('Error:', data.error);
+                }
+
+                console.log('Location:', data.location);
+                console.log('Forecast:', data.forecast);
+            });
+        });
+    });
+    ```
+
+- Save the file
+- Refresh the page
+- Type a valid `location` on the `input` and click the `search` button
+- You should see the `forecast` of the `location` that you type in the console of the `dev tools`
