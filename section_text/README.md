@@ -5652,3 +5652,213 @@ The `error` is not produced by the `JS` code in fact the `error` is produced by 
 - Refresh the page
 - Type a valid `location` on the `input` and click the `search` button
 - You should see the `forecast` of the `location` that you type in the console of the `dev tools`
+
+### Wiring up the user interface
+
+In this section, we will take the messages that we are printing on the console and have them show up on the browser also some styling to the page.
+
+The first thing that we are going to do is give someplace to render the messages. So let's get into it!!
+
+- On your editor; go to the `index.hbs` in the `web-server/templates` directory
+- Below the `form` tag; add 2 `p` tags
+
+    ```hbs
+     <!DOCTYPE html>
+    <html>
+        <head>...</head>
+        <body>
+            <div class="main-content">
+                {{>header}}
+                <p>Use this site to get your weather!</p>
+
+                <form>... </form>
+
+                <p></p>
+                <p></p>
+            </div>
+            {{>footer}}
+
+            <script src="/js/app.js"></script>
+        </body>
+    </html>
+    ```
+
+    In those `p` tags we will render both messages when we successfully get the `forecast` information from a `location` and if we got an `error` only the first `p` tag will have the `error` message
+
+Now our goal is to select the `p` tags on our `js` code and manipulate them so they show the correct value depending on the `forecast` result but as you may remember we use the `querySelector` function to choose an element from the browser on our `js` code sending a `string` of the `element` that we want to select but in this case, we have 2 `p` tags because the `querySelector` function just match the first `element` that it finds and we have 2 of them so we will need to be more specific adding a unique `id` on each `p` tag so we can select the specific `element` that we want.
+
+- On the `p` tags that you just added; put a unique `id` to each of then
+
+    ```hbs
+    <p id="message-1"></p>
+    <p id="message-2"></p>
+    ```
+
+- Now get to the `app.js` file on the `public/js` directory
+- Below the `search` constant; add 2 constant calls `messageOne` and `messageTwo` that its value will be the result of the `querySelector` function using the `id` of each `p` tag
+
+    ```js
+    const messageOne = document.querySelector('#message-1');
+    const messageTwo = document.querySelector('#message-2');
+    ```
+
+Now we need to change the content of each `p` tag dependinng the moment on each step of the `request` to get the `forecast`:
+
+- Before doing the `request`; we will put `loading...` on the `p` tag and the second one will be empty
+- If we got an `error` of the `request`; we will put the `error` message on the first `p` tag and the second will be empty
+- If the `request` goes as expected; we will put the `location` on the first `p` and the `forecast` on the second
+
+Using these conditions we will add the logic that we need on the `callback` function of the `event listener`
+
+- Below the `location` constant definition add the following:
+
+    ```js
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+        messageOne.textContent = 'Loading...'
+        messageTwo.textContent = '';
+
+        fetch('/weather?address=' + location).then((response) => {...});
+    });
+    ```
+
+    The `textContent` property will represent the content of our element so we are substituting this value with the `loading` message for the first `p` tag and empty for the second `p` tag
+
+- Now  on the `fetch` function in the `error` condition; remove the console and update the first `p` tag message with the `error` message
+
+    ```js
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+        messageOne.textContent = 'Loading...'
+        messageTwo.textContent = '';
+
+        fetch('/weather?address=' + location).then((response) => {
+            response.json().then((data) => {
+                if(data.error) {
+                    messageOne.textContent = data.error;
+                    return;
+                }
+                ...
+            });
+        });
+    });
+    ```
+
+- Then remove the 2 consoles below of the `error` condition and update the content of both `p` tags using the `location` and `forecast` information
+
+    ```js
+    weatherForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const location = search.value;
+        messageOne.textContent = 'Loading...'
+        messageTwo.textContent = '';
+
+        fetch('/weather?address=' + location).then((response) => {
+            response.json().then((data) => {
+                if(data.error) {
+                    messageOne.textContent = data.error;
+                    return;
+                }
+
+                messageOne.textContent = data.location;
+                messageTwo.textContent = data.forecast;
+            });
+        });
+    });
+    ```
+
+- Save the files
+- On your terminal; get to the `web-server` directory
+- Run your local server using: `nodemon web-server/src/app.js -e js,hbs`
+- On your browser; go to http://localhost:3000/
+- On the input put an invalid `location` like `!` and click the `submit` button
+- You should see the `error` message
+- Now put a valid `location` on the `input` like `Boston` and click the `submit` button
+- You should see the `location` and `forecast` on the browser
+
+Finally, we will add some more styling for the application
+
+- Go to the `styles.css` file on the `public` directory
+- At the bottom of the file add a rule for an `input`
+
+    `input {}`
+
+- Set the `border` property with the following value
+
+    ```css
+    input {
+        border: 1px solid #cccccc;
+    }
+    ```
+
+- Now we will add some space inside the `input` with the `padding` property
+
+    ```css
+    input {
+        border: 1px solid #cccccc;
+        padding: 8px;
+    }
+    ```
+
+- Then add a rule for a `button` below the `input` rule
+
+    `button {}`
+
+- The first thing that we are going to set is the `cursor` property that will help us to style the `cursor` when you `hover` the `button`
+
+    ```css
+    button {
+        cursor: pointer;
+    }
+    ```
+
+- Now add the following style for the `border`
+
+    ```css
+    button {
+        cursor: pointer;
+        border: 1px solid #888888;
+    }
+    ```
+
+- Then we need to change the `background` to the same color of the `border`
+
+    ```css
+    button {
+        cursor: pointer;
+        border: 1px solid #888888;
+        background: #888888;
+    }
+    ```
+
+- For that `background` we will need to update the `color` of the text
+
+    ```css
+    button {
+        cursor: pointer;
+        border: 1px solid #888888;
+        background: #888888;
+        color: white;
+    }
+    ```
+
+- Finally; we will need to add the same space that we added on the `input` using `padding`
+
+    ```css
+    button {
+        cursor: pointer;
+        border: 1px solid #888888;
+        background: #888888;
+        color: white;
+        padding: 8px;
+    }
+    ```
+
+- Save the file
+- Get to your browser and refresh the page
+- You should see that the `button` and `input` update their styles
