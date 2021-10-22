@@ -5862,3 +5862,11 @@ Finally, we will add some more styling for the application
 - Save the file
 - Get to your browser and refresh the page
 - You should see that the `button` and `input` update their styles
+
+## Section 8: Application Deployment(Weather App)
+
+At this moment the app is running perfectly on your local machine but the problem is exactly that because no one can have access to the application. In these sections, you will see how to `deploy` the application into a `production` server so anyone with the app `URL` can have access to use it. We will use 3 tools: `Git`, `Github` and `Heroku`.
+
+- [Git](https://git-scm.com/): `Git` will allow us to put our application into a `version control` that going to allow us to track the changes to our app.
+- [Github](https://github.com/): Will backup our code and collaborate with others
+- [Heroku](https://www.heroku.com/): Will give us everything we need to `deploy` our `nodeJS` application to a `production` server so our app is accessible from a `URL`
