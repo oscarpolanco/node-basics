@@ -5870,3 +5870,32 @@ At this moment the app is running perfectly on your local machine but the proble
 - [Git](https://git-scm.com/): `Git` will allow us to put our application into a `version control` that going to allow us to track the changes to our app.
 - [Github](https://github.com/): Will backup our code and collaborate with others
 - [Heroku](https://www.heroku.com/): Will give us everything we need to `deploy` our `nodeJS` application to a `production` server so our app is accessible from a `URL`
+
+### Joining Heroku and Github
+
+Before to begin working with the `deploy` of the application we will need to join the 2 tools that will help us to make this possible that are `Heroku` and `Github`.
+
+`Github` is a software development platform to give us all the tools necessary to manage software development projects whether we are working by ourselves or with others. Why `Github`? Is because it makes it easy to manage our projects; track code changes over time to collaborate with others and track `bugs`, `issues`, and `features requests`. Also with `Github` you can host `public` or `private` projects depending is you want or not share to them with others. Actually, all the `npm modules` that we use their code is hosted by `Github`.
+
+`Heroku` will give us all the infrastructure needed to actually `deploy` our `nodeJs` project to a `production` server. `Heroku` is not a `nodeJs` specific; you can use `Heroku` with other languages.
+
+To create accounts get to [Github](https://github.com/) and click on the `Sign up` button then fill the form and that it. Like with did on `Github` go to [Heroku](https://www.heroku.com/) and click on the `Sign up` button then complete the registration form. If you already have an account for any of these sites you can use it and we are going to use the free accounts no need to add a paid account.
+
+We will need some tools that will make it easy to use `Heroku` so we will be downloading the `Heroku command line tool` that will make some commands available on our terminal that will help us to `deploy` our app easily. These are the steps:
+
+- On your browser go to https://devcenter.heroku.com/articles/heroku-cli
+- Get to de download section
+- Download the one for your operating system
+- Use the installer for the installation
+- Open your terminal(If is already open; you will need to restart your terminal)
+- Type the following command: `Heroku -v`
+- You should see the version of `Heroku` that is installed
+
+Now we will `login` to `Heroku` from your terminal to manage everything from the terminal.
+
+- On your terminal use the following command: `Heroku login`
+- Press any key on your keyword
+- You will be redirected to your browser
+- Login with your `Heroku` account(If you are already login on your browser just clicking the login button will be enough)
+- Close the tab
+- On your terminal, you should see that you are login using your `Heroku` account email
