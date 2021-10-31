@@ -5916,3 +5916,89 @@ For this example, we will use `Git` that is easy to use and you can use it regar
 - Go to your terminal(Restart your terminal if you already have the terminal open; if you are on windows install the `git bash`)
 - Use the `version` flag to check if `git` is correctly installed it: `git --version`
 - You should see the `version` of `git`(Make sure that you are over the `version` 2)
+
+### Exploring Git
+
+Let's see a little overview of how `git` works.
+
+Let imagine that we have a new project and create a new folder for the project and decide that I'm going to use `git`. The first thing we do is to initialize `git` on the folder with a command(Later we will see the actual command) so in other to work with `git` we first need to initialize where we want to use it. When we initialize `git` we can begin to add files to our project.
+
+By default `git` don't track files that you add to your application so you will need to run commands to tell `git` that you want to track some specific files so if you add some new files to the project `git` will be considered then as `untracked files`. Let's imaging that we add to files on the folder that we created; an `app.js` script and a `markdown` file call `readme.md`
+
+```
+---------------
+Untracked files
+---------------
+src/app.js
+readme.md
+```
+
+As we mentioned by default the new files are considered `untracked files` and we can begin the process of getting into `commits`. When something is `committed` to `git` and will be tracking those files but this is a 2 step process. The first thing that we do is to `staged` those `changes` that will be the step that we put things that we wanna `save` with all the things that we wanna bundle into a `commit`.
+
+```
+---------------                      --------------
+Untracked files                      Staged changes
+---------------                      --------------
+src/app.js      ==> add command ==>
+readme.md
+```
+
+We will run a `add git command` that will allow us to take one or more files that are `untracked` and convert them to `staged changes`; in this case, we will `track` the `src/app.js` file
+
+```
+---------------                      --------------
+Untracked files                      Staged changes
+---------------                      --------------
+readme.md       ==> add command ==>  src/app.js
+```
+
+As we mentioned we `staged` the things that we want so we can leave the `readme.md` file `untracked` and `staged` just the `app.js` file also the `staged changes` are the things that we are going to add to the next `commit` so the next step will be using a `git commit command` that will allow us to take all the files of the `staged changes`; in this case `src/app.js`; and bundle it on a single `commit`
+
+```
+---------------                      --------------                         -------
+Untracked files                      Staged changes                         Commits
+---------------                      --------------                         -------
+readme.md       ==> add command ==>                 ==> commit command ==>  commit A
+```
+
+Each `commit` has a unique identifier. At this moment we have a single `commit` that is `tracking` some changes of the project and a single `untracked` file. Now let's say that we want to add a new script int our project.
+
+```
+---------------                          --------------                         -------
+Untracked files                          Staged changes                         Commits
+---------------                          --------------                         -------
+readme.md            ==> add command ==>                 ==> commit command ==>  commit A
+src/utils/geocode.js
+```
+
+The new file is added to the `untracked` files; in this case the `geocode` script with the `readme.md` but we also need to use the functions that we just added in the `app.js` file that is already `tracked` by `git`. When we add some changes on a file that is already `tracked` by `git` we are doing an `unstaged change` in other words a file that is already added on a previews  `commit` and you make a change to it `git` will categorize it into `unstaged changes.
+
+```
+---------------      ----------------                     --------------                         -------
+Untracked files      Unstaged changes                     Staged changes                         Commits
+---------------      ----------------                     --------------                         -------
+readme.md            src/app.js       ==> add command ==>                 ==> commit command ==>  commit A
+src/utils/geocode.js
+```
+
+At this point, we need to `commit` to our changes, and that is a 2 step process. The first one is to add the files that we want so they are `staged changes` in this case we will add the `geocode` file and the changes of the `app.js` file.
+
+```
+---------------      ----------------                     --------------                              -------
+Untracked files      Unstaged changes                     Staged changes                              Commits
+---------------      ----------------                     --------------                              -------
+readme.md                             ==> add command ==> src/app.js           ==> commit command ==> commit A
+                                                          src/utils/geocode.js
+```
+
+As you see we added only the changes that we need and we still don't `track` the `readme.md`. Finally, we can use the `git commit command` to bundle all our changes.
+
+```
+---------------      ----------------                     --------------                        -------
+Untracked files      Unstaged changes                     Staged changes                        Commits
+---------------      ----------------                     --------------                        -------
+readme.md                             ==> add command ==>                ==> commit command ==> commit B
+                                                                                                commit A
+```
+
+Now we have 2 `commits` for our project so we can use those `commits` to reverse our application to that point of time in our case we have the `commit A` that have just the `app.js` file than the `commit B` that have `app.js` file in it updated state and the `geocode` file. As we add new features to the project you will add some more `commits` and you will have the ability to move to any point when you need it.
