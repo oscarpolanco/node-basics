@@ -5899,3 +5899,20 @@ Now we will `login` to `Heroku` from your terminal to manage everything from the
 - Login with your `Heroku` account(If you are already login on your browser just clicking the login button will be enough)
 - Close the tab
 - On your terminal, you should see that you are login using your `Heroku` account email
+
+### Version Control with Git
+
+At this moment we have access to a `Github` and `Heroku` account but at the end of the day, those accounts need access to our project code. `Heroku` will need access to the project code to `deploy` our app and `Github` need access to our project code to show it on the `repository` homepage so we can collaborate with others, track code changes over time, or manage issues on our application and for this, we will use `version control` with [Git](https://git-scm.com/).
+
+`Version control` allows you to manage the version of your application over time. Imagine that you are adding features to an application; a `version control` will help you to track those changes creating `save points` for various `versions` of the application. For example, if you have an application that is in use and you add a new feature and `deploy` your app with the new feature so everyone can use it but after that, you realize that is a bug and you will need to get back to a previews state of the application in other to fix the bug and `deploy` it again; without `version control` this is a little bit difficult because the only `version` that you have is the last one with the bug included things that make it difficult to revert to a previews state but with `version control` you can do this on a second.
+
+For this example, we will use `Git` that is easy to use and you can use it regardless of any language that you use.
+
+#### Installing Git
+
+- On your browser go to [Git page](https://git-scm.com/)
+- Click on the `download` button that is on the page
+- Follow the installer steps
+- Go to your terminal(Restart your terminal if you already have the terminal open; if you are on windows install the `git bash`)
+- Use the `version` flag to check if `git` is correctly installed it: `git --version`
+- You should see the `version` of `git`(Make sure that you are over the `version` 2)
