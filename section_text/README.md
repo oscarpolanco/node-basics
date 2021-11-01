@@ -6002,3 +6002,59 @@ readme.md                             ==> add command ==>                ==> com
 ```
 
 Now we have 2 `commits` for our project so we can use those `commits` to reverse our application to that point of time in our case we have the `commit A` that have just the `app.js` file than the `commit B` that have `app.js` file in it updated state and the `geocode` file. As we add new features to the project you will add some more `commits` and you will have the ability to move to any point when you need it.
+
+### Integrating git
+
+In this section, we will assume that you don't have any track files of the `web-server` project so let's get to initialize `git` on the project.
+
+As we mentioned before if we are going to use `git` we will need to use a command to initialize it and is important to mention that we need to do it on the directory that we want to track in this case the `web-server` directory, not in a parent directory or a nested one.
+
+- On your terminal; go to the `web-server` directory
+- Type the following command: `git init`
+- You will see a message output like this: `Initialized empty Git repository in path/to/your/project/.git`
+
+`Git` create a new directory called `.git` and this directory is where `git` store everything that makes your `git` project so when we add new files or create new `commits` will be stored on data structure in the `.git` directory. We don't go to alter this directory instead is `git` that is in charge of altering this directory every time you run `git` commands. Another thing you may notice is that it mentions that a `git repository` is created; a `repository` is a place where a thing is stored which means that everything relate to `git` is stored in a `git` repository. In this case, we got a local `repository` store on the `.git` directory but later we will have remote `repositories` when we work with `Github` and `Heroku` where our code is backup.
+
+You may not see the `.git` directory because a lot of editors hide this directory by default; if you want to see it; you just need to search the configuration on your editor that hides directories but as we mentioned before we will not touch this directory.
+
+Now we will use the behavior of the `vscode` editor to see some of the behaviors that you will see for `Git`. After you initialize the `git` project on the `web-server` directory; you will see on the sidebar where it shows all the files that all of that directory is in `green` color; this is the convention for the files that are `untracked` so they are not been committed yet(This is a convention for the editors). From here we will continue the `git` to `track` the files
+
+- On your terminal; use the following command: `git status`
+
+The `status` command will show us the current `status` of our files. Here you will see all the files of the `web-server` directory that are not `track` yet in `red` color this is the convention that `git` uses for the `untracked` file. Now that we see all the files that we want we could continue with the add process but there is a directory that we don't want to `track` that is the `node_modules` directory because this is a generated directory and we can get back to its exact state using the `package.json` file and the `npm install` command so `git` don't need to know about this directory.
+
+- On your editor; go to the `web-server` directory
+- Create a new file called `.gitignore`(Need to add this exact name in order to `git` recognize the file)
+- Add the name of the thing that we want to ignore; in this case the `node_modules` directory on this newly created file: `node_modules`
+- Save the file
+- Get to your terminal and use the `git status` command again
+- You should see that the `node_modules` directory doesn't appear on the `untracked` files anymore because `git` is ignored it
+
+On `vscode` you will see that the `node_modules` directory turns into `grey` and this is an editor's convention for ignoring files. At this moment we have all the files that we want to track for the application so we are ready to do our first `commit`.
+
+- On your terminal; run the following command: `git add src/`
+
+When we use the `git add` command we will need to at the thing we want to add that are `untracked`; in this case, we are adding the `src` directory so all the files on this directory are on the `staged` area meaning that all of then are ready to be `committed`.
+
+- Run the `git status` command again
+- You should see that the `src/` directory is not on the `untracked` file sections; they are moving to the `staging` area with the title `Changes to be committed` and they are on `green`(Convention for the `staged` files on `git`)
+- Since we want to `commit` all the files we can continue adding the `untracked` files but instead of doing one to one we use a shortcut that is the following: `git add .`
+- Run the `git status` again
+- You will see all the files are `staged` so we can create the `commit`
+- To create a `commit` we use the `git commit` command with the `-m` flag to add a message for the `commit` that describe wanting change but this is our first `commit` so for the convention we put `Init commit` like this: `git commit -m"Init commit"`
+- You will see a large output but at the beginning, you will see the number of files that change and for all files, you will see `create` because they are not `tracked` before this `commit`
+
+On `vscode` after you `commit` your changes the color of the files will get back to the normal color that you see before initializing the `git` repository. Now, let's add one more update.
+
+- On your editor; go to the `app.js` file on the `web-server/public/js` directory
+- Remove the console on the first line and move the first constant to the top of the file
+- Save the file
+
+On `vscode` you will see immediately after saving the file that the color of the `web-server` directory to the `js` file that we just update the change to `orange` this is the convention that we change a `track` file for editors.
+
+- Get back to your terminal and run `git status`
+- You will see that that the `app.js` file is in `red` but is in a new section called `Changes not staged for commits`. This means that we update a file that is already `track` but this update is not `committed` yet
+- Run the add command: `git add .`
+- Run `git status` again
+- You should see that the `app.js` is `green` and is on the `Changes to be committed` section
+- Now run the `commit` command with a message that describes the update: `git commit -m"Remove unnecessary console.log call"`
