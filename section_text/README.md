@@ -6058,3 +6058,60 @@ On `vscode` you will see immediately after saving the file that the color of the
 - Run `git status` again
 - You should see that the `app.js` is `green` and is on the `Changes to be committed` section
 - Now run the `commit` command with a message that describes the update: `git commit -m"Remove unnecessary console.log call"`
+
+### Setting up SSH keys
+
+At this moment you have created your `Github` account, make some commits, and are ready to upload those `commits` to `Github` and `Heroku` so they can access the latest version of our code but we need a secure way to transfer our code to those platforms and for this, we will use `SSH`. The `SSH` letters stand for `Secure Shell` and give users a secure way to communicate with another machine.
+
+In this section we will set an `SSH key pair`; this is a set of 2 files with which we will use to facilitate secure communication. Let's get into the configuration. If you are on `Mac` or `Linux` you can do it from the terminal but on `Windows` you will need to download the `git bash` that we mentioned on the `Install git` section.
+
+- Go to your terminal
+- First; we will need to see if we got `ssh keys` on our machine and for this, we will use the following command
+
+    `ls -a -l ~/.ssh`
+
+    - `ls`: Allow us to list the content of a directory
+    - `-a`: Make sure that all hidden files or folder shows up
+    - `-l`: Change the format of the output of the command so we can read it easily. Will put everything top to bottom instead of using columns
+    - `~/.ssh`: This is the path of the file that we want to see. The `~` is a shortcut for the user directory and the end represent that we are looking for the `ssh` folder
+
+    There is a change that you don't have this directory so the command will fail but this is good because we will add the directory. If you have a file called `id_rsa` and another called `id_rsa.pub` that means that you already have a set of `ssh` keys and you can choose to use those instead of creating new ones. For the following steps, we will assume that you don't have `ssh` keys so you can see all the processes.
+
+- Now use the following command:
+
+    `ssh-keygen -t rsa -b 4096 -C "your_email@addres.com"`
+
+    - `ssh-keygen`: This Will allow us to generate the `ssh` key pair
+    - `-t`: Stand for `type` of protocol that we are going to use to generate the key
+    - `rsa`: Algoritme that help users to generate a secure key
+    - `-b 4096`: The `b` Stand for `bits` then the amount of `bits` for the key
+    - `-C "your_email@addres.com"`: Make sure that the `C` is capital no lowercase and allow us to put a comment for the key. Generally, we put our `email` account
+
+- Then it will show you a question for a file to save the key; just click enter to use the default one
+- We won't provide a `passphrase` so click enter again
+- Click enter again
+- You will see that the key is created
+- Now run the first command that we use on this section: `ls -a -l ~/.ssh`
+- You will see that now you have an `id_rsa` and `id_rsa.pub` files
+
+    The `id_rsa` is a secret file that you will not share with anyone and the other is a public file that we are going to be sharing with `Github` and `Heroku` so we can secure the communication of our machine with their servers
+
+- Now we need to make sure that the program is running with the following command:
+
+    `eval "$(ssh-agent -s)"`
+
+    For windows:
+
+    `eval $(ssh-agent -s)`
+
+    This command will try to start up the `ssh-agent` and if is already running will tell use the `process id`
+- You should see an output like this: `Agent pid ####`(The `#` represent numbers)
+- Then we need to register the file with:
+
+    `ssh-add -K ~/.ssh/id_rsa`
+
+    The `-K` flag will make sure that things get added correctly on `mac` for `Windows` and `Linux` we don't need it
+
+    `ssh-add ~/.ssh/id_rsa`
+
+- You will see that the file is added
