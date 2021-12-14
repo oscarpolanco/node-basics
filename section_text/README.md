@@ -6189,3 +6189,148 @@ If you receive that message everything is good to go!!!
 - Get back to the repository page on `Github`
 - Refresh the page
 - You will see that we have all files for our project!!!
+
+### Deploying node.js to Heroku
+
+Now that we push our code to `Github` we now can go to the next step of the process that is to push the code to `Heroku`. This will allow us to deploy our `node.js` application to `production` so at the end of this section we will have an `URL` that anyone with an internet connection can access to your application. Like with did with `Github` we are going to set our `remote` and use the push command to have the code available on `Heroku` but we still need a couple of updates on the application to work on the `Heroku` environment and one important thing is that we can manage almost all the steps to deploy our app from the terminal(Remember that we install `heroku-cli`).
+
+#### Notes:
+
+- We are assuming that you add your local `git repository` inside of the `web-server` directory
+- After we deploy the add assuming the previews note; there will be some steps if you set the `git repository` on a different folder level
+- Also if you somehow change the `commit` that you use previously to deploy the app(Like change the `commit` hash); we will show how to force update this
+- The last 2 notes can be skipped
+
+#### Deploy the web-server app to Heroku
+
+Here we will see the steps to deploy the app.
+
+- First; we will need to add our `ssh` key to `Heroku` as we did on `Github` so open your terminal and get to the `web-server` directory
+- Type the following command: `heroku keys:add`
+- After running the previews command a question will show up so you can choose which `ssh` key you will add(We are assuming that you are logged in)
+- Type `Y` after choosing the file with the `ssh` key
+- Now the `ssh` key is associated with our `Heroku` account and we can push security our code
+- Now we can create our `Heroku` application. Type the following command: `heroku create name-of-your-app`
+
+    This will need to run on the root of the project and the name of the app is optional so `Heroku` will assign a random name if you don't specify it; in our case is better to specify the name like `myName-weather-app` so we can avoid confusion and should be unique across the `Heroku` platform, not just your apps that is why to like to put my name or something meaningful for us.
+
+    After running the command you will see the logs that a `Heroku` app is been created and 2 `URLs` appear. The first `URL` is the actual `URL` of the website and the other represents the `remote` where we push our code
+
+- Copy the first URL
+- Open your browser and paste the URL that you just copy
+- You will see a welcome message from our new app(This is because we still don't deploy our app yet)
+- Get back to the terminal
+
+We are ready to push our code to `Heroku` but we need to make a couple of changes to actually tell `Heroku` can it run our app so we will continue with the push of the code after those updates.
+
+##### Web-server update to work with Heroku
+
+At this moment we run our application using the `node` command to run the `app.js` file so we need to `Heroku` do the same when we deploy our app. To do this we will need to app a `script` on the `package.json` file that `Heroku` run by default called `start`.
+
+- On your editor; go to the `package.json` file at the root of the `web-server` directory
+- Get to the `scripts` object
+
+    This object as its name said will help us to define `scripts` for our application and you put a key/value pair where the key is the name of the command that we can run at the terminal and it pair will be the what it will run on the terminal
+
+- Remove the `test` command(We will add it again in a future section)
+- Add the following:
+
+    ```json
+    "scripts": {
+        "start": "node src/app.js"
+    },
+    ```
+
+    The `key` needs to be `start` and the value will be the same command that we use to run the `web-server` app. Now we can use the `start` command locally to run our app not just for `Heroku`
+
+- Get to your terminal and run the following: `npm start`
+- You will see the same logs that you see when you run the `node` command
+- On your browser; go to `http://localhost:3000/`
+- You will see that the app works normally
+- Get back to your editor and get to the `app.js` on the `src` directory
+- Bellow the `app` constant definition; create a constant call `port` with the following value:
+
+    `const port = process.env.PORT || 3000;`
+
+    At the bottom of the file on the `app.listen` line we specify the `port 3000` on which our app will run but when we deploy our app `Heroku` will provide us with a `port` that we don't know its value so we will need to update that line that is why we create the `port` constant. `Heroku` will provide us the `port` value on the `env` object(Where all the `environment variables` are available) on the `PORT` property but this `env` is not set on the local environment so we use the `or` logical operator to fallback `3000` is the `env` object doesn't exist
+
+- Get to the bottom of the `app.js` file
+- Update the `3000` on the `app.listen` line to use the `port` constant
+
+    ```js
+    app.listen(port, () => {
+        console.log('Server is up on port 3000.');
+    });
+    ```
+
+Now we are set to push our app to `Heroku`
+
+##### Push the app to Heroku
+
+- On your terminal; use the `status` command of `git`
+- You should see all the changes that you made
+- `Add` all the changes using: `git add .`
+- Commit the changes using: `git commit -m"Message that represent the updates"`
+- Now push the changes to `Github`(We are assuming that you are using `main`)
+- The code on `Github` should be updated
+- Now we need to push the changes to `Heroku` but first, we will check if our `remote` is added so use the `remote` command: `git remote`
+- You will see a `Heroku` remote added on the list(This was done automatically when you create the app; it is not created you can do it manually as we did with `origin`)
+- Use the `push` command with the `Heroku` remote to the `master` branch
+
+    `git push heroku master`
+
+    After running this command you will see logs on the process that `Heroku` follows (Installing dependencies and running the app) and finally telling you that the app is available to check. By default `Heroku` uses the `master` branch not the `main` like `Github` but is the same with another name.
+
+- Get back to the `Heroku` app `URL` that you use before on your browser
+- Refresh the page
+- You will see the app working as expected
+
+#### Deploy to Heroku from a no root directory
+
+In some cases, I have more than one app on the `repository` so the local `git` repository is added to the upper level of the app so we actually run the `Heroku` commands from the root instead of the actual app but we can make a workaround for this so for this part we will begin the process again like we did not deploy the app to `Heroku`.
+
+Example directory:
+
+```bash
+root/
+    - example-app/
+    - web-server/
+    .gitignore
+```
+
+So we will need to run every command from the `root` directory but only deploy the `web-server` app to `Heroku` not all the content of the `root` directory.
+
+- On your terminal; go to the `root` directory
+- Add your `ssh` key as you saw before using `heroku keys:add`
+- Then create your new app using: `heroku create name-of-your-app`
+- Now like you saw before preparing you app so it can work with `Heroku`(Create `start` script and add/use the `port` constant)
+- Commit your changes and push to `Github`
+- Now we will need to push to `Heroku` our code but the different than before that we will need to point the `web-server` directory so we push only those files. Use the following command on the root directory
+
+    `git subtree push --prefix path/of/your/app heroku master`
+
+    The `subtree` command will allow us to specify that we will run a command for a specific directory of our folders. In this case, we will need to `push` only the files on the `web-server` directory then we specify the `prefix` that will allow you to explicitly tell the path of the directory that will run the command; in this case the `web-server` directory and finally we continue with the `remote` and `branch` that we will at this case `push` our code.
+
+- Get to the app `URL` on your browser and you should see that the app is deployed successfully
+
+##### Note:
+
+- If you are not on the `main` branch you can still use the `Heroku` command with `master`
+
+#### Force push to Heroku
+
+Finally, in some cases, we can use some `git` features that update our past `commits` so we will need to `force` an update to `Heroku` because it will reject our update. In the case of the app that like the one first shown on the example just need to app the `-f` option to the `push` command like this:
+
+`git push -f heroku master`
+
+But in an app, like we show that is on a subdirectory will be more complicated because we need to combine 2 commands in one so it can `force push` and know that everything will run in a subdirectory. Here is the actual command:
+
+```bash
+git push heroku `git subtree split --prefix path/of/your/app name_of_your_current_branch`:master --force
+```
+
+Here we add the `push` command to the `heroku remote` but before specifying the branch we add the next command where we specify the `subtree` directory that we need to use on the `push` command and finally add the actual branch on that we are going to `push` with the `force` option. This will help you to `force push` if you need it. On the `prefix` you will need to put the name of the current branch that you did the update this will allow you to `push` no `main` branch as you `master` branch of `Heroku`.
+
+##### Notes:
+
+- Be careful with the `force push` because this will override all the code that you previously uploaded
