@@ -6083,7 +6083,7 @@ In this section we will set an `SSH key pair`; this is a set of 2 files with whi
 
     - `ssh-keygen`: This Will allow us to generate the `ssh` key pair
     - `-t`: Stand for `type` of protocol that we are going to use to generate the key
-    - `rsa`: Algoritme that help users to generate a secure key
+    - `rsa`: Algorithm that help users to generate a secure key
     - `-b 4096`: The `b` Stand for `bits` then the amount of `bits` for the key
     - `-C "your_email@addres.com"`: Make sure that the `C` is capital no lowercase and allow us to put a comment for the key. Generally, we put our `email` account
 
@@ -6110,8 +6110,82 @@ In this section we will set an `SSH key pair`; this is a set of 2 files with whi
 
     `ssh-add -K ~/.ssh/id_rsa`
 
-    The `-K` flag will make sure that things get added correctly on `mac` for `Windows` and `Linux` we don't need it
+    The `-K` flag will make sure that things get added correctly on `Mac` for `Windows` and `Linux` we don't need it
 
     `ssh-add ~/.ssh/id_rsa`
 
 - You will see that the file is added
+
+### Pushing code to Github
+
+Now that we have the `ssh` on your local; you can begin to push your code to those third-party services so we can continue the process of sharing the code on `Github` and deploy our app with `Heroku`. Let's get into the push process.
+
+- On your browser go to https://github.com/
+- Login with your account
+- You should be on the front page of the `Github` page
+
+We already have a local `repository` that we did on a previews section so we will do the same on the `Github` page and that is the way that `Github` will have access to our code.
+
+- On the top right of the page; click on the `plus` button
+- On the dropdown menu; click on create a repository
+- You will be redirected to a form
+- Fill the `repository name` with a name that makes sense to you
+- Now choose between the `public` and `Private` checkboxes
+
+    The `public` option will allow anyone to see your `repository` and the `private` one will hide the `repository` from the public but you can choose some users to see it in a limited number for the free version
+
+- Click on the `create repository` button
+- A new `repository` should be created and you are on a page with some instructions
+
+On the instructions, you will see a couple of titles but we are interested in the `push an existing repository from the command line`. In that title we have 2 commands that we will use to push our existing code to `Github`; on the first one:
+
+`git remote add origin repository.url`
+
+On this line, we use the `remote` command. A `remote` represent a version of your project that is hosted somewhere in our case we will have our code hosted on the `Github` and `Heroku` servers. Then we use the `add` command to as its name said `add` the `URL` of the host of the code. Next, we choose the name of the `remote`; for a convention, we use `origin` for the first `remote` but we can put everything we want. Finally, we have a long string that represents your `remote` repository in this case `Github` provides this.
+
+- Copy the `remote` command
+- Go back to your terminal
+- Be sure that you are at the root of your project(This is important because you need to be in the right place)
+- Run the `remote` command that you copy early
+
+Now we have a `remote` call `origin` that we can `push` to send our code to `Github` so as we create `commits` we will `push` those `commits` to `Github` making sure that we have the latest version and this will guide us to the second command that we have on the `Github` page:
+
+`git push -u origin main`
+
+On this line we use the `push` command that will allow us to `push` our `commits` to a giving `remote` then the name of the `remote` in this case called `origin` and finally the `branch` name and in this case is the default `branch` that `Github` provide to our call `main`. We actually can run this code yet because `Github` is not sure who is pushing the code so we will need to use the `ssh` key that we create before.
+
+- Go back to the `Github` page
+- Click on the profile picture at the top right
+- On the dropdown menu; choose `settings`
+- At the left sidebar; choose `SSH and GPG keys`
+- Click on the `New SSH key` button
+- Now add a name for the `SSH` key on the `title` input
+- Now we need the actual `ssh` key so go to your terminal
+- Use the following command: `cat ~/.ssh/id_rsa.pud`
+    - `cat`: Concatenate the content of a file out to the terminal
+    - `~/.ssh/id_rsa.pud`: File path
+- We will get the content of the file on the terminal so grab all the output and copy it
+- Get back to the `Github` page
+- Paste the `ssh` content on the `key` input
+- Click on the `Add SSH key` button
+- You will see that the `key` is created and on said that is never been used
+- Now we will test the connection; get back to your terminal
+- Run the following command: `ssh -T git@github.com`
+
+This command will test our `ssh` connection to the `Github` servers
+
+- You will get a message with a question(This is not an error); type `Y` and continue
+- Finally, you will get a message like `Hi yourGithubUsername! You've successfully authenticated, but Github does not provide shell access`
+
+If you receive that message everything is good to go!!!
+
+- Get back to the `Github` page
+- Click on the top left `Github` icon
+- On the search input at the left  sidebar; search the repository that we created before
+- You will see that we still have the instructions that we saw before
+- Get to your terminal
+- Now we can run the `push` command: `git push -u origin main`
+- You will see logs that end will end with: `Branch 'main' set up to track branch 'master' from 'origin'`
+- Get back to the repository page on `Github`
+- Refresh the page
+- You will see that we have all files for our project!!!
