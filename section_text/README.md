@@ -6378,3 +6378,39 @@ Now we will add some new data to the `forecast` text that we show when we search
 - You should see all the logs of the deployment process
 - Get to your browser and go to the `URL` of your app
 - All should work property and have all the new text
+
+### Avoiding global modules
+
+Now we will make another `script` to make our development experience easier because at this moment we type the `nodemon` command ourselves every time we are working on something locally.
+
+- On your editor; go to the `package.json` on the `web-server` directory
+- On the `script` section; add a new `script` call `dev` and its value will be the `nodemon` command
+
+    ```json
+    "scripts": {
+        "start": "node src/app.js",
+        "dev": "nodemon src/app.js -e js,hbs"
+    }
+    ```
+
+- Save the file
+- Get to your terminal and go to the `web-server` directory
+- Run the `dev` script using: `npm run dev`
+- Get to your browser and go to `http://localhost:3000/`
+- You should see that the application works as expected
+
+One thing before we continue is that this script works because we previously install the `nodemon` dependency globally on our machine so if another person download the code and try to run this script maybe it fails because it doesn't have the script globally installed yet so we want that every dependency is locally installed so everyone can use it and do this we first uninstall `nodemon` globally
+
+- Get to your terminal and stop your local server
+- Use the `npm uninstall` command with the `g` flag for `nodemon`: `npm uninstall -g nodemon`
+- Now install `nodemon` as a `dev dependency` on the `web-server` project using: `npm install nodemon --save-dev`
+- On your editor; go to the `package.json`
+- At the bottom; you will see a `devDependencies` object and in there should be `nodemon`
+
+    A `dev dependency` is dependencies that are installed on your local machine for development and not installed on your `production` environment. In our case, `Heroku` won't install the `nodemon` dependency.
+
+- Now get to your terminal
+- Use the `nodemon` command as we use before: ` nodemon web-server/src/app.js -e js,hbs`
+- It should fail
+- Now run the `dev` script
+- It should work as expected
