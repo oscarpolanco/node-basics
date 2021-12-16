@@ -6334,3 +6334,47 @@ Here we add the `push` command to the `heroku remote` but before specifying the 
 ##### Notes:
 
 - Be careful with the `force push` because this will override all the code that you previously uploaded
+
+### New feature deployment workflow
+
+In this section, we will check the new workflow on which we add a new feature and that feature gets to `Heroku` and `Github`. Let's begin with the example!!!
+
+- On your editor; go to the `about.hbs` on the `web-server/templates/`
+- Bellow of the `header partial` add a `p` tag with a new message
+
+    ```hbs
+    <div class="main-content">
+        {{>header}}
+        <p>This site was created by me. It use data from mapbox.com and weatherstack.com!</p>
+        <img class="portrait" src="/img/robot.png" />
+    </div>
+    ```
+
+- Save the file
+- Get to your terminal and go to the `web-server` directory
+- Use `nodemon` to run your local server: `nodemon src/app.js -e js,hbs`
+- On your browser go to the `about` page: http://localhost:3000/about
+- You should see the new text available on the page
+
+Now we will add some new data to the `forecast` text that we show when we search a location `weather`.
+
+- Get to the `forecast.js` on the `src/utils/` directory
+- We will use the `humidity` value that came on the `weatherstack` object response. Go to the last part of the condition on the `request` callback and add the following:
+
+    ```js
+    const currentWeather = body.current;
+    callback(undefined, currentWeather.weather_descriptions[0] + '. Its is currently ' + currentWeather.temperature + ' degrees out. Its feels like ' + currentWeather.feelslike + ' degrees out and the humidity is ' + currentWeather.humidity + '%');
+    ```
+
+- Save the file
+- Get to your browser and go to the homepage
+- Type a valid location on the input
+- The resulting text of the `forecast` will have the new information
+- Now get back to your terminal and stop your local server
+- Use the `add` command for the files that have updates: `git add .`
+- `Commit` your changes using: `git commit -m"Message that represents the updates"`
+- Use the `push` command to send all changes to `Github`: `git push origin main`(We are assuming that you are using `main` and the `web-server` is the root)
+- Now `push` your changes to `Heroku` using: `git push heroku master`(We are assuming that your current branch is the one that you want to deploy and the `web-server` is the root; if you are not on the root get to the previews themes on this section)
+- You should see all the logs of the deployment process
+- Get to your browser and go to the `URL` of your app
+- All should work property and have all the new text
