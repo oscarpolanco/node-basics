@@ -1,5 +1,5 @@
 const http = require('http');
-const keys = require('./keys');
+const keys = require('./keys.dev.js');
 
 const url = 'http://api.weatherstack.com/current?access_key=' + keys.weatherstackAPIKey + '&query=40,-75&units=f';
 

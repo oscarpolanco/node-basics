@@ -99,7 +99,7 @@ This is a folder with some mini examples outside of the applications that are bu
 ### 6. HTTP requests without a library
 
 - On your editor; go to the `playground` directory
-- On this directory; create a new file call `keys.js`
+- On this directory; create a new file call `keys.dev.js`
 - Inside of this newly created file add the following(If you don't have a `weatherstack API key`; [here](https://weatherstack.com/) you can get a free `key`):
 
     ```js
