@@ -11,7 +11,7 @@ The `weather-app` is an application the provides you on your `terminal` with the
 ## Step to run the app
 
 - On your editor; go to the `weather-app` directory
-- In this directory; create a new file call `keys.js`
+- In this directory; create a new file call `keys.dev.js`
 - On the newly created file add the following:
 
     ```js

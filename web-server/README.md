@@ -15,8 +15,8 @@
 
 ## Step to run the app
 
-- On your editor; go to the `web-server` directory
-- In this directory; create a new file call `keys.js`
+- On your editor; go to the `web-server/config` directory
+- In this directory; create a new file call `keys.dev.js`
 - On the newly created file add the following:
 
     ```js
@@ -29,5 +29,5 @@
 - Substitute `weatherstack_api_key` and `mapbox_api_key` with the corresponding `key` values
 - On your terminal; go to the `web-server` directory
 - Install all dependencies using: `npm install`
-- Start your local server using: `node src/app.js`
+- Start your local server using: `npm run dev`
 - On your browser go to http://localhost:3000/
