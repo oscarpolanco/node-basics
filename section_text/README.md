@@ -6410,7 +6410,11 @@ One thing before we continue is that this script works because we previously ins
     A `dev dependency` is dependencies that are installed on your local machine for development and not installed on your `production` environment. In our case, `Heroku` won't install the `nodemon` dependency.
 
 - Now get to your terminal
-- Use the `nodemon` command as we use before: ` nodemon web-server/src/app.js -e js,hbs`
+- Use the `nodemon` command as we use before: `nodemon web-server/src/app.js -e js,hbs`
 - It should fail
 - Now run the `dev` script
 - It should work as expected
+
+## Section 9: MongoDB and Promises(Task app)
+
+In this section, we will begin another app that is the `task` app where we are going to see how to connect our `node.js` application with a database so you can store user data. This application will have a lot of features that we can use on real-world apps like `user authentication with an email and password`, `database data storage` for user data, `file upload support` for user images, and `email notifications`. In this specific section we will address the basics; set our database in our machines then we are going to connect with the database from `node.js` and from there we are going to see how we can do the `CRUD`(create, read, update and delete) 4 basic operations.
