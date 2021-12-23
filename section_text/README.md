@@ -6418,3 +6418,84 @@ One thing before we continue is that this script works because we previously ins
 ## Section 9: MongoDB and Promises(Task app)
 
 In this section, we will begin another app that is the `task` app where we are going to see how to connect our `node.js` application with a database so you can store user data. This application will have a lot of features that we can use on real-world apps like `user authentication with an email and password`, `database data storage` for user data, `file upload support` for user images, and `email notifications`. In this specific section we will address the basics; set our database in our machines then we are going to connect with the database from `node.js` and from there we are going to see how we can do the `CRUD`(create, read, update and delete) 4 basic operations.
+
+### MongoDB and NoSQL database
+
+On the new app, we will use `MongoDB` because we will have an `authentication` system and we are going to need a more robust solution than the one we use in our previous example on the `notes` application(we store our data on a `JSON`).
+
+[MongoDB](https://www.mongodb.com/) is an open-source database that is available for all operating systems so we will install it on our machine then use the `MongoDB native driver` to connect our database to `node.js` and begin the process of reading and writing data. Is important to say that `MongoDB` is not exclusive of `node.js` you can use other programming languages with that database and you can use another database with `node.js`.
+
+`MongoDB` falls in a different category of database that is called `NoSQL` database. `SQL` stands for `structure query language` and `NoSQL` is `not only structure query language`. To begin to get used to `MongoDB` we will present a simple visualization of the differences between `SQL` and `NoSQL` and in a couple of next sections we will have another in deep view about this; so let's get into it.
+
+Since the concept of a `database` is the same on both we will enter the structure of the data when we store it in the database
+
+- `SQL`
+    - In here we store the data into `tables`
+
+        ```
+        -----------------------------------------
+        id  name    email               password
+        -----------------------------------------
+        21  Test    test@example.com    pass123
+        -----------------------------------------
+        ```
+
+        Your database can have as many `tables` that it need for the application
+
+    - In terms of describing the actual data that we have this will be known as a `row` or `record`
+
+        ```
+        -----------------------------------------
+        21  Test    test@example.com    pass123
+        -----------------------------------------
+        ```
+
+    - The individual things stored on our database will be known as a `column`
+
+        ```
+        --------
+        password
+        --------
+        pass123
+        --------
+        ```
+
+        On the example, we will have 4 `columns` that will be `id`, `name`, `email`, and `password`
+
+- `NoSQL`
+    - In here we store our data into a `collection`
+
+        ```json
+        [
+            {
+                "id": "21",
+                "name": "Test",
+                "email": "test@example.com",
+                "password": "pass123"
+            },
+            {
+                ...
+            }
+        ]
+        ```
+
+        Your database can have as many `collections` as it needs
+
+    - In terms of describing the actual data that we have this will be known as a `document`
+
+        ```json
+        {
+            "id": "21",
+            "name": "Test",
+            "email": "test@example.com",
+            "password": "pass123"
+        }
+        ```
+
+    - The individual things stored on our database will be known as `fields`
+
+        ```
+        "password": "pass123"
+        ```
+
+        On the example, we will have 4 `fields` that will be `id`, `name`, `email`, and `password`
