@@ -6499,3 +6499,27 @@ Since the concept of a `database` is the same on both we will enter the structur
         ```
 
         On the example, we will have 4 `fields` that will be `id`, `name`, `email`, and `password`
+
+### Installing MongoDB on macOS
+
+Now we are going to install `mongoDB` on the machine that will allow us to start a `mongoDB` server and connect to it with `node.js`. This will be a section that we assume that you are on `macOS` so for another operating system you will need to search the steps that work for you. We will be using the `community server` that is the free version of `mongoDB`.
+
+- On your browser go to; the [mongodb installation page](https://docs.mongodb.com/manual/administration/install-community/)
+- Choose your operating system(In this case `macOS`)
+
+You will need to follow the instruction on this page but here you will have a brief resume of the steps
+
+- We will need `brew` to install the packages that we need so on your browser go to the [brew installation page](https://brew.sh/#install) if you don't have it yet
+- After installing `brew` we will need to `tap mongoDB` so it will download all tools that we need for `mongoDB`
+- Now install the actual `community server` that you need(at the moment of the creation of the example the lastest was 5.0 so make sure to pick the lastest one): `brew install mongodb-community@5.0`
+- Then check if `mongoDB` is running using: `brew services list`
+
+    If you got an error this [article](https://stackoverflow.com/a/68559057) may help
+
+- Now we will create a new directory that our database can live; we will put it on the `Users` directory. So go to the `/User/your-user-name` and create a new directory. We will put it `mongodb-data`
+- Get to your terminal again and run the following command:
+
+    `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+
+- You should see a lot of output and the server will run without issues
+- Go to the `mongodb-data` folder that you created before and you should see that a lot of files populate the folder
