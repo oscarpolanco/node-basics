@@ -6511,7 +6511,7 @@ You will need to follow the instruction on this page but here you will have a br
 
 - We will need `brew` to install the packages that we need so on your browser go to the [brew installation page](https://brew.sh/#install) if you don't have it yet
 - After installing `brew` we will need to `tap mongoDB` so it will download all tools that we need for `mongoDB`
-- Now install the actual `community server` that you need(at the moment of the creation of the example the lastest was 5.0 so make sure to pick the lastest one): `brew install mongodb-community@5.0`
+- Now install the actual `community server` that you need(at the moment of the creation of the example the latest was 5.0 so make sure to pick the latest one): `brew install mongodb-community@5.0`
 - Then check if `mongoDB` is running using: `brew services list`
 
     If you got an error this [article](https://stackoverflow.com/a/68559057) may help
@@ -6523,3 +6523,47 @@ You will need to follow the instruction on this page but here you will have a br
 
 - You should see a lot of output and the server will run without issues
 - Go to the `mongodb-data` folder that you created before and you should see that a lot of files populate the folder
+
+### Installing database GUI viewer
+
+Now that we install `mongoDB` on our machine we will install an admin tool that is going to make it a lot easier to see everything related to our database.
+
+This tool will be a `GUI`(Graphic user interface) for managing your `mongoDB` database and the data that it contains and its name will be `Robot 3T`(This will be an installation guide for macOS).
+
+- On your browser go to https://robomongo.org/
+- Click on the `Download Robo 3T` button
+- Fill the required form fields
+- Then click on the `Download for Mac` button
+- Get to the download directory
+- Click on the `dmg` file that you just downloaded
+- A popup should appear
+- Grand the `Robo 3T` and move it to the `application` icon
+- Open the `applications` folder
+- Search for the `Robo 3T` icon
+- Click `open` on the popup that will appear
+- `Robo 3T` should appear
+- A popup should be open with `Robo 3T` with the license
+- Agree and continue
+- Click `finish` on the form that will appear
+- Now another popup should appear but is that not the case click on the `computer` icon at the top left
+- Click on the `Create` link at the top left of the popup
+- On the `Connection` tap set the `Name` of the `connection`; for the example, I use `Local MongoDB Database`(Could be whatever make same to you)
+- Now go to your terminal
+- Run your local `mongo` server using: `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+- On the logs check the default `mongo` port
+- Get back to `Robo 3T`
+- You should see the same port on the popup that the one you saw before on the terminal
+- Click the `Test` button
+- You should see a popup with 2 green checks that mean that the connection is working
+- Close the popup with the checks
+- Click the `finish` button
+- Choose the connection that you just created
+- You should see the connection at the sidebar
+- Right-click on the connection name
+- Choose `Open Shell`(This will allow us to run a command directly against `MongoDB`)
+- On the black input that appears write the following: `db.version()`
+
+    This command will return to us the current `version` of the `db` object. This looks like a lot to `js` and is because is `js`; when you are working with `MongoDB` and interact with it via the `MongoDB shell` we are using `js` to manipulate the database at this case we ask for the `MongoDB version`
+
+- Click on the green play button at the top
+- You should see the `version` of `MongoDB` that you installed. This will prove that everything is ok with the connection
