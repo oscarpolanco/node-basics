@@ -6567,3 +6567,210 @@ This tool will be a `GUI`(Graphic user interface) for managing your `mongoDB` da
 
 - Click on the green play button at the top
 - You should see the `version` of `MongoDB` that you installed. This will prove that everything is ok with the connection
+
+### Connecting and inserting documents
+
+In this section, we will connect to our `MongoDB` database with our `node.js` application and insert new `documents`. We will be using the `MongoDB native drive` that is an `npm` module that will allow us to interact with our database from `node`.
+
+[Here](https://docs.mongodb.com/drivers/node/current/) is the official `MongoDB` documentation. On this page get to the [API](https://docs.mongodb.com/drivers/node/current/#api) title and click the link; this will guide you to a complete overview of the `MongoDB native driver`. For our project, we will be using the official [mongoDB package npm package](https://www.npmjs.com/package/mongodb) so we can work with `MongoDB` from our `node.js` project.
+
+- Get to your terminal
+- Run your `mongoDB` local server using: `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+- Now get to your editor
+- On the root directory create a new folder called `task-manager`
+- Open another tab of your terminal(The `mongo` local server should be running so we will do the others command on another tab)
+- Get to the `task-manager` directory
+- We need to `initialize` our project using the `init` command: `npm init -y`
+- A `package.json` file should be created on the `task-manager` directory
+- Now we will install the `MongoDB` package using: `npm i mongodb`
+- A `node_modules` directory should be created; the `package.json` file should change and a `package-lock.json` should be created
+- Get to your editor
+- Create a new file called `mongodb.js`(This will change in the future just need it for an introduction)
+- At the top of the newly created file `require` the `mongodb` package:
+
+    `const mongodb = require('mongodb');`
+
+- Now we will need the `MongoClient` property from the `mongodb` object to initialize the connection with the database so create a constant call `MongoClient`(Needs to be uppercase) that will have the value of the property that we mentioned before
+
+    `const MongoClient = mongodb.MongoClient;`
+
+    This will give us functions that will help us to do the basic operations in `MongoDB`(Connect, create, read, update and delete)
+
+- Now we will need to store a `string` that will represent the connection URL of our database so bellow `MongoClient`; create a new constant call `connectionURL` with the following value:
+
+    ```js
+    const mongodb = require('mongodb');
+    const MongoClient = mongodb.MongoClient;
+
+    const connectionURL = 'mongodb://127.0.0.1:27017';
+    ```
+
+    On the `connectionURL` we will put the `localhost` that our `MongoDB` server is currently running. As you see at the beginning of the `string` we specify their protocol(`mongodb://`) then we put our `localhost` address with the `port` that our `MongoDB` database is running. We use `127.0.0.1` instead of `localhost` because `localhost` will give you some issues later and with `127.0.0.1` those issues don't happen
+
+- Then we will need the `name` of the database that we will connect to create a new constant call `databaseName` that its value will be a `string` in the case of the example we will put `task-manager`
+
+    ```js
+    const mongodb = require('mongodb');
+    const MongoClient = mongodb.MongoClient;
+
+    const connectionURL = 'mongodb://127.0.0.1:27017';
+    const databaseName = 'task-manager';
+    ```
+
+- Now we can `connect` to the database so bellow of the `databaseName` call the `connect` method of `MongoClient`
+
+    `MongoClient.connect();`
+
+- The first thing the connect method receive is the `connection string` that is stored on the `connectionURL` constant
+
+    `MongoClient.connect(connectionURL);`
+
+- The second argument is a configuration object with the following property
+
+    `MongoClient.connect(connectionURL, { useNewUrlParser: true });`
+
+    Since the `parser` that use `MongoDB` is deprecated so we will need to send the `useNewUrlParser` property in order to `parse` our connection URL correctly
+
+- The third argument will be a `callback` function
+
+    `MongoClient.connect(connectionURL, { useNewUrlParser: true }, () => {});`
+
+    This `callback` function will be called when we actually connected to the database. The database connection is an `asynchronous` operation and will take some time to connection setup and the `callback` will run when the `connect` operation is completed
+
+- Depending on what happens the `callback` will receive one of the following arguments:
+
+    `MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {});`
+
+    In case that something fails we will receive the `error` argument otherwise the `client` that will mean that the connection is established without issues
+
+- Now add a condition to check if the `error` exists and if exits the console a message that represents the error
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {
+            return console.log('Unable to connect to database!');
+        }
+    });
+    ```
+
+    Make sure that you `return` the console to prevent the `callback` function continue with its execution
+
+- Then below the console that will tell you that you connect successfully
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {
+            return console.log('Unable to connect to database!');
+        }
+
+        console.log('Connected correctly!');
+    });
+    ```
+
+- Get to the tab of the terminal that you use to install the `mongodb` package
+- Run the `mongodb.js` script using: `node mongodb.js`
+- You will see the successful message print on the console
+- Now get to the tab that is your `mongo` server running
+- You will see on the log one that said `connection accepted`; that means that you are connected to the `MongoDB` server.
+
+    At the time you have only one connection but you will see a message saying that you have five or six open connections that's because when we connect with `MongoDB`; it uses a connection pool so there actually more connections that are opened behind the scenes, even though we've only called `connect` once. That is to make sure that our `node` application can still communicate quickly even if we are trying to perform a lot of operations at the same time
+
+- Get to the other tab that you run the `mongodb.js` file
+
+    You will see that the process is still hanging and that is because when you open a connection your `node` process will be staying up and running as long as you let it or as long as your connection remains active
+
+Now let's insert our first `document`!!!
+
+- Get back to the `mongodb.js` file
+- Remove the successful message of the `callback` function
+- The first thing that we need to do is to have a reference of the database so below the `error` condition create a new constant call `db` and its value will be the return value of the `db` method of the `client` argument
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db();
+    });
+    ```
+
+- Now the `db` method receives the `name` of the database and as you remember we have the `name` on the `databaseName` constant
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db(databaseName);
+    });
+    ```
+
+    On `mongoDB` you actually don't need to create the database first because it will be created automatically when we access it
+
+- Now we need to tell which `collection` we are trying to insert the `document` and for this, we will use the `collection` method of the `db` object
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db(databaseName);
+
+        db.collection();
+    });
+    ```
+
+- The `collection` method receive a `string` that will be the `name` of the `collection` that we will insert in this case we will use a `user collection` to insert some `user` data
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db(databaseName);
+
+        db.collection('users');
+    });
+    ```
+
+    As the `db` method the `collection` don't need to exist first; `MongoDB` will create it automatically
+
+- Then we will call the `insertOne` method
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db(databaseName);
+
+        db.collection('users').insertOne();
+    });
+    ```
+
+- The `insertOne` method will receive an object will all the data that you will insert like this:
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {...}
+
+        const db = client.db(databaseName);
+
+        db.collection('users').insertOne({
+            name: 'Test',
+            age: 27
+        });
+    });
+    ```
+
+- Save the file
+- Go to the tab that you run the `mongodb.js` file
+- Stop the current process
+- Run the `mongodb.js` file again: `node mongodb.js`
+- Now get to the `Robo 3T` app
+- Right-click on the name of the database
+- You should see that new items appear on the sidebar
+- Click on the `task-manager` name
+- You should see some folders
+- Click on the `Collections` folder
+- You will see the `users` collection
+- Double click on the `users` collection
+- Data should appear on the main screen
+- Open the data and you should see the data that you just add to the `mongodb.js` file
+
+    You will notice that is a `field` call `_id` and that store a `unique` identifier for a `document` and `mongoDB` this will be done automatically
