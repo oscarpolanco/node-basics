@@ -6774,3 +6774,250 @@ Now let's insert our first `document`!!!
 - Open the data and you should see the data that you just add to the `mongodb.js` file
 
     You will notice that is a `field` call `_id` and that store a `unique` identifier for a `document` and `mongoDB` this will be done automatically
+
+### Inserting documents
+
+Here we will continue inserting documents on `MongoDB` but not only one as we saw before; we will insert more than one document at a time.
+
+As you may notice `insertOne` is not a `synchronous` operation so if we want to handle `errors` we will need to register a `callback`.
+
+- Get to your terminal
+- Run your local `MongoDB` server using: `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+- Get to your editor
+- Go to the `mongodb.js` file on the `task-manager` directory
+- At the `insertOne` function add a `callback` function as a second argument
+
+    ```js
+    db.collection('users').insertOne({
+        name: 'Test',
+        age: 27
+    }, () => {});
+    ```
+
+- The `callback` function will receive 2 arguments; the `error` if we can't insert the value for some reason and a `result` with some information of the data that we insert
+
+    ```js
+    db.collection('users').insertOne({
+        name: 'Test',
+        age: 27
+    }, (error, result) => {});
+    ```
+
+- Add a condition that checks if we got an `error` and if we have it console a message that wasn't able to insert the `user`
+
+    ```js
+    db.collection('users').insertOne({
+        name: 'Test',
+        age: 27
+    }, (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+    });
+    ```
+
+- Now if everything goes as expected console the `insertedIds` property of `result`
+
+    ```js
+    db.collection('users').insertOne({
+        name: 'Test',
+        age: 27
+    }, (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+
+        console.log(result.insertedId);
+    });
+    ```
+
+- Save the file
+- Go to your terminal and open another tab
+- On this new tab; get to the `task-manager` directory
+- Run the `mongodb.js` file using: `node mongodb.js`
+- Get to `Robo 3T`
+- If you have `Robo 3T` already open; right click on the database connection and click refresh
+- Click on the `task-manager` database
+- Click on the `collection` folder
+- Two-Click on `user`
+- You should see that a new `user` is inserted with the correct data
+- Go to the terminal tab that you run the `mongodb.js` file
+- You should see the `object id` of the `user` that you just inserted
+
+Now we will insert more than one document at a time.
+
+- On your editor; get to the `mongodb.js` file
+- Remove everything on the `insertOne` method include it
+
+    `db.collection('users')`
+
+- Now you will need to use a new method called `insertMany`
+
+    `db.collection('users').insertMany();`
+
+    The `insertMany` method receive an `array` of documents and a `callback`
+
+- Provide an `array` with 2 new `users`
+
+
+    ```js
+    db.collection('users').insertMany([{
+        name: 'Jen',
+        age: 28
+    }, {
+        name: 'Gunter',
+        age: 27
+    }]);
+    ```
+
+- Then set the `callback` function as a second parameter receiving the `error` and `result` parameter
+
+    ```js
+    db.collection('users').insertMany([{
+        name: 'Jen',
+        age: 28
+    }, {
+        name: 'Gunter',
+        age: 27
+    }], (error, result) => {});
+    ```
+
+- Add a condition that checks if we got an `error` and if we have it console a message that wasn't able to insert the `user`
+
+    ```js
+    db.collection('users').insertMany([{
+        name: 'Jen',
+        age: 28
+    }, {
+        name: 'Gunter',
+        age: 27
+    }], (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+    });
+    ```
+
+- Finally; console the `ids` of the `result` object
+
+    ```js
+    db.collection('users').insertMany([{
+        name: 'Jen',
+        age: 28
+    }, {
+        name: 'Gunter',
+        age: 27
+    }], (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+
+        console.log(result.insertedIds);
+    });
+    ```
+
+- Get to the tab of your terminal that you use to run the `mongodb.js` file
+- Stop the process
+- Run the `mongodb.js` file again
+- You will see an object with all the `ids` that you just inserted
+- Get to `Robo 3T`
+- Refresh the connection and check the `users` collection
+- You should see the `users` that you just inserted
+
+To finish with the insert example we will insert data on a new collection
+
+- On your editor; get to the `mongodb.js` file on the `task-manager` directory
+- Remove the `users` collection function
+- Now in the same line that we have the `users` collection function; use the collection method for a new one called `tasks`
+
+    `db.collection('tasks');`
+
+We will insert documents with the following structure:
+
+```js
+{
+    description: '',
+    completed: true
+}
+```
+
+The `description` property will have a brief `description` of the `task` and the `completed` property will have a `boolean` value that represents if the `task` is `completed` or not
+
+- Use the `insertMany` function sending 3 `task` and at least one of the `tasks` should have a `false` value
+
+    ```js
+    db.collection('tasks').insertMany([{
+        description: 'write code',
+        completed: true
+    }, {
+        description: 'continue with the example',
+        completed: true
+    }, {
+        description: 'finish the example',
+        completed: false
+    }]);
+    ```
+
+- Now add a `callback` function that receives `error` and `result`
+
+    ```js
+    db.collection('tasks').insertMany([{
+        description: 'write code',
+        completed: true
+    }, {
+        description: 'continue with the example',
+        completed: true
+    }, {
+        description: 'finish the example',
+        completed: false
+    }], (error, result) => {});
+    ```
+
+- Add a condition to check the `error` and console a message if is the case on the `callback` function
+
+    ```js
+    db.collection('tasks').insertMany([{
+        description: 'write code',
+        completed: true
+    }, {
+        description: 'continue with the example',
+        completed: true
+    }, {
+        description: 'finish the example',
+        completed: false
+    }], (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+
+    });
+    ```
+
+- Finally; console the `ids` if is not an `error`
+
+    ```js
+    db.collection('tasks').insertMany([{
+        description: 'write code',
+        completed: true
+    }, {
+        description: 'continue with the example',
+        completed: true
+    }, {
+        description: 'finish the example',
+        completed: false
+    }], (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+
+        console.log(result.insertedIds);
+    });
+    ```
+
+- On your terminal; get to the tab that you run the `mongodb.js` file
+- Stop the process
+- Run the `mongodb.js` file again
+- You should see the `ids` of the documents that you insert
+- Get to `Robo 3T`
+- Refresh the connection and check that you have a new `tasks` collection
+- On the `tasks` collection you should have all the data that you just inserted

@@ -12,12 +12,22 @@ MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) =>
 
     const db = client.db(databaseName);
 
-    db.collection('users').insertMany([{
-        name: 'Jen',
-        age: 28
+    // Goal: Insert 3 tasks into a new task collection
+    //
+    // 1. Use insertMany to insert the documents
+    //      - description (string), completed (boolean)
+    // 2. Setup the callback to handle error and print the ids
+    // 3. Run the script
+    // 4. Refresh the database in Robo 3t and view the data in tasks collections
+    db.collection('tasks').insertMany([{
+        description: 'write code',
+        completed: true
     }, {
-        name: 'Gunter',
-        age: 27
+        description: 'continue with the example',
+        completed: true
+    }, {
+        description: 'finish the example',
+        completed: false
     }], (error, result) => {
         if(error) {
             return console.log('Unable to insert user');
