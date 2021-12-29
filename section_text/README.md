@@ -7021,3 +7021,109 @@ The `description` property will have a brief `description` of the `task` and the
 - Get to `Robo 3T`
 - Refresh the connection and check that you have a new `tasks` collection
 - On the `tasks` collection you should have all the data that you just inserted
+
+### The object ID
+
+As you see; each time that we insert data to the database an `objectId` is created and that is a unique identifier for each document that you insert. If you work with a more traditional `SQL` database this `id` will be much different and this is by design. On those `SQL` databases the `id` is set by an autoincrement value but on `mongo` the `id` is known as `GUID`(Globally Unique Identifiers) and these `ids` are designed to be unique using an algorithm without the server to determine what is the next `id` value is that help `mongo` to achieve one of its goals that are the ability of scale well in a distributed system so we have multiple database servers running instead of just one allowing us to handle heavy traffic because there is no change of an `id` collision.
+
+As we mentioned our server doesn't need to determine the `id` but we actually can generate it on `node.js` using the `mongo native driver` and we will do exactly that to get a deeper view on this.
+
+- On your terminal; run your `mongo` local server using: `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+- Then on your editor; go to the `mongodb.js` file on the `task-manager` directory
+- Remove the `collection insert`
+- Noe at the top of the file get the `ObjectId` from `MongoDB` since we are requiring 2 things from `MongoDB` we can use destructuring
+
+    `const { MongoClient, ObjectId } = require('mongodb');`
+
+- Remove the `MongoClient` line bellow of the `MongoDB` require
+- Now create a new constant call `id` bellow the `databaseName` with the following value:
+
+    `const id = new ObjectId();`
+
+    This is a `constructor` function that will generate a new `id` for us. Technically the `new` keyword is not necessary because the `MongoDB` library has a little defensive built to add  it if you don't but in general is a good idea to add it ourself
+
+- Console the value of the `id`
+- Save the file
+- Open a new tab of your terminal
+- Get to the `task-manager` directory
+- Run the `mongodb.js` file using: `node mongodb.js`
+- You will see an `id` output on the terminal
+
+You may think that is a random sequence of characters but actually, there are some pieces of information in there. The `ObjectId` is a `12 bytes` value that consists of:
+
+- The first `4 bytes` represent the number of seconds since the `unix epoch`(This is a point on time that is midnight, January first of 1970). So inside of the `id` value is actually a `timestamp` which know when the particular `id` was created
+- The following `5 bytes` are a randomly generated value
+- And the last `3 bytes` a `counter` starting with a random value
+
+Now let's check some of the information that we can extract from the `ObjectId`
+
+- Get to the `mongodb.js` file
+- Below of the console of the `id` add another console that prints the following
+
+    `console.log(id.getTimestamp());`
+
+    The `getTimestamp` method will get the `timestamp` stored inside of the first `4 bytes` of the `ObjectId`
+
+- Get to the tab of the terminal that we run the `mongodb.js` file and stop the process
+- Run the `mongodb.js` file again
+- You should see the `id` and the correct `timestamp` of the `id` creation
+
+Now we will use the `id` that we are generating to insert a value on the `users` collection
+
+- Go to the `mongodb.js` file
+- Bellow the `db` constant; add the following:
+
+    ```js
+    db.collection('users').insertOne({
+        _id: id,
+        name: 'Testing',
+        age: 27
+    }, (error, result) => {
+        if(error) {
+            return console.log('Unable to insert user');
+        }
+
+        console.log(result.insertedId);
+    });
+    ```
+
+    As you see we are adding the `_id` property to the object that we are inserting and use the `id` value that we are generated as its value
+
+- Save the file
+- Get to the tab that you run the `mongodb.js` file and stop the process
+- Run the `mongodb.js` file again
+- You should see the `id` created and the `id` of the new `user` are equal
+
+On the terminal when we see an `ObjectId` we only see a series of characters actually we see a call to an `ObjectId` function and as an argument, we see a `string` with all the characters that we mentioned before. This is a visualization to make it easier to see the `id` value because those values are `binary` data. The reason that they are using `binary` data instead of a traditional `string` has to do with the size of each. By using `binary` instead of a `string` it will be able to cut the size of an `ObjectId` in half.
+
+Let's check this.
+
+- On your editor; get to the `mongodb.js` file
+- Comment the `collection insert` methods
+- On the first console of the `id` call the `id` property of that object
+
+    `console.log(id.id);`
+
+- Save the file
+- Get to the tab that you run the `mongodb.js` file and stop the process
+- Run the `mongodb.js` file again
+- You should see the `buffer` with the `binary` data
+- Now get to the `mongodb.js` file
+- On the `id` of the first console; call the `length` property
+
+    `console.log(id.id.length);`
+
+- Save the file
+- Get to the tab that you run the `mongodb.js` file and stop the process
+- Run the `mongodb.js` file again
+- You should see the `length` of the `id` and is `12`
+- Now get back to the `mongodb.js` file
+- Bellow of the first `id` console add the following
+
+    `console.log(id.toHexString().length);`
+
+    The `toHexString` method will return the `string` representation of the `id` and we will check its `length`
+
+- Get to the tab that you run the `mongodb.js` file and stop the process
+- Run the `mongodb.js` file again
+- You should see both `length` and the second one will be `24`
