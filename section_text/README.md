@@ -7127,3 +7127,240 @@ Let's check this.
 - Get to the tab that you run the `mongodb.js` file and stop the process
 - Run the `mongodb.js` file again
 - You should see both `length` and the second one will be `24`
+
+### Querying documents
+
+Now we are going to check how to `read` documents from our `MongoDB` database. Before to start we will need to remove the code of the previews section of the `id`.
+
+- Get to your editor and go to the `mongodb.js` file on the `task-manager` directory
+- Remove the following lines:
+
+    ```js
+    console.log(id.id.length);
+    console.log(id.toHexString().length);
+    console.log(id.getTimestamp());
+    ```
+
+- Then remove the `collection insert` of `users` inside of the `connect` method
+
+When we are `reading` documents on `MongoDB` we will have 2 main methods:
+- `find`: Will allow us to `fetch` multiple documents out of the database; depending on criteria of searching like the age on a `user`
+- `findOne`: `Fetch` an individual document
+
+You will see other functions that begin with `find` but these are related to other things like `update` and `delete` with `find` but those topics will be addressed later. Now we will go to check to find an individual element first.
+
+- Go to `Robo 3T`
+- On the `users` collection; right click on one of the `users`
+- Choose `Edit document`
+- Copy the name of the `user` and click the `close` button
+- On your editor; go to the `mongodb.js`
+- In the `connect` method use the `db` object to call the `users collection`
+
+    `db.collection('users')`
+
+- Call the `findOne` method on the `users collection`
+
+    `db.collection('users').findOne();`
+
+    The `findOne` method receives 2 arguments; a configuration object with the property and value that we need to search and a `callback` function
+
+- Add an object as a first argument of the `findOne` method with the property `name` and its value will be the `name` that you copy before on `Robo 3T`
+
+    `db.collection('users').findOne({ name: 'NameThatYouCopy' });`
+
+    The property `name` will be the acceptance criteria for the `search` and you can use more fields specifying the values on the object
+
+- Now as a second parameter add a `callback` function that receives an `error` and a `user`
+
+    `db.collection('users').findOne({ name: 'NameThatYouCopy' }, (error, user) => {});`
+
+    The `user` argument can be named as you like but since we are working with the `users` collection and we are `searching` for a `user` will have a lot of sense that we call it like this
+
+- On the `callback` function add a condition to handle the `error` and console a message
+
+    ```js
+    db.collection('users').findOne({ name: 'NameThatYouCopy' }, (error, user) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+    });
+    ```
+
+- Then console the `user` if there is not an `error`
+
+    ```js
+    db.collection('users').findOne({ name: 'NameThatYouCopy' }, (error, user) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(user);
+    });
+    ```
+
+- Get to your terminal and run your local `mongoDB` server using: `sudo mongod --dbpath /Users/your-user-name/mongodb-data`
+- On another tab of your terminal run the `mongodb.js` file using: `node mongodb.js`
+- You should see the `user` information that you use it `name` for the `search`
+
+Now what happens if we `search` for a value that doesn't exist on our database like with an `age` that doesn't match with any `user`
+
+- On the `findOne` first argument; add the `age` property with a value that doesn't exist on the database
+
+    ```js
+    db.collection('users').findOne({ name: 'NameThatYouCopy', age: 1 }, (error, user) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(user);
+    });
+    ```
+
+- Save the file
+- Get to your terminal; and stop the process where you run the `mongodb.js` file
+- Run the `mongodb.js` file again
+- You should see a `null` value is output to the terminal and this is ok because you are doing a `search` on the database but any `user` doesn't match the `search` criteria
+
+Now if you `search` a `user` that has more than one `match` on the database with `findOne` you only will get the first match. To `search` the information of a specific `user`(in this case) is better for use `search` by the `unique id`.
+
+- Get to `Robo 3T`
+- Copy from the `user` collection an `id` of a `user`
+- Go to the `mongodb.js` file on your editor
+- On the `findOne` first argument; remove the `name` and `age` property
+- Then add on the `search` object the following:
+
+    ```js
+    db.collection('users').findOne({ _id: new ObjectId('theIdThatYouCopied') }, (error, user) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(user);
+    });
+    ```
+
+    Remember that the `_id` receive `binary` data, not a `string` so if you put the `string` directly on the `_id` property you will don't have a match
+
+- Save the file
+- Go to your terminal and stop the `mongodb.js` process
+- Run the `mongodb.js` file again
+- You should see the data of the `user` that you copy the `id` before
+
+Now if you want to have more than the first match of your data you will need to use the `find` method.
+
+- Get to the `Robo 3T` app
+- On the `users` collection; edit some of the `users` and put the same `age` on more than one(In this example we will use `27`)
+- Go to the `mongodb.js` file on your editor
+- Bellow of the `findOne` method; use the `db` object to call the `users` collection again
+
+    `db.collection('users');`
+
+- Now call the `find` method
+
+    `db.collection('users').find();`
+
+- The `find` method receives as its first argument an `object` with the property that will represent the `search` criteria; in this case the `age`
+
+    `db.collection('users').find({ age: 27 });`
+
+The `find` method works a little bit different than the `findOne` method because it actually doesn't receive a `callback` function as its second argument because the return value of the `find` method is actually a `cursor` and a `cursor` is not actually the data is actually a pointer to the data in the database. The reason that this happens is that `MongoDB` is not going to assume that every time you use `find` you always want to get back an `array` of all of those documents there are other things that you might want to do like get back just the first five documents or return the number of the matching documents and with the `cursor` we will have all these options. In this case, we will use the `toArray` method to return an `array` of documents.
+
+- After the `find` method; call the `toArray` function that will receive a `callback`
+
+    `db.collection('users').find({ age: 27 }).toArray(() => {});`
+
+- The `callback` of the `toArray` method will receive 2 arguments: an `error` and the `users`(Can be named as you need)
+
+    `db.collection('users').find({ age: 27 }).toArray((error, users) => {});`
+
+- Like the previous `callback` methods we can use a condition to handle the `error` and print the `users`
+
+    ```js
+    db.collection('users').find({ age: 27 }).toArray((error, users) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(users);
+    });
+    ```
+
+- Save the file
+- Get to the tab of the terminal that the `mongodb.js` file is running and stop the process
+- Run the `mongodb.js` file again
+- You should see all `users` that have the `age` that you put on the `find` function
+
+Now imagine that we need to know the amount of `users` that we have with that `age` instead of all the information
+
+- Get to the `mongodb.js` file
+- Change the `toArray` method to `count`
+- Update the `users` argument of the `callback` to `count` and on the `console`
+
+    ```js
+        db.collection('users').find({ age: 27 }).count((error, count) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(count);
+    });
+    ```
+
+- Save the file
+- Get to the tab of the terminal that the `mongodb.js` file is running and stop the process
+- Run the `mongodb.js` file again
+- You should see the amount of `users` with the `age` of the `search`
+
+Know we will `search` the last document of the `task` collection
+
+- Go to `Robo 3T`
+- On the `task` collection copy the `id` of the last collection of the list
+- Get to the `mongodb.js` file
+- Bellow the `find` method; use the `db` object to call the `task` collection
+
+    `db.collection('tasks')`
+
+- Now use the `findOne` method to `search` for an `id` and set the `callback` function to handle `errors` and print the `task`
+
+    ```js
+    db.collection('tasks').findOne( { _id: ObjectId('idThatYouCopied') }, (error, task) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(task);
+    });
+    ```
+
+- Save the file
+- Get to the tab of the terminal that the `mongodb.js` file is running and stop the process
+- Run the `mongodb.js` file again
+- You should see the information of the last `task`
+
+Finally, we will output all `tasks` that is not `completed` yet(Make sure that at least one is not `completed`)
+
+- Get to the `mongodb.js` file
+- Bellow of the last `findOne` method; use the `db` object to call the `tasks` collection
+
+    `db.collection('tasks');`
+
+- Now use the `find` method to `search tasks` that are not `completed` yet
+
+    `db.collection('tasks').find({ completed: false });`
+
+- Then call the `toArray` method and set the `callback` to handle `errors` and print the `tasks`
+
+    ```js
+    db.collection('tasks').find({ completed: false }).toArray((error, tasks) => {
+        if(error) {
+            return console.log('Unable to fetch');
+        }
+
+        console.log(tasks);
+    })
+    ```
+
+- Save the file
+- Get to the tab of the terminal that the `mongodb.js` file is running and stop the process
+- Run the `mongodb.js` file again
+- You should see all the `tasks` that are not `completed` yet
