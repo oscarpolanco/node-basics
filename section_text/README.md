@@ -7364,3 +7364,158 @@ Finally, we will output all `tasks` that is not `completed` yet(Make sure that a
 - Get to the tab of the terminal that the `mongodb.js` file is running and stop the process
 - Run the `mongodb.js` file again
 - You should see all the `tasks` that are not `completed` yet
+
+### Promises
+
+Here we will stop a little bit the `mongoDB` features exploration to give some insides on `promises`. The `promises` make easy to work with `async` code and are desingned to resolve many of the problems that we run into when we use `callback` functions. For ilustrate `promises` we will make an example with the `callback` pattern and compare then with `promises`.
+
+- On your editor; go to the `playground` directory and create a file call `8-promises.js`
+- On the `8-promises.js` file; create the following function call `doWorkCallback` that will simulate a delay
+
+    `const doWorkCallback = () => {}`
+
+- Call the `doWorkCallback` bellow the function definition
+
+    `doWorkCallback();`
+
+- Provide the following function to the `doWorkCallback` call
+
+    ```js
+    doWorkCallback((error, result) => {
+        if(error) {
+            return console.log(error);
+        }
+
+        console.log(result);
+    });
+    ```
+
+    This is the same pattern that we use before
+
+- Now we will simulate the `async` process with a `setTimeout` inside of the `doWorkCallback` function
+
+    ```js
+    const doWorkCallback = (callback) => {
+        setTimeout(() => {
+            callback('This is my error');
+        }, 2000)
+    }
+    ```
+
+    Here we recive a function as a parameter and call it inside of the `setTimeout` after 2 seconds sending the `error` parameter at this time. Since we don't send the second parameter it will be `undefined`
+
+- Get to your terminal
+- Go to the `8-promises.js` file
+- Run the `8-promises.js` script using: `node 8-promises.js`
+- You will see that the `error` is printed after 2 seconds
+- Now get to the `8-promises.js` commend the `callback` call on the `setTimeout`
+- Bellow the comment call the `callback` function again but at this time providing the `result` parameter like this
+
+    ```js
+    const doWorkCallback = (callback) => {
+        setTimeout(() => {
+            // callback('This is my error');
+            callback(undefined, [1, 4, 7])
+        }, 2000)
+    }
+    ```
+
+- Get back to your terminal and run the script again
+- You should see the `result` printed after 2 seconds
+- Bellow of the `doWorkCallback` call; add a constant call `doWorkPromise` that will have an instance of the `Promise` object 
+
+    `const doWorkPromise = new Promise();`
+
+    Not always we will create the actual `promises` instead the library we use will create the `promises` for us for example with `MongoDB` those `promises` will be created behind the scenes but we will need to create this example to get started to understand it
+
+- Send a function to the `Promise` object with the following parameters
+
+    `const doWorkPromise = new Promise((resolve, reject) => {});`
+
+    The `resolve` and `reject` parameters are sent by default to our function and will be used later
+
+- We will simulate again the delay with a `setTimeout`
+
+    ```js
+    const doWorkPromise = new Promise((resolve, reject) => {
+        setTimeout(() => {}, 2000);
+    });
+    ```
+
+- In the past, we used the `callback` function with the correct parameters in case of failure and success but at this time we will have 2 different functions; `resolve` and `reject`. Call the `result` sending a value that signifies the actual success
+
+    ```js
+    const doWorkPromise = new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve([1, 4, 7]);
+        }, 2000);
+    });
+    ```
+
+    The advantage that we have is that we have a clear view of the failure and success process because the semantics of the functions clearly specify that instead of just sending parameters that may be confusing without seeing the actual `callback` function. This function will have the same `result` as the `callback` pattern function
+
+- The `promise` is just an object with some methods and the first one that we will use is the `then` method. Bellow the `doWorkPromise` add the following
+
+    `doWorkPromise.then();`
+
+    The `then` method allows us to register a function when things go well in other words when `resolve` is called
+
+- Send a function that will receive a `result` param on the `then` method
+
+    `doWorkPromise.then((result) => {));`
+
+    The `result` param will have the value that we send when we call `resolve` on the `doWorkPromise` definition
+
+- Log the success message using the `result` parameter
+
+    ```js
+    doWorkPromise.then((result) => {
+        console.log('Success!', result);
+    ));
+    ```
+
+- Get back to your terminal and run the script again
+- You will see that now you will have a success message of the `promise` after 2 second
+- Not always do things go as expected and we have a successful process so in that case, we will don't call `resolve` on the `promise` we will call `reject` in our case sending a failure message. Go to your editor and in the `doWorkPromise` comment the `resolve` line and add the `reject` function sending a failure message
+
+    ```js
+    const doWorkPromise = new Promise((resolve, reject) => {
+        setTimeout(() => {
+            // resolve([1, 4, 7]);
+            reject('This is my error');
+        }, 2000);
+    });
+    ```
+
+- When we call `reject` the `then` method will not run so we will need to call another method called `catch` and we can chain it to the previous code that we have like this
+
+    ```js
+    doWorkPromise.then((result) => {
+        console.log('Success!', result);
+    )).catch();
+    ```
+
+- The `catch` method will receive a function with an `error` parameter that will have the message that we send when we use the `reject` method and we will print that message
+
+    ```js
+    doWorkPromise.then((result) => {
+        console.log('Success!', result);
+    )).catch((error) => {
+        console.log('Error!', error);
+    });
+    ```
+
+- Go to your terminal and run the script
+- You will see that now you have a failure message after 2 seconds
+
+Some new terms that we will use for `promises`
+
+```
+                            fulfilled
+                        /
+Promise -- pending -->
+                        \
+                            rejected
+```
+
+When we create a `promise` it will be created as a `pending` in our case will be `pending` in the 2seconds before we call `resolve` or `rejected`. If `resolve` is called; your `promise` will be considered `fulfilled` and if `reject` is called will be considered `rejected`.
