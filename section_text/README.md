@@ -7519,3 +7519,241 @@ Promise -- pending -->
 ```
 
 When we create a `promise` it will be created as a `pending` in our case will be `pending` in the 2seconds before we call `resolve` or `rejected`. If `resolve` is called; your `promise` will be considered `fulfilled` and if `reject` is called will be considered `rejected`.
+
+### Updating documents
+
+Now we can get back to the `MongoDB` basics; at this time with `updating documents` and using what we saw about `promises`.
+
+- On your editor go to the `mongodb.js` file in the `task-manager` directory
+- Inside of the `MongoClient` function; remove all code related to the `find` examples
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {
+            return console.log('Unable to connect to database!');
+        }
+
+        const db = client.db(databaseName);
+    });
+    ```
+
+Now we will begin to update our documents in this case we will update the `name` of the `users` that we have on our database
+
+- On your terminal; start `MongoDB` using `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Then open `Robo 3T`
+- Connect to your `localhost`
+- You should see the `task-manager` database
+- Click on the `task-manager` name
+- Double click on `users`
+- You should see all `users`
+- Click in one of them and grab it `_id`
+
+We will use `updateOne` which will help us to update a specific document. Notice that there is an `update` method but this will be `deprecated` at some point in the near future.
+
+- Go to the `mongodb.js` file
+- Bellow of the `db` constant; use the `collection` method to call the `users` collection
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {
+            return console.log('Unable to connect to database!');
+        }
+
+        const db = client.db(databaseName);
+        db.collection('users');
+    });
+    ```
+
+- Now use the `updateOne` function on the `users` collection
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateOne();
+    });
+    ```
+
+- The first parameter that the `updateOne` receive is an object that represents the `search` criteria. In this case will be the `_id` of the document
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateOne({
+            _id: new ObjectId('id_that_you_copied_before_on_robo_3t')
+        });
+    });
+    ```
+
+At this moment we will need to pass the thing that we need to apply to the document but we actually can't directly change what we want; we need to use an [update operator](https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators) that will have the behavior that we want. At this time we will use the `$set` operator that will allow us to `set` a value on a determined property
+
+- Add a second object on the `updateOne` method with the `$set` operator as its property and update the `name` with a value that you want
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateOne({
+            _id: new ObjectId('id_that_you_copied_before_on_robo_3t')
+        }, {
+            $set: {
+                name: 'Testing'
+            }
+        });
+    });
+    ```
+
+- Since we are not using the `callback` pattern; we don't need to send a third parameter in fact the `updateOne` method return to you a `promise` so we will need to grab that `promise` in a variable. Add a new constant call `updatePromise` that grabs the `promise` of the `updateOne` method
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        const updatePromise = db.collection('users').updateOne({
+            _id: new ObjectId('id_that_you_copied_before_on_robo_3t')
+        }, {
+            $set: {
+                name: 'Testing'
+            }
+        });
+    });
+    ```
+
+- Call the `then` method on the `updatePromise` and console the `result`
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        const updatePromise = db.collection('users').updateOne({...});
+
+        updatePromise.then((result) => {
+            console.log(result);
+        });
+    });
+    ```
+
+- Then chain the `catch` method to `then` and console the `error`
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        const updatePromise = db.collection('users').updateOne({...});
+
+        updatePromise.then((result) => {
+            console.log(result);
+        }).catch((error) => {
+            console.log(error);
+        })
+    });
+    ```
+
+- Now get to your terminal and open another tab
+- Get to the `task-manager` directory
+- Run the `mongodb.js` script using `node mongodb.js`
+- You will see an object print on the console with some properties. What we are interested is in the `matchedCount` property that will tell us that a document matches and was updated
+- Get to `robo 3t` and refresh the database
+- Go to the document that you grab the `_id` and you should see that the `name` has changed
+
+Actually, we don't need to create a variable to grab the `promise`; we can change all methods when we call `updateOne`
+
+- Get to the `mongodb.js` file
+- Remove `updatePromise` and chain the `then` and `catch` method to `updateOne`
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateOne({
+            ...
+        }).then((result) => {
+            console.log(result);
+        }).catch((error) => {
+            console.log(error);
+        })
+    });
+    ```
+
+Now we are going to test another [update operator](https://www.mongodb.com/docs/manual/reference/operator/update/#update-operators) at this case will be `$inc` to increment the `age` of a `user`. As you will see on the `$inc` documentation you only need to add the `field` with a value; if the value is positive will increment the `field` that you put and will decrement if you use a negative number
+
+- On the `updateOne` method remove the `$set` operator and use `$inc` to increment the `age` value on one
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateOne({
+            _id: new ObjectId('id_that_you_copied_before_on_robo_3t')
+        }, {
+            $inc: {
+                age: 1
+            }
+        }).then((result) => {
+            console.log(result);
+        }).catch((error) => {
+            console.log(error);
+        })
+    });
+    ```
+
+- Get to the terminal that is on the `task-manager` directory
+- Run the `mongodb.js` script
+- You will see the `update` object print
+- Go to the `Robo 3t` and refresh the database
+- Check the document that you grab the `_id` and you will see that the `age` increment one
+
+Now we will use the `updateMany` method on the `tasks` collection to update the value of the `completed` value and put it `true`(If you don't have at least one on `false` update the value manually on `Robo 3t`).
+
+- On the `mongodb.js` file remove all the `updateOne` example(or comment it)
+- Call the `tasks` collection and use the `updateMany` method
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateMany();
+    });
+    ```
+
+- Add the `search` criteria that will be all the `tasks` that have a `false` value
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateMany({
+            completed: false
+        });
+    });
+    ```
+
+- Then add the `$set` operator to set the `completed` value to `true`
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateMany({
+            completed: false
+        }, {
+            $set: {
+                completed: true
+            }
+        });
+    });
+    ```
+
+- Finally, chain the `then` and `catch` methods to `updateMany` and print the `result` and `error`
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users').updateMany({
+            completed: false
+        }, {
+            $set: {
+                completed: true
+            }
+        }).then((result) => {
+            console.log(result);
+        }).catch((error) => {
+            console.log(error);
+        });
+    });
+    ```
+
+- Go to the terminal that is on the `task-manager` directory
+- Run the `mongodb.js` script
+- You should see the `update` object on the terminal
+- Go to `Robo 3t` and refresh the database
+- You will see that all `tasks` are `completed`
