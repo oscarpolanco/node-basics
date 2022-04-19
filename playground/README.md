@@ -123,3 +123,9 @@ This is a folder with some mini examples outside of the applications that are bu
     order undefined 0
     order 2 Red notebook 201
     ```
+
+### 8. Promises
+
+- On your terminal; go to the `playground` directory
+- Run the `8-promises.js` script
+- You will see 2 messages after 2 seconds representing a `callback` pattern function and a `promise`
