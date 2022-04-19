@@ -13,3 +13,4 @@ On this repository, you will see some examples related to using `NodeJs` to get 
 - [Notes-app](https://github.com/oscarpolanco/node-basics/tree/master/notes-app): App that use the `file system` to `write`, `read` and `delete` notes using commands
 - [Weather-app](https://github.com/oscarpolanco/node-basics/tree/master/weather-app): App that returns the current `weather` of a location that you provide
 - [Weather-app](https://github.com/oscarpolanco/node-basics/tree/master/web-server)(Web server version): An app that renders a page on the browser; let the user add a `location` and show the current `forecast` of that `location` on the page
+- [Task-app](https://github.com/oscarpolanco/node-basics/tree/master/task-manager): WIP
