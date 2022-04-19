@@ -7757,3 +7757,102 @@ Now we will use the `updateMany` method on the `tasks` collection to update the 
 - You should see the `update` object on the terminal
 - Go to `Robo 3t` and refresh the database
 - You will see that all `tasks` are `completed`
+
+### Deleting documents
+
+Now we will be working `deleting` documents and like the `update` methods we can `delete` one or many using a filter.
+
+- Open `Robo 3t` and connect to your `localhost`
+- On your terminal; run your database using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On your editor; go to the `mongodb.js` file
+- Remove all the `update` method example
+- Now bellow of the `db` constant call the `users` collection
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        if(error) {
+            return console.log('Unable to connect to database!');
+        }
+
+        const db = client.db(databaseName);
+
+        db.collection('users')
+    });
+    ```
+
+- Now we are going to delete more than one `user` so we will use the `deleteMany` method on all `users` that have 27 years old(make sure that you have at least one `user` with 27 years old)
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users')).deleteMany({
+            age: 27
+        });
+    });
+    ```
+
+- Add the `then` and `catch` methods to log the results of the deletion
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('users')).deleteMany({
+            age: 27
+        });
+    }).then((result) => {
+        console.log(result);
+    }).catch((error) => {
+        console.log(error);
+    });
+    ```
+
+- Now get to another tab of your terminal and get to the `task-manager` directory
+- Run the `mongodb.js` script using: `node mongodb.js`
+- You should see an object with the `deleteCount` property that represents the amount of `users` deleted
+- Go to `Robo 3t` and refresh the database and you should see all the `users` with `27` years old are deleted
+
+Now we will `delete` one `task` of your choosing
+
+- Get back to the `mongodb.js` file
+- Remove the `deleteMany` example
+- Call the `tasks` collection
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('collection'));
+    });
+    ```
+
+- Go to `Robo 3t` and copy one of the `description` of a `task`
+- Get back to the `mongodb.js` file and use the `deleteOne` method with the `description` as a filter
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('collection')).deleteOne({
+            description: 'description that you copied'
+        });
+    });
+    ```
+
+- Add the `then` and `catch` methods to log the results of the deletion
+
+    ```js
+    MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) => {
+        ...
+        db.collection('collection')).deleteOne({
+            description: 'description that you copied'
+        }).then((result) => {
+        console.log(result);
+        }).catch((error) => {
+            console.log(error);
+        });
+    });
+    ```
+
+- Go to your terminal and run the `mongodb.js` script
+- You should see an object with the `deleteCount` property that represents the amount of `users` deleted
+- Go to `Robo 3t` and refresh the database and you should see that the `task` with the `description` that you choose is deleted
+
+Now that we have an introduction to `mongodb` we can continue working on the steps of our next app(the `task app`)
