@@ -7856,3 +7856,7 @@ Now we will `delete` one `task` of your choosing
 - Go to `Robo 3t` and refresh the database and you should see that the `task` with the `description` that you choose is deleted
 
 Now that we have an introduction to `mongodb` we can continue working on the steps of our next app(the `task app`)
+
+## Section 10: REST APIs and Mongoose(Task App)
+
+In this section, we will start the process of creating our `express` base `REST API` using what we see in `data storage`. This will allow making operations such as signing for a new account; creating a `task` or fetching a list of all `tasks` that they still need to complete. We also are going to explore `mongoose` that will give off a very easy system for modeling our data like a `user` or a `task`; we will be able to create the `fields` and `data types` also `data validation` to make our application more secure.
