@@ -7860,3 +7860,127 @@ Now that we have an introduction to `mongodb` we can continue working on the ste
 ## Section 10: REST APIs and Mongoose(Task App)
 
 In this section, we will start the process of creating our `express` base `REST API` using what we see in `data storage`. This will allow making operations such as signing for a new account; creating a `task` or fetching a list of all `tasks` that they still need to complete. We also are going to explore `mongoose` that will give off a very easy system for modeling our data like a `user` or a `task`; we will be able to create the `fields` and `data types` also `data validation` to make our application more secure.
+
+### Setting up Mongoose
+
+Now we will check a new tool that we will use for our `task manager` application. `Mongoose` is related to `mongodb` and is going to allow us to do some things that we do not know so far like set up `validation` for our documents; the `type` of data of the `fields` on the document or how we will say that a given `task` is created by a `user`. You can see all the specifications on [mongoosejs](https://mongoosejs.com/) page.
+
+Here is the basic example of [mongoosejs](https://mongoosejs.com/) page at the moment the moment of writing this:
+
+```js
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/test');
+
+const Cat = mongoose.model('Cat', { name: String });
+
+const kitty = new Cat({ name: 'Zildjian' });
+kitty.save().then(() => console.log('meow'));
+```
+
+- Here you will see a basic example of which `mongoose` connect with the database
+- Then it will create a `model` that allows us to `model` something in the real world that we wanna be able to store on our database like a `user` or `task` in other words we create `models` for every `collection` that we want and we use the `model` to describe the data. In this case, we set a `cat` moment that has a `name` and the `name` should be a `string`
+- Bellow they create a new instance of a `cat` on the `kitten` variable with its custom `name`
+- Finally, it manipulates the data with some methods, in this case, is the `save` method that allows us to `save` data on the database and that method return a `promise` that is why we can use the `then` method and print the message
+
+`Mongoose` fell into a category of tools known as `ODM`(Object Document Mapper) that allow us to map the object on our code over to documents on `mongoDB` database. Let's start coding!!
+
+- On your terminal; go to the `task-manager` directory
+- Install `mongoose` using: `npm install mongoose`
+- In your editor go to the `task-manager` directory
+- Now let's begin to create our folder structure for the `task-manager` app. Create a new directory call `src` inside of the `task-manager` directory
+- Inside of this newly created directory; create another folder called `db`
+- On the `db` directory create a new file called `mongoose.js`
+- In the `mongoose.js` file require the `mongoose` library
+
+    `const mongoose = require('mongoose');`
+
+- Now use the `connect` method on the `mongoose` constant
+
+    ```js
+    const mongoose = require('mongoose');
+
+    mongoose.connect();
+    ```
+
+- Similar to the `mongoClient.connect` that we use before we will provide the `connection url` but with a little difference like you will see bellow
+
+    `mongoose.connect('mongodb://127.0.0.1:27017/task-manager-api');`
+
+    Here you see that we use our `localhost ip` with the port `27017` and finally, we specify the database name. We pick another name for the database different than the one that we use before
+
+Now let's define our first `model` in this case `user`
+
+- Bellow of the `connect` method creates a constant call `User`(uppercase) that will be equal to the result of the `model` method of `mongoose`
+
+    `const User = mongoose.model();`
+
+- The `model` method receive to arguments the name of the `model` in this case `User`(uppercase) and an object with all `fields` that we are going to define
+
+    `const User = mongoose.model('User', {});`
+
+- Inside of the `fields` object add a `name` and `age` properties that both values will be an object
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {},
+        age: {}
+    });
+    ```
+
+- Inside of both properties objects we defined the `type` of the `fields` in this case `string` and `number`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {
+            type: String
+        },
+        age: {
+            type: Number
+        }
+    });
+    ```
+
+    This `types` values are the `constructor` function from `javascript`
+
+- Now we need to create an instance of `Users` so bellow of `Users` create a new constant call `me` that its value will be an instance of `Users` and specify a `name` and `age`
+
+    ```js
+    const User = mongoose.model('User', {...});
+
+    const me = new User({
+        name: 'Test',
+        age: 27
+    });
+    ```
+
+- Now we will use the `save` method to store the new instance that we just created and use the `then` and `catch` methods to see the results
+
+    ```js
+    const User = mongoose.model('User', {...});
+
+    const me = new User({...});
+
+    me.save().then(() => {
+    console.log(me);
+    }).catch((error) => {
+        console.log('Error!', error);
+    });
+    ```
+
+    Since the `then` method will send us the same information as the `me` constant we will just use the instance that we already have
+
+- Go to your terminal and start `mongoDB` database using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of the terminal get to the `task-manager/src/db` directory
+- Run the `mongoose.js` script using: `node mongoose.js`
+- You will see the instance of a `User` that you created. You also will see a new property called `__v` added by `mongoDB` that stores the version of the document
+- Open `Robo 3t` and connect to your localhost
+- You will see the `task-manage-api` database
+- Click on the `collection` folder
+- Click on the `Users` collection
+- You will see the `user` that just created
+- You can drop the database that we use for the other examples
+- Now get to your editor and in the `mongoose.js` file remove the `age` value of `me` and add a `string`
+- Get back to your terminal and run the `mongoose.js` script
+- You will see a large `error` object and this object is a `validation` object that describes to us what happen so when we use `mongoose` we have some basic `validation` from the start
+- Check on `Robo 3t` and you will see that the second time doesn't create a new document
+- On the `mongoose.js` file; fix the `age` property
