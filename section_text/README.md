@@ -7984,3 +7984,59 @@ Now let's define our first `model` in this case `user`
 - You will see a large `error` object and this object is a `validation` object that describes to us what happen so when we use `mongoose` we have some basic `validation` from the start
 - Check on `Robo 3t` and you will see that the second time doesn't create a new document
 - On the `mongoose.js` file; fix the `age` property
+
+### Creating a Mongoose model
+
+Now we will create a new  `model` for the `tasks`
+
+- On your editor; go to the `mongoose.js` file
+- Comment the `me` constant definition and value
+- Also comment on the call of the `save` method that we use on the `me` constant
+- Now below all the comments; create a new constant call `Task`(uppercase) and call the `model` method as its value
+
+    `const Task = mongoose.model();`
+
+- The `Task` model will have two properties called `description`(string) and `completed`(boolean). So send those properties to the `model` method
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {
+            type: String
+        },
+        completed: {
+            type: Boolean
+        }
+    });
+    ```
+
+- Now below of the `Task` model definition creates a new `Task` instance with some example data
+
+    ```js
+    const task = new Task({
+        description: 'Clean office',
+        completed: true
+    });
+    ```
+
+- Then call the `save` method on the new instance in order to add the new `task` data(Remember to call `catch` for the errors)
+
+
+    ```js
+    task.save().then(() => {
+        console.log(task);
+    }).catch((error) => {
+        console.log('Error', error);
+    });
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Open `Robo 3T`
+- In another tab of your terminal; go to the `task-manager/src` directory
+- Run the `mongoose.js` script using: `node mongoose.js`
+- On your terminal; you should see a log with the data that you just added
+- Go to `Robo 3T`
+- Refresh the database
+- Go to `Collections`
+- You should see the `tasks` collection with one item that has the data that you just added
+
+If you notice we have a `tasks` and `users` collections at this moment in lowercase but we don't define them like this on any part of our code. This is because `mongo` takes the first parameter that you send on the `mongoose.model` method and converts it to lowercase and pluralizes it and that is what it uses as the collection name.
