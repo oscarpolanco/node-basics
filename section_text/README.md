@@ -8041,7 +8041,7 @@ Now we will create a new  `model` for the `tasks`
 
 If you notice we have a `tasks` and `users` collections at this moment in lowercase but we don't define them like this on any part of our code. This is because `mongo` takes the first parameter that you send on the `mongoose.model` method and converts it to lowercase and pluralizes it and that is what it uses as the collection name.
 
-### Data Validation and Sanitization I
+### Data Validation and Sanitization
 
 We will continue to construct our models but first, we need to check 2 very important topics:
 
@@ -8291,3 +8291,176 @@ First; we will use `trim` for the `name` property of the `user`. When `trim` is 
 - Now go to `Robo 3T` and remove all data from the `users` collection
 - Get to the terminal and run the `mongoose.js` script
 - You will see that the data is added without issue. The data will don't have spaces and the `age` will have a value of `0`
+
+Now we will add some more `validation` and `sanitization` to our `user` model and begin to add them to the `task` model. First; we will add a new field to `user` in this case the field is `password`; for the moment we will store the `password` as it sends this is call store a `plain text password` that is a bad practice but in the future, we will correctly store and `hash` it. The `password` field will be a `string`; will `trim` the extra spaces; need to be greater than 6 characters and can't have the word `password` in it.
+
+- On your editor; go to the `mongoose.js` file
+- Below the `email` field on the `User` definition add a `password` property
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {},
+        age: {...}
+    });
+    ```
+
+- Add a `type` property set to `String`; a `trim` and `required` properties set to `true` on `password`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        age: {...}
+    });
+    ```
+
+- Now we will need to add a minimum of 6 characters for the `password` so we will use the `minLength` property set to `7`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 7
+        },
+        age: {...}
+    });
+    ```
+
+- Then add a custom `validation` function to `password`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 7,
+            validate(value) {}
+        },
+        age: {...}
+    });
+    ```
+
+- Now create a condition that tests the `value` string to see if it has the `password` word in it
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 7,
+            validate(value) {
+                if(value.toLowerCase().includes('password')) {}
+            }
+        },
+        age: {...}
+    });
+    ```
+
+    We use the `toLowerCase` js method to ensure that we always test for `password` without any uppercase(This will be for the moment; later we will change all this code) then we use the `includes` method that will check if `password` exits on the string that you are saving into the database
+
+- Throw an error is the condition match
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {...},
+        password: {
+            type: String,
+            required: true,
+            trim: true,
+            minLength: 7,
+            validate(value) {
+                if(value.toLowerCase().includes('password')) {
+                    throw new Error('Password cannot contain "password"');
+                }
+            }
+        },
+        age: {...}
+    });
+    ```
+
+- Now go to your terminal and run the `mongoose.js` script(We assume that you didn't change the `me` constant value that doesn't have a `password`)
+- You should see a `required password` error
+- Kill the process and get back to the `mongoose.js` file
+- Add the `password` property with less than 6 characters
+- Get back to your terminal and run the `mongoose.js` script
+- You should see the `minLength` error
+- Get back to the `mongoose.js` file
+- Change the `password` value to a string that has the `password` word in it like `testpassword`
+- Get back to your terminal and run the `mongoose.js` script
+- You should see the custom `validation` error
+- Get back to the `mongoose.js` file
+- Add `password` that doesn't match any of the `validation` errors like:`testing8888`
+- Get back to your terminal and run the `mongoose.js` script
+- You should see that the `user` is created with the `password`
+- Get back to the `mongoose.js` file
+- Comment the `me` constant definition and it calls to the `save` method
+- Uncomment the `task` constant and its call to the `save` method
+
+Now we will work with the `Task` model. On the `description` field we will `trim` the spaces and will be `required`. The `completed` field will be optional and will have a default value of `false`.
+
+- Add the `required` and `trim` properties on the `description` field in the `Task` definition
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        completed: {
+            type: Boolean
+        }
+    });
+    ```
+
+- Now add a `default` value of `false` on the `completed` field
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        completed: {
+            type: Boolean,
+            default: false
+        }
+    });
+    ```
+
+- On the `task` constant; remove all values
+
+    `const task = new Task({});`
+
+- Get back to your terminal and run the `mongoose.js` script
+- You should see a `required description` error
+- Kill the process and get back to the `mongoose.js` file
+- Add a `description` with some extra spaces on the `task` constant
+
+    ```js
+    const task = new Task({
+        description: '     Clean office     ',
+    });
+    ```
+
+- Get back to your terminal and run the `mongoose.js` script
+- You should see that the `task` is saved into the database; the `description` doesn't have extra space and the `completed` have a `false` value
