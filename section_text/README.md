@@ -8031,7 +8031,7 @@ Now we will create a new  `model` for the `tasks`
 
 - On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
 - Open `Robo 3T`
-- In another tab of your terminal; go to the `task-manager/src` directory
+- In another tab of your terminal; go to the `task-manager/src/db` directory
 - Run the `mongoose.js` script using: `node mongoose.js`
 - On your terminal; you should see a log with the data that you just added
 - Go to `Robo 3T`
@@ -8040,3 +8040,254 @@ Now we will create a new  `model` for the `tasks`
 - You should see the `tasks` collection with one item that has the data that you just added
 
 If you notice we have a `tasks` and `users` collections at this moment in lowercase but we don't define them like this on any part of our code. This is because `mongo` takes the first parameter that you send on the `mongoose.model` method and converts it to lowercase and pluralizes it and that is what it uses as the collection name.
+
+### Data Validation and Sanitization I
+
+We will continue to construct our models but first, we need to check 2 very important topics:
+
+- Data validation: Here we enforce that the data follow some rules. As an example, we can add a rule that said that only `users` that have legal adult `age` can be added.
+- Data Sanitization: Allow us to alter the data before saving it. For example; remove empty spaces around a `user` name.
+
+We can begin with the `validation` that is offered to us by [mongoose](https://mongoosejs.com/docs/validation.html)(Open the docs on your browser). At this moment all the properties that we have on the `models` can be empty so we can prevent that with one of the `validators` that `mongoose` make available to us called `require`(As you see on the docs this `validator` can be used in any property). Let's add it.
+
+- On your editor; go to the `mongoose.js` file on the `task-manager/src/db` directory
+- In this file; comment on the `tasks` constant and its calls to the `save` method
+- Uncomment the `me` constant and its calls to the `save` method
+- On the `User` model definition add the `require` property with a `true` value below the `name` property
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {
+            type: String,
+            required: true,
+        },
+        age: {
+            type: Number,
+        }
+    });
+    ```
+
+- On the `me` constant definition; remove all properties
+
+    `const me = new User({});`
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; go to the `task-manager/src/db` directory
+- Run the `mongoose.js` script using: `node mongoose.js`
+- You should see an error message
+- Scroll in the log and you should see the `validation` message that said `name is required`
+- Kill the process
+- Go to the `mongoose file`
+- On the `me` constant definition add an example `name`
+
+    ```js
+    const me = new User({
+        name: 'Test'
+    });
+    ```
+
+- Go back to your terminal a run the `mongoose` script again
+- You should see that the `user` is added without issues
+
+As you see here we made the `name` property `required` and the `age` is optional so we create rules for our data. Now if you see on the [mongoose validation page](https://mongoosejs.com/docs/validation.html); we don't have a lot of `validation` for our data so you are very limited if you are using only those `validation`; for example, if you need to validate a field is a phone number; a valid email or a valid credit number. If you need to do a `validation` like the examples `mongoose` give you the way to add a `custom validation` for your fields. Let's take an example where the `age` can't be a negative number
+
+- On your editor; go to the `mongoose.js` file
+- In the `age` property of the `user`; add a function that is called `validate` that receives a value parameter below the `type` property
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        age: {
+            type: Number,
+            validate(value) {}
+        }
+    });
+    ```
+
+- On the `validate` function create a condition that checks if `value`(This parameter will have the `value` that will be saved) is a negative number and throw an error if this is the case
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        age: {
+            type: Number,
+            validate(value) {
+                if(value < 0) {
+                    throw new Error('Age must be a positive number');
+                }
+            }
+        }
+    });
+    ```
+
+- On the `me` constant add a negative number for the `age` property
+
+    ```js
+    const me = new User({
+        name: 'Test',
+        age: -1
+    });
+    ```
+- Go to your terminal and run the `mongoose.js` script
+- You will see an error and if you scroll on the log you'll see the message of the error that you just made
+
+Now we can do our `custom validation` but every time we need one we will need to create the code to handle each type of data that we will need including each edge case and some of them can be complex. I can recommend that instead of doing that we use a tested package that has all these `validations` already done like [validator.js](https://www.npmjs.com/package/validator) but on special cases, you still will do it yourself but this will help with a lot of the `validations` that we normally use. Let's do an example using this package on an `email` field on the user model.
+
+- On your terminal; go to the `task-manager` directory
+- Install the `validator.js` package using: `npm install validator`
+- Go to the `mongoose.js` file on your editor
+- Require the `validator` package
+
+    `const validator = require('validator');`
+
+- On the `User` model definition; add a new property called `email`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {},
+        age: {...}
+    });
+    ```
+
+- The `email` will be a `string`, it will be `required` and will have a custom `validation` function
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {
+            type: String,
+            required: true,
+            validate(value){}
+        },
+        age: {...}
+    });
+    ```
+
+- Now inside of the `validate` function create a condition that throws an error when an `email` is not `valid` using the `isEmail` function of the `validator` package
+
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {...},
+        email: {
+            type: String,
+            required: true,
+            validate(value){
+                if(!validator.isEmail(value)) {
+                    throw new Error('Email is invalid');
+                }
+            }
+        },
+        age: {...}
+    });
+    ```
+
+    Since `isEmail` will send `true` to use when the `email` is `valid` we will need to convert the output to the opposite in order to have the correct output that is why we use `!` on the condition
+
+- Go to the `me` constant and remove the `age` property and add an invalid `email`
+
+    ```js
+    const me = new User({
+        name: 'Test',
+        email: 'test@'
+    });
+    ```
+
+- On your terminal; run the `mongoose.js` script
+- You will see an error for the `invalid email`
+
+Now we can have `custom validation` written by us or use a library if we need it.
+
+#### Schema Types
+
+Each `type` of data that we use have some properties that we can use provided by `mongoose` like `require` and `validate` that we already use. [Here](https://mongoosejs.com/docs/schematypes.html) you will see all of those `schema types` that we can use in general and depending on the `type` of data that we will use. Let us a couple of them.
+
+First; we will use `trim` for the `name` property of the `user`. When `trim` is set to `true` will eliminate all the extra space at the beginning and at the end of the string
+
+- On your editor; go to the `mongoose.js` file
+- Below the `type` property of the `name` in the `User` model add `trim` with a `true` value
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        email: {...},
+        age: {...}
+    });
+    ```
+
+- Now add the `trim` and `lowercase` property and set those to `true` on the `email`
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        email: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            validate(value) {
+                if(!validator.isEmail(value)) {
+                    throw new Error('Email is invalid');
+                }
+            }
+        },
+        age: {...}
+    });
+    ```
+
+    When you set `lowercase` to `true` all the letters on a `string` will be converted to `lowercase` if they are `uppercase`
+
+-  On the `age` we will add the `default` property with a `0` value
+
+    ```js
+    const User = mongoose.model('User', {
+        name: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        email: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            validate(value) {
+                if(!validator.isEmail(value)) {
+                    throw new Error('Email is invalid');
+                }
+            }
+        },
+        age: {
+            type: Number,
+            default: 0,
+            validate(value) {
+                if(value < 0) {
+                    throw new Error('Age must be a positive number');
+                }
+            }
+        }
+    });
+    ```
+
+    The `default` property will add the value that you set on this property if the `age` in this case doesn't exist when you save data to the database
+
+- Go to the `me` constant and update the value like this
+
+    ```js
+    const me = new User({
+        name: '    Test    ',
+        email: 'TEST@ME.IO '
+    });
+    ```
+- Now go to `Robo 3T` and remove all data from the `users` collection
+- Get to the terminal and run the `mongoose.js` script
+- You will see that the data is added without issue. The data will don't have spaces and the `age` will have a value of `0`
