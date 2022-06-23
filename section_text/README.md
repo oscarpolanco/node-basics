@@ -8662,3 +8662,41 @@ Next are the `headers`:
 
 Next is the `body`:
 - `{"_id":"82ue28e9h29e8h2e92h", "description": "Order new books", "completed": "false"}`: Data of the resource created in this case a `task`
+
+### Installing Postman
+
+We will make a lot of `HTTP` requests when we work on the application so we will need a tool that gives us the opportunity to test and verify our work easily. For this, we will use a tool called [Postman](https://www.postman.com/)(We don't need a `postman` account to work so skip every time that tells you to make an account). This tool will help us to test our `API` without having a `client`. So let's test a little bit with `postman`.
+
+- On your browser go to the [postman page](https://www.postman.com/)
+- On the `Download the desktop app` section; click on your operating system
+- Download the installer
+- Use the installer
+- You should successfully install `postman`
+- Open the `postman` app
+- It will ask to create an account but we don't need it so click on the `skip` link at the bottom
+- A modal should popup
+- We are going, to begin with, a basic request so click on the `Request` option
+- We will test with the weather app that you created before so on the `Request name` input add a name that specifies that like `Get weather`(`Get` request of the `weather`)
+- The `description` is optional but you will need to specify a `collection`(Folder where you store multiple requests). Click on the `Create Collection` link below
+- On the `Collection name` input that appears add a name like `Weather App`
+- Click on the `check` button
+- Now click on the `Save` button
+- You will be forward to the main `postman` window
+- At the left sidebar; you should see the `Weather App` folder and inside of it the `Get weather` request
+
+On the main screen(The middle) you will see that we have 2 pieces of information:
+
+- The `HTTP` method that we are going to use(In this case `GET`)
+- The `URL` that we are making the request
+
+Now we will make the first `Postman` request
+
+- Get your `heroku` app URL
+- Paste your `heroku` app URL on the `Enter request URL` input
+- Type the `/weather` endpoint(Remember that we set this endpoint to get the `weather` data)
+- Now we need to provide the address so add the `address` query param and put a valid location like
+
+    `/weather?address=boston`
+
+- Click the `Send` button
+- You will see the `response` below with the `weather` data in a `JSON` format
