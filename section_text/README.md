@@ -8464,3 +8464,201 @@ Now we will work with the `Task` model. On the `description` field we will `trim
 
 - Get back to your terminal and run the `mongoose.js` script
 - You should see that the `task` is saved into the database; the `description` doesn't have extra space and the `completed` have a `false` value
+
+## Structuring a REST API
+
+Now we will take a brief look at how we will structure our `HTTP` endpoints that we will need for our application and a little look at how an `HTTP` request is structured.
+
+First; we will need to take a look at what the `REST API` means. So `REST` stand for `Representational State Transfer` and `API` is `Application Programming Interface`(Also known as a `RESTful API`).
+
+The `Application Programming Interface` or `API` is a set of tools that allow you to build software applications like `npm` modules such as `express` provide us with a set of tools to build software applications.
+
+The `Representational State Transfer` allows clients such as web applications to access and manipulate resources using a set of predefined operations; so what is a `resource`? Is something like a `user` or a `task`. A `predefined` operation for `user` and `task` could be something to create a `user`; update a `task` when is completed or upload a profile picture for your `user` account, so this `predefined` operation is going to allow the client like a web app to go to the process of creating a frontend for a `task manager`.
+
+Let's look at `Representational State Transfer` parts:
+
+- `Representational`: With a `REST API` we are working with a representation of our data in other words the data is stored in the database but using a `REST API` I can still `fetch` data or perform any `CRUD` operations
+- `State Transfer`: The `REST API`(The server) is `stateless` this means that the `state` is `transfer` to the client so each request to the client has everything that the server needs to process an operation; this includes the operation that they are trying to perform; all of the data that the operation needs in order to work and also include things like authentication making sure that the `user` that is trying to perform the operation is actually allowed to do it.
+
+Here is a little example:
+
+```bash
+-------------------------
+| Need task data to show |
+-------------------------
+            ||
+        *--------*                       *--------*
+        | client |                       | server |
+        *--------*                       *--------*
+```
+
+Here we have a `client` and a `server` and the `client` is going to have a `requirement` like `need to have a task data to show on this page`. Then it will do an `HTTP` request to the `server`
+
+```bash
+-------------------------
+| Need task data to show |
+-------------------------
+            ||
+        *--------*      GET /tasks/:id   *--------*
+        | client |       ===========>    | server |
+        *--------*                       *--------*
+```
+
+Here the `client` is using the `GET HTTP` method to make a request to `/task/:id`(the `:id` means an `id` of a `task`). At this moment the `server` will enter the process of fulfilling it
+
+```bash
+-------------------------               ---------------------------
+| Need task data to show |              | Found it in the database |
+-------------------------               ---------------------------
+            ||                                      ||
+        *--------*      GET /tasks/:id          *--------*
+        | client |       ===========>           | server |
+        *--------*                              *--------*
+```
+
+The `server` found the data in the database using the `id` that the `client` send and will send it back using an `HTTP` response
+
+```bash
+-------------------------               ---------------------------
+| Need task data to show |              | Found it in the database |
+-------------------------               ---------------------------
+            ||                                      ||
+        *--------*      GET /tasks/:id          *--------*
+        |        |       ===========>           |        |
+        | client |       <===========           | server |
+        |        |    200 - JSON Response       |        |
+        *--------*                              *--------*
+```
+
+On the response, we see a `status code`(200) in this case indicates that everything when well and has the `JSON` with the data that was requested. They are more `status codes` but we will see them at the moment that we build the application endpoints. At this point, the `client` will receive the data and will be time to `render` things
+
+```bash
+-------------------------               ---------------------------
+| Time to render data   |              | Found it in the database |
+-------------------------               ---------------------------
+            ||                                      ||
+        *--------*      GET /tasks/:id          *--------*
+        |        |       ===========>           |        |
+        | client |       <===========           | server |
+        |        |    200 - JSON Response       |        |
+        *--------*                              *--------*
+```
+
+With the `Rest API` we will use more than the `GET` request; we will be `creating`; `update` and `deleting` data. For example:
+
+```bash
+------------------------------------------
+| I am a user and I need to create a todo |
+------------------------------------------
+            ||
+        *--------*                              *--------*
+        |        |                              |        |
+        | client |                              | server |
+        |        |                              |        |
+        *--------*                              *--------*
+```
+
+Here the user is authenticated and tries to perform a `predefined` operation so it will fire a request
+
+```bash
+------------------------------------------
+| I am a user and I need to create a todo |
+------------------------------------------
+            ||
+        *--------*                                  *--------*
+        |        |    POST /tasks - JSON request    |        |
+        | client |          ============>           | server |
+        |        |                                  |        |
+        *--------*                                  *--------*
+```
+
+At this time we are not using the `GET HTTP` method we are using `POST` that is used to `create` data. The `client` is making a request to `/tasks` sending along with a `JSON` with the request in the case of a `task` will need the `description` in order to be created. When the `server` get the request is going to authenticate that the user has an account and then is going to create the `task` associated with the `user`
+
+```bash
+                                                    -----------------------------------
+                                                    | Identify confirmed; Task created |
+                                                    -----------------------------------
+                                                                ||
+        *--------*                                          *--------*
+        |        |       POST /tasks - JSON request         |        |
+        | client |             ============>                | server |
+        |        |                                          |        |
+        *--------*                                          *--------*
+```
+
+Now that the `task` is created will send the `response` back
+
+```bash
+                                                    -----------------------------------
+                                                    | Identify confirmed; Task created |
+                                                    -----------------------------------
+                                                                ||
+        *--------*           POST /tasks - JSON request     *--------*
+        |        |             ============>                |        |
+        | client |             <============                | server |
+        |        |          201 - JSON response             |        |
+        *--------*                                          *--------*
+```
+
+Here we have seen a different `status code` in this case `201` that means `resource created` with a `JSON` response with the information of the `task` created. The user will receive the data that everything when well and render the data that it needs
+
+```bash
+    --------------------------
+    | Time to render the data |
+    --------------------------
+            ||
+        *--------*           POST /tasks - JSON request     *--------*
+        |        |             ============>                |        |
+        | client |             <============                | server |
+        |        |          201 - JSON response             |        |
+        *--------*                                          *--------*
+```
+
+In order to anyone do something meaningful with the application we will need to expose some `predefined` operations. Every single `API` operation is defined with 2 pieces of data; the `HTTP` method and the `path`. Now we will see some `predefined` operation for the `task resource`:
+
+- `Create` => `POST /tasks`: Will help us to create a new `task`(When you are creating a `create` endpoint you'll use the pluralize version of the resource in this case `tasks`)
+- `Read` => `GET /tasks`: Get all `tasks`(If you notice we still using the `tasks` path)
+- `Read` => `GET /tasks/:id`: Get a single specify `task`(using it `id`)
+- `Update` => `PATCH /tasks/:id`: Update a existing `task`(using it `id`)
+- `Delete` => `DELETE /tasks/:id`: Delete a `task` by it `id`
+
+Every `HTTP` request just has some text that is sent between the `client` and `server`. Here is an example:
+
+```bash
+Post /tasks HTTP/1.1
+Accept: application/json
+Connection: Keep-Alive
+Authorization: Bearer 29209ue2ue9djsidsnj....
+
+{"description": "Order new books"}
+```
+
+- `Post /tasks HTTP/1.1`: This is known as a `request` line that contains the `HTTP` method; in this case `POST`; the `path` and the `HTTP` protocol
+
+After this line we will have as many `headers` we need(The 3 next lines are `headers`). The `headers` are `key value` pairs that allow you to attach meta information to the request
+
+- `Accept: application/json`: Said that we are expecting `JSON` data back
+- `Connection: Keep-Alive`: We are telling you that we are likely to do a request shortly so keep this connection open so we keep things fast
+- `Authorization: Bearer 29209ue2ue9djsidsnj....`: We setting `authorization` to get `authentication` in this case we put an example `token`
+- `{"description": "Order new books"}`: This represent the request `body`. We will need to send data in order to create a `task` so we will send it as a `JSON` to the `server`
+
+Then the server will send back a response like this:
+
+```bash
+HTTP/1.1 201 Created
+Date: Sun, 28 Jul 2022 15:37:40 GTM
+Server: Express
+Content-type: application/json
+
+{"_id":"82ue28e9h29e8h2e92h", "description": "Order new books", "completed": "false"}
+```
+
+- `HTTP/1.1 201 Created`: First; we have the `HTTP` protocols; the `status` of the request(201) and a text representation of the status code(Created)
+
+Next are the `headers`:
+- `Date: Sun, 28 Jul 2022 15:37:40 GTM`: Time that the operation happens
+- `Server: Express`: Server type
+- `Content-type: application/json`: Is metadata of the data that is on the `body`
+
+Next is the `body`:
+- `{"_id":"82ue28e9h29e8h2e92h", "description": "Order new books", "completed": "false"}`: Data of the resource created in this case a `task`
