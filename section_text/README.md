@@ -8700,3 +8700,257 @@ Now we will make the first `Postman` request
 
 - Click the `Send` button
 - You will see the `response` below with the `weather` data in a `JSON` format
+
+### Resources Creation Endpoint
+
+Now we will set our first endpoint on our app!!! In this case, we will do the `user` and `task` creation endpoints. Let's get into it!!!
+
+- On your terminal; go to the `task-manager` directory
+- Install `nodemon` as a `dev` dependency using: `npm install nodemon`
+- Install `express` using: `npm install express`
+- Now get to the `task-manager` directory on your editor
+- Delete the `mongoDB.js` file(We are not using this file for the app; it was for illustration)
+- Inside of the `src` directory; create a new file called `index.js`
+
+    The `index.js` file will be the starting point of the application so we will set our `express` server on this file
+- On this newly created file; require `express`
+
+    `const express = require('express');`
+
+- Below the `express` constant; create a new constant call `app` with the `express` method as its value
+
+    `const app = express();`
+
+- Below the `app` constant; create a new one called `port`. We will deploy the app to `heroku` in the future so the value of the `port` constant will be `process.env.PORT` or `3000` locally
+
+    `const port = process.env.PORT || 3000;`
+
+- Now below the `port` constant; use the `listen` method of `app` sending the `port` and a `callback` function that console a message that the server is running
+
+    ```js
+    app.listen(port, () => {
+        console.log('Server is running on port ' + port);
+    });
+    ```
+
+- Go to the `package.json` file
+- On the `script` object; remove the `test` property
+- Add a `start` and `dev` scripts
+
+    ```json
+    "scripts": {
+        "stat": "",
+        "dev": ""
+    },
+    ```
+
+- On the `start` script we will add how `heroku` will run the app(As we mentioned before `index.js` will be our starting point)
+
+    ```json
+    "scripts": {
+        "stat": "node src/index.js",
+        "dev": ""
+    },
+    ```
+
+- Then on the `dev` script we will use `nodemon` to run the app locally
+
+    ```json
+    "scripts": {
+        "stat": "node src/index.js",
+        "dev": "nodemon src/index.js"
+    },
+    ```
+
+- Go to your terminal and run the app on the `dev` version using: `npm run dev`
+- You should see the log of the server
+
+Now we have the basic `express` set up for our app; we can continue creating our first endpoint. As we mentioned before we will work with the `creation` resource so we will create the create `user` route.
+
+- Get to the `index.js` file
+- Below the `port` constant and before the `app.listen` call; call the `post` method of `app`
+
+    `app.post();`
+
+- Like the `get` method that we saw before `post` receives 2 arguments; the `path` and a `callback` function
+
+    `app.post('', () => {});`
+
+- Since we are working with the `creation` resource of a `user`; the `path` will be `users`(pluralize)
+
+    `app.post('/users', () => {});`
+
+- As we saw before the `callback` function has 2 arguments: `res`(respond) and `req`(request)
+
+    `app.post('/users', (req, res) => {});`
+
+- For testing; add a test respond inside of the `callback` function
+
+    ```js
+    app.post('/users', (req, res) => {
+        res.send('testing!');
+    });
+    ```
+
+- Go to `postman`
+- At the left sidebar; click on the `plus` button at the top
+- Add the `collection` name; in this case `Task App`
+- On the sidebar; right click on the `Task App` collection
+- Click on `Add Request`
+- Add the new `request` name
+- Since we are doing a `POST` request we will need to change the `GET` option so click on the `GET` dropdown and choose `POST`
+- On the URL input; add the server URL: `http://localhost:3000/users`
+- Click on the `Send` button
+- You should see the testing message below
+
+As you may recall for the `creation` of a `user` or `task` we need to send some information so from `postman` we will need to set the `JSON` data that we are going to send in the request
+
+- Click on the `Body` tab below the `URL` input
+- Then click on the `raw` radio button
+- Since we are sending `JSON` we will need to choose it in the dropdown that has `text` pre-defined
+- Now below you will need to add the `JSON` with the data necessary to create a `user`(like we set before on the `mongoose` file; `name`, `email` and `password`. The `age` is optional)
+
+    ```json
+    {
+        "name": "Test",
+        "email": "test@testing.com",
+        "password": "testing123"
+    }
+    ```
+
+- Click the `Send` button
+- You should see the testing message again
+
+We will need to get the data on the `express` server. This is a 2 step process: We will need to configure `express` to automatically parse the incoming `JSON` for us so we have it as an object that we actually can use then on the `request` handler get the `body` as an object
+
+- Below the `port` constant call the `use` method of `app`
+
+    `app.use();`
+
+- `Express` provide use a function to `parse` the `JSON` that we can send as a parameter of the `use` method
+
+    `app.use(express.json());`
+
+When we add this line `express` will `parse` the incoming `JSON` to an object and we can access it on our `request handler`
+
+- On the `users` handler logs the `request body`
+
+    ```js
+    app.post('/users', (req, res) => {
+        console.log(req.body);
+        res.send('testing!');
+    });
+    ```
+
+- Save the file
+- Get back to `postman`
+- Send the request
+- Get to your terminal and you will see the `request body` that you just send from `postman`
+
+Now we will integrate the code that we already have on the `mongoose.js` file for creating a `user`. Since we already connect to the database and have the necessary code to create a model and save data we will just reorganize the code on this file.
+
+- First; create a new folder called `models` inside of the `src` directory
+- Inside of this newly created folder; create a file called `user.js`
+- Get to the `mongoose.js` file
+- Cut all the `User` model code(From the `User` constant declaration to the end of the attribute definition)
+- Paste it into the `user.js` file
+- At the top of the `user.js` file; require `mongoose` and `validator`
+
+    ```js
+    const mongoose = require('mongoose');
+    const validator = require('validator');
+    ```
+
+- Now we will need to export the `user` model in order for other files can create new `users` so at the bottom of the file export `User`
+
+    `module.exports = User;`
+
+- Get to the `mongoose.js` file and remove the `validator` require at the top
+- Remove the `me` definition and call the `save` method
+- Also remove the `task` constant definition(Not the `Task` definition) and its calls to the save method
+- Now get back to the `index.js` file
+- Below the `express` definition at the top; require the `mongoose.js` file like this
+
+    `require('./db/mongoose');`
+
+    We don't need to grab anything from that file so we will only need that the code run and that will ensure that `mongoose` connect to the database
+
+- Next; load the `User` model; below the `mongoose` require
+
+    `const User = require('./models/user');`
+
+- Get to the `user` handler and create a new constant call `user` that creates an instance of a `User`(Since we need some things to create a `user` instance we will need to send the `request body`) and remove the log
+
+    ```js
+    app.post('/users', (req, res) => {
+        const user = new User(req.body);
+        res.send('testing!');
+    });
+    ```
+
+- Remove the `testing` message
+- Then call the `save` method using the `user` constant with the `then` and `catch` method like we defined before on the `mongoose.js` file
+
+    ```js
+    app.post('/users', (req, res) => {
+        const user = new User(req.body);
+
+        user.save().then(() => {})
+            .catch((e) => {});
+    });
+    ```
+
+- Now on the `then` callback we will need to send the response back with the `user` data(Since we already have the data on the `user` constant we just send it)
+
+    ```js
+    app.post('/users', (req, res) => {
+        const user = new User(req.body);
+
+        user.save().then(() => {
+            res.send(user);
+        })
+        .catch((e) => {});
+    });
+    ```
+
+- Get to `postman` and send the request
+- At the bottom, you should see the response with all the data that was provided when you send the request
+- Get back to the `index.js` file
+- We will need to send the error if something is wrong so sends the `e` parameter
+
+    ```js
+    app.post('/users', (req, res) => {
+        const user = new User(req.body);
+
+        user.save().then(() => {
+            res.send(user);
+        })
+        .catch((e) => {
+            res.send(e);
+        });
+    });
+    ```
+
+- Go to `postman` and change the `password` to an incorrect one like `test` in the `request body`
+- Send the request
+- You should see the error below but on the `status` you still see the `200 ok`(Top right of the response section)
+- Get to the `index.js` file
+- Call the `status` method of `res` and send `400` as parameters (We will use chaining for `status` and `send`). Is important to use `status` before `send` in order to get the correct status
+
+    ```js
+    app.post('/users', (req, res) => {
+        const user = new User(req.body);
+
+        user.save().then(() => {
+            res.send(user);
+        })
+        .catch((e) => {
+            res.status(400).send(e);
+        });
+    });
+    ```
+
+    [Here](https://www.httpstatuses.org/) is a useful page with all the status information. We will use the `2xx` statuses when things go well; `4xx` when things go wrong with things that the `client` did and `5xx` when something goes wrong with something on the `server`
+
+- Go to `postman` and send the request
+- You should see the error with a `400` status
