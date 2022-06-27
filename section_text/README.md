@@ -8764,6 +8764,7 @@ Now we will set our first endpoint on our app!!! In this case, we will do the `u
 
 - Go to your terminal and run the app on the `dev` version using: `npm run dev`
 - You should see the log of the server
+- On another tab of your terminal begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
 
 Now we have the basic `express` set up for our app; we can continue creating our first endpoint. As we mentioned before we will work with the `creation` resource so we will create the create `user` route.
 
@@ -8954,3 +8955,106 @@ Now we will integrate the code that we already have on the `mongoose.js` file fo
 
 - Go to `postman` and send the request
 - You should see the error with a `400` status
+
+At this moment we can begin to do the same process with the `task` model
+
+- On your editor go to the `models` directory and create a new file called `task.js`
+- Get to the `mongoose.js` file and cut the `Task` definition
+- In the newly created `task.js` file paste the `Task` definition
+-  At the top of the `task.js` file; require `mongoose`
+
+    `const mongoose = require('mongoose');`
+
+- At the bottom of the file; export `Task`
+
+    `module.exports = Task;`
+
+- Now get to the `index.js` and import the `Task` model below the `User` model import
+
+    `const Task = require('./models/task');`
+
+- Below the `user` handle; add a handler for a `tasks` endpoint
+
+    ```js
+    app.post('/tasks', (req, res) => {});
+    ```
+
+- On the `tasks` callback; create a new constant call `task` that will contain a new instance of `Task`(Remember to send the `body` of the request)
+
+    ```js
+    app.post('/tasks', (req, res) => {
+        const task = new Task(req.body);
+    });
+    ```
+
+- Then call the `save` method using the `task` constant also call the `then` and `catch` methods
+
+    ```js
+    app.post('/tasks', (req, res) => {
+        const task = new Task(req.body);
+
+        task.save().then(() => {})
+            .catch((e) => {});
+    });
+    ```
+
+- On the `save` method send the `task` if everything goes as expected and on the `catch` method send the `error` with a `400` status
+
+    ```js
+    app.post('/tasks', (req, res) => {
+        const task = new Task(req.body);
+
+        task.save().then(() => {
+            res.send(task);
+        }).catch((e) => {
+            res.status(400).send(e);
+        });
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Right-click on the `Task App` collection
+- Choose to create `Add Request`
+- Add the name of the request like `create task`
+- Choose the `POST` option
+- Add the `URL` of the request: http://localhost:3000/tasks
+- Choose the `Body` option below the `URL`
+- Below the `Body` tab; choose `raw` and on the dropdown at the end choose `JSON`
+- On the `request body` put an empty `JSON`({})
+- Click `Send`
+- You should see an error below with the correct status(400)
+- Now change the `request body` and add a `description` like this
+
+    ```json
+    {
+        "description": "fire a request from postman"
+    }
+    ```
+
+- Click `send`
+- You should see the data of a created `task` in the response section
+
+One last thing; when we create a `user` or `task` we respond with a `status 200`(`express` do this by default) which is ok but we actually can provide more information for this case if we use `201` that means that a resource is created so get to both `users` and `tasks` endpoint
+
+```js
+app.post('/users', (req, res) => {
+    const user = new User(req.body);
+
+    user.save().then(() => {
+        res.status(201).send(user);
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+});
+
+app.post('/tasks', (req, res) => {
+    const task = new Task(req.body);
+
+    task.save().then(() => {
+        res.status(201).send(task);
+    }).catch((e) => {
+        res.status(400).send(e);
+    });
+});
+```
