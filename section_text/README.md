@@ -9058,3 +9058,180 @@ app.post('/tasks', (req, res) => {
     });
 });
 ```
+
+### Resources reading Endpoints
+
+Now we can continue creating our endpoints in this case the `reading` endpoints that will get the data of all or one `user/task`.
+
+- On your editor; go to the `index.js` file
+- Below the `users` endpoint; create a new endpoint called `users` but in this case using the `get` method
+
+    ```js
+    app.get('/users', (req, res) => {});
+    ```
+
+`Mongoose` provide us with a series of methods like the `MongoDB` native driver that will help us to perform the `read` operation. [Here](https://mongoosejs.com/docs/queries.html) you can see the methods that `mongoose` gives to you for different operations. In order to `fetch` multiple items, we will use the [find](https://mongoosejs.com/docs/api.html#model_Model.find) method that searches for items that match the criteria that received.
+
+- Now inside of the callback function of the `users` handler that you just created; use the `find` method on the `User` model sending an empty object
+
+    ```js
+    app.get('/users', (req, res) => {
+        User.find({});
+    });
+    ```
+
+    The object that we send as a parameter of the `find` method will have the acceptance criteria that will use to `find` the items that we want. Since we need all items; we will send an empty object so every item matches the criteria
+
+-  Next; we can use the `then` and `catch` methods
+
+    ```js
+    app.get('/users', (req, res) => {
+        User.find({}).then((users) => {})
+        .catch((e) => {});
+    });
+    ```
+
+- In a success case we will need to send the list of the items that match the creation
+
+    ```js
+    app.get('/users', (req, res) => {
+        User.find({}).then((users) => {
+            res.send(users);
+        }).catch((e) => {});
+    });
+    ```
+
+- On your terminal; go to the `task-manager` directory
+- Run the `express` server using: `npm run dev`
+- On another tab of the terminal run the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Go to `postman`
+- Right-click on the `task app` collection
+- Click on `Add Request`
+- A new request tab should popup
+- Add the request name like `Read user`
+- Leave `Get` as a type of request
+- On the `URL` section add this: `http://localhost:3000/users`
+- Click on `Send`
+- You should see all `users` that you have on the database
+- Get back to the `index.js` file
+- On the `get users` endpoint's catch method send a `500` to say that we have some issues connecting to the database
+
+    ```js
+    app.get('/users', (req, res) => {
+        User.find({}).then((users) => {
+            res.send(users);
+        }).catch((e) => {
+            res.status(500).send();
+        });
+    });
+    ```
+
+    We just send the status we don't actually need to send the error back because the status will provide the information needed
+
+Now we will need to add another `read` endpoint for the `user` that has the ability to get the information of a single `user`
+
+- Below the `get users` endpoint; create a new `get` handler
+
+    `app.get('', (req, res) => {});`
+
+- Now we will need to set the path for the handler that will be the same `users` path but we will need a part that will be changed depending on the `id` of the element so we will add `/:id` at the end of the path
+
+    `app.get('/users/:id', (req, res) => {});`
+
+    The `:id` is called `route parameters` and `express` give us to be part of the `URL` that is used to capture dynamic values
+
+- To access the dynamic value of the `URL` we will have the `params` property as a part of `req` so create a constant call `_id` and store the value of the `id` on the `URL` and log the value
+
+
+    ```js
+    app.get('/users/:id', (req, res) => {
+        const _id = req.params.id;
+
+        console.log(_id);
+    });
+    ```
+
+- Go to `postman`
+- Right-click on the `Task app` collection
+- Click on the `Add Request`
+- A new request tab should popup
+- Add the request name like `read user`
+- Add the `URL` like this: http://localhost:3000/users/087123409823 (Make sure that the `id` have this length, and should not exists on the database for the moment)
+- Click `Send`
+- Go to the terminal tab that the server is running
+- You should see the value of the `id` that you just put on the request `URL` that you send
+- Get back to your editor
+- Remove the log of the `read user` handler that you just added
+
+Now we will use another `mongoose` method and if you see it on the [mongoose docs](https://mongoosejs.com/docs/api.html) we can choose from 2 options; `findOne` and `findOneById`. The difference between these 2 methods is that we use `findOne` when we want to get an item without using the `id` and as its name suggests `findOneById` use the `id` of an item to retrieve its data. In our case, we will use `findOneById` since we get the `id` from a `param` of the `URL`.
+
+- On the `get a user` handler call the `findOneById` method using the `User` model and call the `then`(receive a `user` as a parameter) and `catch` methods
+
+    ```js
+    app.get('/users/:id', (req, res) => {
+        const _id = req.params.id;
+
+        User.findById(_id).then((user) => {})
+        .catch((e) => {});
+    });
+    ```
+
+At this moment is worth mentioning; that when we don't have any `user` to retrieve is not considered an error is just that the `id` provided doesn't match with any user so we will respond with the appropriate status that represents that a `user` with that `id` wasn't found.
+
+- On the `then` method adds a condition that asks if we receive a `user` and if we don't receive it send a `404` status
+
+    ```js
+    app.get('/users/:id', (req, res) => {
+        const _id = req.params.id;
+
+        User.findById(_id).then((user) => {
+            if (!user) {
+                return res.status(404).send();
+            }
+        }).catch((e) => {});
+    });
+    ```
+
+- Now if we are able to find a `user` we respond with it
+
+    ```js
+    app.get('/users/:id', (req, res) => {
+        const _id = req.params.id;
+
+        User.findById(_id).then((user) => {
+            if (!user) {
+                return res.status(404).send();
+            }
+
+            res.send(user);
+        }).catch((e) => {});
+    });
+    ```
+
+- Finally; send a `500` if we got an error like we did before
+
+    ```js
+    app.get('/users/:id', (req, res) => {
+        const _id = req.params.id;
+
+        User.findById(_id).then((user) => {
+            if (!user) {
+                return res.status(404).send();
+            }
+
+            res.send(user);
+        }).catch((e) => {
+            res.status(500).send();
+        });
+    });
+    ```
+
+- Go to `postman`
+- Click `Send` on the `get user` request
+- You should receive a `404` error
+- Now get to the `get all users` request tab and grab one of the valid `ids`
+- Get back to the `get user` request tab and paste the valid `id` at the end of the `URL`(deleting the previews `id` that you put)
+- Click `Send`
+- You should get the data of the `user` with the `id` that you put on the `URL`
+
+As you see we didn't convert the `id` that we receive as a `param` on the `URL` in the `get user` handler to an `ObjectID` as we do on the `MongoDB native driver` before. `Mongoose` take care of this for us converting `string ids` into `ObjectIDs`.
