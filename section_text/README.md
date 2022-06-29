@@ -9368,3 +9368,267 @@ Now we can continue with the next part of the `read resource` that is the same p
 - Change one number to another in the `id` in the `URL`
 - Click `Send`
 - You should see a `404` response
+
+### Promise chaining
+
+At this moment we will stop the `task app` development in order to see a `promise` feature that we will need to understand.
+
+Each time that we work with `promises` we do one `asynchronous` thing at a time but sometimes we want to do more than one thing in order to achieve something and that is when the `promise chaining` go into action. Let's create some examples of it.
+
+- On your editor; go to the `playground` directory
+- Create a new file called `9-promises.js`
+
+We will create a `promise` that has some delay in other to make an example. We will create a function that adds return the sum of 2 numbers.
+
+- Inside of this file create a new function called `add` that receives 2 numbers
+
+    `const add = (a, b) => {}`
+
+- On the `add` function; return a `promise`
+
+    ```js
+    const add = (a, b) => {
+        return new Promise((resolve, reject) => {}
+    }
+    ```
+
+- Add a `setTimeout` on the `promise` of `2` seconds that return the sum of the 2 numbers
+
+    ```js
+    const add = (a, b) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve(a + b);
+            }, 2000);
+        }
+    }
+    ```
+
+- Now below the `add` definition; call it with 2 numbers(Remember to use the `then` and `catch` methods printing the result or error)
+
+    ```js
+    add(1, 1).then((sum) => {
+        console.log(sum);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- On your terminal; go to the `playground` directory
+- Run the `9-promises.js` file using: `node 9-promises.js`
+- You should see the `sum` of the 2 numbers after 2 seconds
+
+Now imagine that you will need to add another number to the first result that we have when we call the `add` function. For this case, we will need to call the `add` function on the `then` method.
+
+- Call the `add` function sending the first result a `4` as the second parameter
+
+    ```js
+    add(1, 1).then((sum) => {
+        console.log(sum);
+        add(sum, 4).then((sum2) => {
+            console.log(sum2);
+        }).catch((e) => {
+            console.log(e);
+        });
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Get back to your terminal and run the `9-promises.js` script again
+- You should see after 2 seconds 2 then after 2 more seconds 6 on the terminal
+
+This resolve what we need but this creates a more nested and complex call; imaging that we need to do another `asynchronous` call; this will get more complex to actually know what is happening also we have duplicate `catch` calls. Now let's update this to use `promise chaining`.
+
+- Remove the second `add` call on the first `then` method
+- Now in the `then` method; return an `add` promise with the `sum` and `4` as a parameter
+
+    ```js
+    add(1, 1).then((sum) => {
+        console.log(sum);
+        return add(sum, 4);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Now we will need to call the `then` method again and this time it will receive the result of the second `add` call
+
+    ```js
+    add(1, 1).then((sum) => {
+        console.log(sum);
+        return add(sum, 4);
+    }).then((sum2) => {
+        console.log(sum2);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+So this is `promise chaining` on effect; we call multiple `promises` and add a `then` method call for each of them after we return a `promise` and that method will receive the result of that return `promise` and we can call a single `catch` call.
+
+- Get back to your terminal and run the `9-promises.js` script again
+- You should see after 2 seconds 2 then after 2 more seconds 6 on the terminal
+
+Now we can test with our `task app` database(We don't have an actual use case yet but we will do an example for this).
+
+- On your editor; go to the `task-manager` directory
+- Create a new folder called `playground`
+- Create a new file called `promise-chaining.js`
+
+Now we will create an example where we change the `age` of a `user` and then `fetch` all the `users` with that `age`.
+
+- On this newly created file `require` the `mongoose.js` file on the `src/db` directory
+
+    `require('../src/db/mongoose');`
+
+- Then `require` the `User` model
+
+    `const User = require('../src/models/user');`
+
+- Go to your terminal and start the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Now open `Robo 3T`
+- Click on the `task-manager` database
+- Click on the `collections`
+- Click on the `user` collection
+- Right-click on one of the `user`
+- Choose `edit`
+- Copy one of the `id` of that `user`
+
+At this moment we need functions that help us to achieve our goal so as you notice `mongoose` will help us with this. On the [docs][https://mongoosejs.com/docs/api/query.html] you will see that we have some `updates` functions like `updateMany` or `updateOne` and those functions can be used to achieve our goal but those functions don't retrieve the document that we `update`. There are other variations that will return the document; `findByIdAndUpdate` and `findOneAndUpdate`; those functions will help us to achieve what we need and for this case, we will use `findByIdAndUpdate`.
+
+- Go to the `promise-chaining.js`
+- Below the `User` require; call the `findByIdAndUpdate` using the `User` model
+
+    `User.findByIdAndUpdate();`
+
+- Paste the `id` of the `user` that you copied before as the first parameter of the `findByIdAndUpdate` method
+
+    `User.findByIdAndUpdate(':id');`
+
+- As the second parameter we will send an object with the property that we want to update and the new value
+
+    `User.findByIdAndUpdate(':id', { age: 1 });`
+
+    As you notice; we didn't use the `$` as we did before when we use the `mongoDB native driver` because `mongoose` take care of this for us
+
+- Now add the `then` method that will receive the `user` and log the `user`
+
+    ```js
+    User.findByIdAndUpdate(':id', { age: 1 }).then((user) => {
+        console.log(user);
+    });
+    ```
+
+At this moment we have the first part of the task that is to `update` the `user`; now we need to `find` all `users` that have the same `age` as the one that we just `updated` and checking the [docs][https://mongoosejs.com/docs/api/query.html] you will see a method called `countDocuments` that will retrieve the number of documents depending on criteria.
+
+- On the `then` method returns the `countDocuments` of the `User` model
+
+    ```js
+    User.findByIdAndUpdate(':id', { age: 1 }).then((user) => {
+        console.log(user);
+        return User.countDocuments();
+    });
+    ```
+
+- Add the `age` of `1` as a parameter on the `countDocuments` method
+
+    ```js
+    User.findByIdAndUpdate(':id', { age: 1 }).then((user) => {
+        console.log(user);
+        return User.countDocuments({ age: 1});
+    });
+    ```
+
+- Now add another `then` call that receives `result` and log it
+
+    ```js
+    User.findByIdAndUpdate(':id', { age: 1 }).then((user) => {
+        console.log(user);
+        return User.countDocuments({ age: 1});
+    }).then((result) => {
+        console.log(result);
+    });
+    ```
+
+- Finally, add the `catch` call at the end
+
+    ```js
+    User.findByIdAndUpdate(':id', { age: 1 }).then((user) => {
+        console.log(user);
+        return User.countDocuments({ age: 1});
+    }).then((result) => {
+        console.log(result);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Now open a new tab of your terminal and get to the `task-manager/playground` directory
+- Run the `promise-chaining.js` script using: `node promise-chaining.js`
+- You should see the document that you just updated and a number that represents the amount of `users` that have the `age` that you use
+
+We can do something similar for the `tasks` but instead of updating a `task` we are going to `delete` a `task` and `count` the `task` that a not `completed`.
+
+- On the `task-manager/playground` directory; create a new file called `promise-chaining-2.js`
+- In this newly created file; `require` the `mongoose` file and the `Task` model
+
+    ```js
+    require('../src/db/mongoose');
+    const Task = require('../src/models/task');
+    ```
+
+- Go to `Robo 3T` and get the `id` of a `task`
+- Get back to the `promise-chaining-2.js`
+- Below the `Task` model `require`; call the `findByIdAndDelete` of the `Task.model`
+
+    `Task.findByIdAndDelete();`
+
+- Now send as a parameter the `id` that you just grab of a `task`
+
+    `Task.findByIdAndDelete(':id');`
+
+- Call the `then` method receiving a `task` as a parameter and log that value
+
+    ```js
+    Task.findByIdAndDelete(':id').then((task) => {
+        console.log(task);
+    });
+    ```
+
+- Then return the `countDocuments` method of the `Task` model; sending the `completed` property with a `false` value
+
+    ```js
+    Task.findByIdAndDelete(':id').then((task) => {
+        console.log(task);
+        return Task.countDocuments({ completed: false });
+    });
+    ```
+
+- Add another `then` method that gets the result of the `countDocuments` method and logs it
+
+    ```js
+    Task.findByIdAndDelete(':id').then((task) => {
+        console.log(task);
+        return Task.countDocuments({ completed: false });
+    }).then((result) => {
+        console.log(result);
+    });
+    ```
+
+- Finally, add a `catch` method
+
+    ```js
+    Task.findByIdAndDelete(':id').then((task) => {
+        console.log(task);
+        return Task.countDocuments({ completed: false });
+    }).then((result) => {
+        console.log(result);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Get to your terminal and go to the `task-manager/playground` directory
+- Run the `promise-chaining-2.js` script using: `node promise-chaining-2.js`
+- You should see the data of the `task` that you just delete it and the amount of `tasks` that are not `completed`

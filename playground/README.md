@@ -129,3 +129,11 @@ This is a folder with some mini examples outside of the applications that are bu
 - On your terminal; go to the `playground` directory
 - Run the `8-promises.js` script
 - You will see 2 messages after 2 seconds representing a `callback` pattern function and a `promise`
+
+### 9. Promise chaining
+
+Using `promise chaining` to call 2 `async` operations
+
+- On your terminal; go to the `playground` directory
+- Run the `9-promises.js` script
+- You will see a `2` after 2 seconds then `6` after 2 more seconds
