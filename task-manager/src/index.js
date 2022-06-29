@@ -40,11 +40,6 @@ app.get('/users/:id', (req, res) => {
     });
 });
 
-// Goal: Setup the task creation endpoint
-//
-// 1. Create a separate file for the task model (load it into the index.js)
-// 2. Create the task creation endpoint (handle success and error)
-// 3. Test the endpoint from postman with good and bad data
 app.post('/tasks', (req, res) => {
     const task = new Task(req.body);
 
@@ -52,6 +47,33 @@ app.post('/tasks', (req, res) => {
         res.status(201).send(task);
     }).catch((e) => {
         res.status(400).send(e);
+    });
+});
+
+// Goal: Setup the task reading endpoints
+//
+// 1. Create an endpoint for fetching all tasks
+// 2. Create an endpoint for fetching a task by its id
+// 3. Setup new request in Postman and test your work
+app.get('/tasks', (req, res) => {
+    Task.find({}).then((tasks) => {
+        res.send(tasks);
+    }).catch((e) => {
+        res.send(500).send();
+    });
+});
+
+app.get('/tasks/:id', (req, res) => {
+    const _id = req.params.id;
+
+    Task.findById(_id).then((task) => {
+        if(!task) {
+            res.status(404).send();
+        }
+
+        res.send(task);
+    }).catch((e) => {
+        res.status(500).send();
     });
 });
 

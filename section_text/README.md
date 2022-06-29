@@ -9235,3 +9235,136 @@ At this moment is worth mentioning; that when we don't have any `user` to retrie
 - You should get the data of the `user` with the `id` that you put on the `URL`
 
 As you see we didn't convert the `id` that we receive as a `param` on the `URL` in the `get user` handler to an `ObjectID` as we do on the `MongoDB native driver` before. `Mongoose` take care of this for us converting `string ids` into `ObjectIDs`.
+
+Now we can continue with the next part of the `read resource` that is the same process that we did before but with `tasks`.
+
+- On your editor; get to the `index.js` file
+- Below the `get user` handler; add a new endpoint that gets all `tasks`
+
+    `app.get('/tasks', (req, res) => {});`
+
+- Call the `find` method of the `Task` model in the callback function with an `empty` object as a parameter(Remember to call the `then` and `catch` methods) 
+
+    ```js
+    app.get('/tasks', (req, res) => {
+        Task.find({}).then((tasks) => {})
+        .catch((e) => {});
+    });
+    ```
+
+- Send the `tasks` as a response to the `then` method
+
+    ```js
+    app.get('/tasks', (req, res) => {
+        Task.find({}).then((tasks) => {
+            res.send(tasks);
+        })
+        .catch((e) => {});
+    });
+    ```
+
+- Send a `500` status when there is an error
+
+    ```js
+    app.get('/tasks', (req, res) => {
+        Task.find({}).then((tasks) => {
+            res.send(tasks);
+        })
+        .catch((e) => {
+            res.send(500).send();
+        });
+    });
+    ```
+
+- Get to `postman`
+- Right-click on the `task app` collection
+- Click on `Add request`
+- Add the name of the new request like `read tasks`
+- Add the `tasks` endpoint: http://localhost:3000/tasks
+- Click `Send`
+- You should receive the data of all `tasks` that you have on your database
+- Get back to the `index.js` file
+- Below the `get tasks` handler; create a new endpoint to retrieve one `task` by its `id`
+
+    `app.get('/tasks/:id', (req, res) => {});`
+
+- Inside of the callback function; create a new constant call `_id` and its value will be the `params.id` property of `req`
+
+    ```js
+    app.get('/tasks/:id', (req, res) => {
+        const _id = req.params.id;
+    });
+    ```
+
+- Use the `findById` method of the `Task` method sending the `_id` as a parameter(Remember to call the `then` and `catch` method)
+
+    ```js
+    app.get('/tasks/:id', (req, res) => {
+        const _id = req.params.id;
+
+        Task.findById(_id).then((task) => {})
+        .catch((e) => {});
+    });
+    ```
+
+- Create a condition that checks if `task` has a value and if it doesn't have it send a `404` status as a response
+
+    ```js
+    app.get('/tasks/:id', (req, res) => {
+        const _id = req.params.id;
+
+        Task.findById(_id).then((task) => {
+             if(!task) {
+                res.status(404).send();
+            }
+        })
+        .catch((e) => {});
+    });
+    ```
+
+- Then if we have a value on `task` send it as a response
+
+    ```js
+    app.get('/tasks/:id', (req, res) => {
+        const _id = req.params.id;
+
+        Task.findById(_id).then((task) => {
+             if(!task) {
+                res.status(404).send();
+            }
+
+            res.send(task);
+        })
+        .catch((e) => {});
+    });
+    ```
+
+- Finally; send a `500` status if we got an error
+
+    ```js
+    app.get('/tasks/:id', (req, res) => {
+        const _id = req.params.id;
+
+        Task.findById(_id).then((task) => {
+             if(!task) {
+                res.status(404).send();
+            }
+
+            res.send(task);
+        })
+        .catch((e) => {
+            res.status(500).send();
+        });
+    });
+    ```
+
+- Get to `postman`
+- Right-click on the `task app` collection
+- Click on `Add request`
+- Add the name of the new request like `read task`
+- Add the `tasks` endpoint: http://localhost:3000/tasks/:id (Change the `:id` with a valid `id`; you can use the `read tasks` request tab to get one)
+- Click `Send`
+- You should receive the data of the `task` that you send the `id` as a param
+- Change one number to another in the `id` in the `URL`
+- Click `Send`
+- You should see a `404` response
