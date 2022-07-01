@@ -9632,3 +9632,280 @@ We can do something similar for the `tasks` but instead of updating a `task` we 
 - Get to your terminal and go to the `task-manager/playground` directory
 - Run the `promise-chaining-2.js` script using: `node promise-chaining-2.js`
 - You should see the data of the `task` that you just delete it and the amount of `tasks` that are not `completed`
+
+### Async/Await
+
+There is another `asynchronous` feature that we need to check before getting back to the building process of the application which is `async/await`. The `async/await` keywords will help us to make code more readable and will look more `synchronous` than `asynchronous` also it will not represent a lot of change in the actual code so we won't need to do a lot of changes like the time we pass from `callback` pattern to `promises`. Let's make an example.
+
+- On your editor; go to the `playground` directory
+- Create a new file called `10-async-await.js`
+- Inside of this newly created file; create a function called `doWork` and will be an arrow function empty
+
+    `const doWork = () => {}`
+
+- Now below the `doWork` function; log the result of calling that function
+
+    `console.log(doWork());`
+
+- Go to your terminal and get to the `playground` directory
+- Run the `10-async-await.js` using `node 10-async-await.js`
+- You should see that `undefined` is log on the terminal
+
+As you may know, if we don't return a value in a function `undefined` is implicitly returned. Now we will add the `async` keyword and check the difference.
+
+- Add `async` to the `doWork` function definition
+
+    `const doWork = async () => {}`
+
+    The `async` keyword allows us to create an `asynchronous` function and in that function, we can use the `await` feature
+
+- Get to your terminal and run the `10-async-await.js`
+- You should see: `Promise { undefined }`
+
+That log means that `doWork` is returning a `promise` and that `promise` is fulfilled with `undefined` so `async` function always returns a `promise` and that `promise` is fulfilled with the value that you choose to return. Let's return a value and see the change.
+
+- On the `doWork` function return a `string`
+
+    ```js
+    const doWork = async () => {
+        return 'Test';
+    }
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You should see: `Promise { 'Test' }`
+
+As you see the `doWork` function still returns a `promise` but in this case is fulfilled with a `string` called `Test`. Now we can use the `then/catch` methods can be useful because `doWork` is a `promise`. Let's use it.
+
+- Remove the `console` line
+- Then call the `doWork` function and use the `then` method(Will receive `result` as a param and log that `result`) and the `catch` method(log the error)
+
+    ```js
+    doWork().then((result) => {
+        console.log('result', result);
+    }).catch((e) => {
+        console.log('e', e);
+    });
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You should see: `result Test`
+
+Since the `promise` is fulfilled the `then` block runs. If we `throw` an `error` we can run the `catch` block in other words to `resolve` the `promise` we just need to return a value and `reject` it; we will need to `throw` an `error`. Let's try to `reject` it
+
+- On the `doWork` function; before the `return` value
+
+    ```js
+    const doWork = async () => {
+        throw new Error('Something went wrong');
+        return 'Test';
+    }
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You should see an error and the message that you put should be on the logs
+
+Now we can check the other half of the feature that allows us to manage our `asynchronous` tasks and that is the `await` keyword. The `await` operator can only be used in `async` functions. Let's begin with the example.
+
+- Go to the `9-promises.js` file; and copy the `add` function(Function that receives 2 numbers and returns the sum of the numbers after 2 seconds)
+- Paste the `add` function at the top of the `10-async-await.js` file
+
+We will use the `add` function intentionally because when you are working with `async/await` you don't have to change how your `promises` function internally the only thing that change is how you work with them.
+
+- Remove the `error` and `return` of the `doWork` function
+- Use the `await` operator calling the `add` function the following 2 parameters
+
+    ```js
+    const doWork = async () => {
+        await add(1, 99);
+    }
+    ```
+
+When we use `promises` we have access to the data using the `then` method but `await` the `add` function looks like a standard `synchronous` function so we actually can store the value that the `promise` is fulfilled with on a constant so in this case, we still wait the 2 seconds in order to get the value; the only advantage is syntactical.
+
+- Create a constant call `sum` that stores the `add` value
+
+    ```js
+    const doWork = async () => {
+        const sum = await add(1, 99);
+    }
+    ```
+
+- Now return the `sum` value
+
+    ```js
+    const doWork = async () => {
+        const sum = await add(1, 99);
+        return sum;
+    }
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You will see `result 100` after 2 seconds
+
+Now we have `asynchronous` code that looks like `synchronous`. Let's add some more calls to `add` in other to see the advantage
+
+- Go to the `doWork` function and add the following
+
+
+    ```js
+    const doWork = async () => {
+        const sum = await add(1, 99);
+        const sum2 = await add(sum, 50);
+        const sum3 = await add(sum2, 3);
+
+        return sum3;
+    }
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You will see `result 153` after 6 seconds
+
+As you see we have a more simple code using `async/await` instead of `promise chaining` also we have all values that the `promise` return in the same `scope` in case we need it. Now we will check when we have a `reject promise` with multiple calls.
+
+- On the `add` function; inside of the `setTimeout` callback; add a condition that `reject` the `promise` when you try to sum a negative number(Add a message)
+
+    ```js
+    const add = (a, b) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if(a < 0 || b < 0) {
+                    return reject('Numbers must be non-negative');
+                }
+                resolve(a + b);
+            }, 2000);
+        });
+    }
+    ```
+
+- On the `doWork` function change the second parameter of the `add` function on the `sum3` constant to a negative number
+
+    ```js
+    const doWork = async () => {
+        const sum = await add(1, 99);
+        const sum2 = await add(sum, 50);
+        const sum3 = await add(sum2, -3);
+
+        return sum3;
+    }
+    ```
+
+- Get to your terminal and run the `10-async-await.js`
+- You should see an error message after 6 seconds
+
+As you notice we wait the same amount of time that the time that we don't any `rejections` because the first 2 `promises` return the value as expected; if we have the `rejection` early we will get the message sooner.
+
+Now we can apply the same thing to the `promise-chaining` files on the `task-manager/playground` directory
+
+- On your editor go to the `promise-chaining.js` file
+- Remove all the code except the requires
+- Create a new function call `updateAgeAndCount` that will be `async` and receive an `id` and `age`
+
+    `const updateAgeAndCount = async (id, age) => {}`
+
+- Inside of the newly created function; create a constant call `user` that its value will be the result of the `findByIdAndUpdate` method of the `User` model sending the `id` as a parameter and the `age`(This value that will update the user). Remember that the `findByIdAndUpdate` is a `promise` so you will need to use the `await` operator before you call it
+
+    ```js
+    const updateAgeAndCount = async (id, age) => {
+        const user = await User.findByIdAndUpdate(id, { age });
+    }
+    ```
+
+    Since we have the variable `age` with the same name as the property `age` of the `user` we can use the shorthand syntax
+
+- Now create a new constant call `count` that its value will be the `countDocuments` of the `User` model and will have the `age` as a parameter
+
+    ```js
+    const updateAgeAndCount = async (id, age) => {
+        const user = await User.findByIdAndUpdate(id, { age });
+        const count = await User.countDocuments({ age });
+    }
+    ```
+
+- Return the `count`
+
+    ```js
+    const updateAgeAndCount = async (id, age) => {
+        const user = await User.findByIdAndUpdate(id, { age });
+        const count = await User.countDocuments({ age });
+        return count;
+    }
+    ```
+
+- Then; get to your terminal and start the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Now go to `Robo 3T`
+- Grab a `user id`
+- Get back to the `promise-chaining.js` file
+- Call the `updateAgeAndCount` function sending the `id` that you just grab from `Robo 3T` and an `age` that you want to update; we are going to use `2` but you can use another value
+
+    `updateAgeAndCount(':id', 2);`
+
+- Call the `then`(will receive `count` as a parameter and will log that value) and `catch`(log the error) methods
+
+    ```js
+    updateAgeAndCount(':id', 2).then((count) => {
+    console.log(count);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Get to another tab of your terminal and go to the `task-manager/playground` directory
+- Run the `promise-chaining.js` script using: `node promise-chaining.js`
+- You should see the `count` of `user` with the `age` that you update(Confirm with `Robo 3T`)
+
+Next; we can continue with the other `promise-chaining` file.
+
+- Go to the `promise-chaining-2.js` file
+- Remove all the code except the requires
+- Create a new function called `deleteTaskAndCount` that will be `async` and will receive an `id`
+
+    `const deleteTaskAndCount = async (id) => {}`
+
+- Inside of the newly created function; create a new constant call `task` and it value will be the result of the `findByIdAndDelete` method of the `Task` model sending the `id` as a parameter
+
+    ```js
+    const deleteTaskAndCount = async (id) => {
+        const task = await Task.findByIdAndDelete(id);
+    }
+    ```
+
+- Then; create a new constant call `count` that it value will be the `countDocuments` method of the `Task` model and it will `count` the `task` that is not `completed`
+
+    ```js
+    const deleteTaskAndCount = async (id) => {
+        const task = await Task.findByIdAndDelete(id);
+        const count = await Task.countDocuments({ completed: false });
+    }
+    ```
+
+- Return `count`
+
+    ```js
+    const deleteTaskAndCount = async (id) => {
+        const task = await Task.findByIdAndDelete(id);
+        const count = await Task.countDocuments({ completed: false });
+        return count;
+    }
+    ```
+
+- Now go to `Robo 3T` and grab one of the `task id`
+- Get back to the `promise-chaining-2.js` file
+- Call the `deleteTaskAndCount` function sending the `id` that you just grab also call the `then`(will receive `count` as a parameter and will log that value) and `catch`(log the error) methods
+
+    ```js
+    deleteTaskAndCount('62b33c459de37af45b3f03bf').then((count) => {
+        console.log(count);
+    }).catch((e) => {
+        console.log(e);
+    });
+    ```
+
+- Go to your terminal and run the `promise-chaining-2.js` file
+- You will see the `count` of the `task` that is not `completed`
+
+You'll notice that on both files we have the `user` update and the `task` deleted but don't use those values so you can instead of creating the constant just call the function(with the `await` operator) like this:
+
+`await Task.findByIdAndDelete(id);`
+
+Will have the same result as we have before but we store the value in case we need it.
