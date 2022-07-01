@@ -9975,6 +9975,8 @@ At this point, anything that we added after the `save` function will only run if
     ```
 
 - On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal; go to the `task-manager` directory
+- Run your local server using: `npm run dev`
 - Go to `postman`
 - On the `Task App` collection; click on the `Create User`
 - Add valid data on the `body`
@@ -10091,3 +10093,376 @@ app.get('/tasks/:id', async (req, res) => {
 ```
 
 Test on `postman` each route that you update here.
+
+### Resource Updating Endpoints
+
+We can continue with the creation of the endpoint at this time we are going to work with the `update` endpoints for `users` and `tasks`.
+
+- On your editor; go to the `task-manager/src` directory
+- In the `index.js` file; below the last `user` endpoint; add a new handler that has the `/user/:id` path to receive an `id` and an `async` function. Use `patch` as the `HTTP` method
+
+    `app.patch('/users/:id', async (req, res) => {});`
+
+    The `patch` method is used to `update` existing resources
+
+- Add a `try/catch` block
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+        } catch (e) {}
+    });
+    ```
+
+Now we will use the `findByIdAndUpdate` to `update` an existing `user` and get back the document that we change
+
+- Inside of the `try` block; create a constant call `user` that it value will be the result of the `findByIdAndUpdate` method of the `User` modal
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate();
+        } catch (e) {}
+    });
+    ```
+
+- Now we will need to send an `id` as the same parameter and the `id` is present on the `params` that we send on the request
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id);
+        } catch (e) {}
+    });
+    ```
+
+- As a second parameter of the `findByIdAndUpdate` method we will need the things that we are going to `update` on the `user` and we will have those things on the `body` of the request
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id, req.body);
+        } catch (e) {}
+    });
+    ```
+
+- We going to send a 3rd parameter to the `findByIdAndUpdate` that will be an `option object`. Check the following:
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        } catch (e) {}
+    });
+    ```
+
+    - `new: true`: This is going to return the new `user` instead of the original one before the `update`
+    - `runValidators: true`: This is going to make sure that we run `validations` for the object that we send. This `validation` is set in the model
+
+At this point we can have 3 scenarios:
+
+- The `update` going well
+- The `update` going poorly
+- There was no `user` with that `id`
+
+We need to make sure that we handle all 3 of these scenarios and the first one will be the no `user` found.
+
+- Below the `user` constant definition; add a condition that returns a `404` status if the `user` constant doesn't have any values
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if (!user) {
+                return res.status(404).send();
+            }
+        } catch (e) {}
+    });
+    ```
+
+- Then return the `user` if we successfully `update` the `user`
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if (!user) {
+                return res.status(404).send();
+            }
+
+            res.send(user);
+        } catch (e) {}
+    });
+    ```
+
+- Now in case of any errors returns a `400` error sending the `error` in case there are a `validation` errors
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if (!user) {
+                return res.status(404).send();
+            }
+
+            res.send(user);
+        } catch (e) {
+            res.status(400).send(e);
+        }
+    });
+    ```
+
+    Could be another type of error like the `500` errors where we weren't able to connect with the database but we will handle it later
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- Right-click on the `task app` collection
+- Click on `Add request`
+- Add a name to the request like `update user`
+- Change the `HTTP` method to `PATCH`
+- Get to the `read users` request tab and send a request
+- You should have a response with all `users`
+- Grab one of the `id`
+- Get back to the `update user` tab
+- Add the `URL`: http://localhost:3000/users/:id
+- Substitute `:id` with the `id` that you just grab from the `read users` tab
+- Now click on the `body` tab
+- Check the `raw` options
+- Switch from `TEXT` to `JSON`
+- On the `body` section add a valid `JSON` with a property of the `user` that you want to `update` like this:
+
+    ```json
+    {
+        "name": "Test testing"
+    }
+    ```
+
+- Click send
+- You should receive a response with the `user` with the `updated` data
+- Now change one of the numbers of the `id` to another
+- Click send
+- You should receive a `404` status
+- Get back to the same `id` as before
+- Send an empty object on the `body`
+- Click send
+- You should receive a `400` status with the `validation` error
+- Now on the `JSON body` send a new property that doesn't exist on the `user` model like
+
+    ```json
+    {
+        "height": 72
+    }
+    ```
+
+- Click send
+- You will receive the `user` data without any change and a `200` status
+
+This last thing happens because all the properties that don't exist are completely ignored by `mongoose`. We also have a `200` status error and this will be confusing because we actually don't `update` anything so we will need to set a new response and a message that represents that error.
+
+- Get to the `index.js` file
+- On the `user patch` handler; create a new constant call `allowedUpdates` at the top that its value will be an `array` of the `allow` properties that the `user` can `update`
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+
+        try {...}
+        catch (e) {...}
+    });
+    ```
+
+Now we will need to know what the `user` is trying to `update` and we already have that information on the `req.body` but we only need the `key` so we will use the `Object.key` method in other of obtaining each `key` that the `user` send.
+
+- At the top of the handler; create a new constant call `updates` and its value will be the `Object.keys` result sending the `req.body` as a parameter
+
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+
+        try {...}
+        catch (e) {...}
+    });
+    ```
+
+- Then we will need to test every `key` on the `update` constant against the `allowedUpdates` so we will need that every `string` on the `updates` constant is on the `allowedUpdates`. For this, we will use the `every` method that receives a callback function(Create a constant call `isValid` to store the value of the `every` method)
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => {});
+
+        try {...}
+        catch (e) {...}
+    });
+    ```
+
+    The `every` method run the `callback` function for `every` item on the `updates` array
+
+- Now use `include` in the `allowedUpdates` array to see that every update is on that array
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        try {...}
+        catch (e) {...}
+    });
+    ```
+
+- Below the `isValid` definition; add a condition that checks if `isValid` is `false` and if this is the case send a `400` error with a message that represents that they are trying to do an invalid update
+
+    ```js
+    app.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {
+            return res.status(400).send({ error: "Invalid updates!" })
+        }
+
+        try {...}
+        catch (e) {...}
+    });
+    ```
+
+- Go to `postman` and send the invalid `JSON`
+- You should see a `400` status and the error message that you just set
+
+Now we can follow the process with the `tasks`!!
+
+- Below the last `task` endpoint; add a new endpoint that uses the `patch HTTP method that receives the `/user/:id` path and an `async` function
+
+    `app.patch('/tasks/:id', async (req, res) => {});`
+
+- Add the same process to `validate` that we are receiving a valid property to update
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+    });
+    ```
+
+- Now add a `try/catch` block
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+        } catch (e) {}
+    });
+    ```
+
+- On the `try` block; create a new constant call `task` and its value will be the result of the `findByIdAndUpdate` method of the `Task` model receiving the `id`, `body`, and the `options object` as parameters
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        } catch (e) {}
+    });
+    ```
+
+- Add a condition that sends a `404` status if `task` is empty
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if(!task) {
+                res.status(404).send();
+            }
+        } catch (e) {}
+    });
+    ```
+
+- Then send the `task` if we have a successful `update`
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if(!task) {
+                res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {}
+    });
+    ```
+
+- Finally, send a `400` status with a message in case of an error
+
+    ```js
+    app.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+            if(!task) {
+                res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {
+            res.status(400).send(e);
+        }
+    });
+    ```
+
+- Test on `postman` the different cases for this new endpoint
