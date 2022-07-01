@@ -9909,3 +9909,185 @@ You'll notice that on both files we have the `user` update and the `task` delete
 `await Task.findByIdAndDelete(id);`
 
 Will have the same result as we have before but we store the value in case we need it.
+
+### Integrating Async/Await
+
+Now we know about `async/await`; we can implement it into the routes on the `task app`.
+
+- On your editor; go to the `index.js` file on the `task-manager/src` directory
+- On the `users post` handler; mark as `async` the function of the handler
+
+    `app.post('/users', async (req, res) => {...});`
+
+    As you recall `async` will change the behavior of the function in which the function pass to return a `promise` and `express` at no point use the return value of the function so adding the `async` operator won't affect the behavior that we have before
+
+- Remove the `save` method call and all code related
+- Now use `await` to call the `save` method of `user`
+
+    ```js
+    app.post('/users', async (req, res) => {
+    const user = new User(req.body);
+
+    await user.save();
+    });
+    ```
+
+At this point, anything that we added after the `save` function will only run if the `promise` is fulfilled but when there is a `rejection` the execution will stop. To handle the `rejection` case we will use a `try/catch` block so we can send a response on that case.
+
+- Add a `try/catch` block and put the `save` method call inside of the `try` block
+
+    ```js
+    app.post('/users', async (req, res) => {
+    const user = new User(req.body);
+
+    try {
+        await user.save();
+    } catch (e) {}
+    });
+    ```
+
+- Now we can send a response after the `save` method call so send a `201` status response with the `user`
+
+    ```js
+    app.post('/users', async (req, res) => {
+    const user = new User(req.body);
+
+    try {
+        await user.save();
+        res.status(201).send(user);
+    } catch (e) {}
+    });
+    ```
+
+- Then send a `500` status in case of an error
+
+    ```js
+    app.post('/users', async (req, res) => {
+    const user = new User(req.body);
+
+    try {
+        await user.save();
+        res.status(201).send(user);
+    } catch (e) {
+        res.status(400).send(e);
+    }
+    });
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Go to `postman`
+- On the `Task App` collection; click on the `Create User`
+- Add valid data on the `body`
+- Send the request
+- A `user` should be created
+- Get back to the `index.js` file
+- Now on the `users` get handler to remove all code inside of the function
+- Mark as `async` the handler function
+
+    `app.get('/users', async (req, res) => {});`
+
+- Inside of the function; add a `try/catch` block
+
+    ```js
+    app.get('/users', async (req, res) => {
+        try {
+        } catch (e) {}
+    });
+    ```
+
+- On the `try` block; create a `user` constant that it value will be the result of the `find` method of the `User` model with an empty object parameter
+
+    ```js
+    app.get('/users', async (req, res) => {
+        try {
+            const user = await User.find({});
+        } catch (e) {}
+    });
+    ```
+
+- Send the `user` after the `find` method call
+
+    ```js
+    app.get('/users', async (req, res) => {
+        try {
+            const user = await User.find({});
+            res.send(user);
+        } catch (e) {}
+    });
+    ```
+
+- Now send a `500` status in case of an error
+
+    ```js
+    app.get('/users', async (req, res) => {
+        try {
+            const user = await User.find({});
+            res.send(user);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Go to `postman`
+- Click on the `read users` request on the `task app` collection
+- Send the request
+- You should see the response with all `users`
+
+The other routes follow the same process that we just did:
+
+```js
+app.get('/users/:id', async (req, res) => {
+    const _id = req.params.id;
+
+    try {
+        const user = await User.findById(_id);
+
+        if (!user) {
+            return res.status(404).send();
+        }
+
+        res.send(user);
+    } catch (e) {
+        res.status(500).send();
+    }
+});
+
+app.post('/tasks', async (req, res) => {
+    const task = new Task(req.body);
+
+    try {
+        await task.save();
+        res.status(201).send(task);
+    } catch (e) {
+        res.status(400).send(e);
+    }
+});
+
+app.get('/tasks', async  (req, res) => {
+    try {
+        const task = await Task.find({});
+        res.send(task);
+    } catch (e) {
+        res.status(500).send();
+    }
+});
+
+app.get('/tasks/:id', async (req, res) => {
+    const _id = req.params.id;
+
+    try {
+        const task = await Task.findById(_id);
+
+        if (!task) {
+            res.status(404).send();
+        }
+
+        res.send(task);
+    } catch (e) {
+        res.status(500).send();
+    }
+});
+```
+
+Test on `postman` each route that you update here.
