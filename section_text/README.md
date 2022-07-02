@@ -10466,3 +10466,116 @@ Now we can follow the process with the `tasks`!!
     ```
 
 - Test on `postman` the different cases for this new endpoint
+
+### Resource deleting endpoints
+
+At this moment we can work with another `resource` in this case the `delete` endpoints for the `users` and `tasks`. Let's get into it!!
+
+- On your editor; go to the `index.js` file in the `task-manager/src` directory
+- Below the last `users` endpoint; add a new handler for a `delete` endpoint that has a `/user/:id` path and an `async` function
+
+    `app.delete('/users/:id', async (req, res) => {});`
+
+- Inside of the `delete` function; add a `try/catch` block
+
+    ```js
+    app.delete('/users/:id', async (req, res) => {
+        try {
+        } catch (e) {}
+    });
+    ```
+
+- On the `try` block; create a new constant call `user` that it value will be the result of the `findByIdAndDelete` of the `User` model sending the `id` that came from the request as a parameter
+
+    ```js
+    app.delete('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndDelete(req.params.id);
+        } catch (e) {}
+    });
+    ```
+
+- Now add a condition that check if the `user` don't have any value and if it don't have a value send a `404` status
+
+    ```js
+    app.delete('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndDelete(req.params.id);
+
+            if(!user) {
+                res.status(404).send();
+            }
+        } catch (e) {}
+    });
+    ```
+
+- If there is a `deleted` user; send the `user` data as a response
+
+    ```js
+    app.delete('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndDelete(req.params.id);
+
+            if(!user) {
+                res.status(404).send();
+            }
+
+            res.send(user);
+        } catch (e) {}
+    });
+    ```
+
+- Finally; send a `500` status in case of an error
+
+    ```js
+    app.delete('/users/:id', async (req, res) => {
+        try {
+            const user = await User.findByIdAndDelete(req.params.id);
+
+            if(!user) {
+                res.status(404).send();
+            }
+
+            res.send(user);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of the terminal; run your local server using: `npm run dev`
+- Go to `postman`
+- Right-click on the `task app` collection
+- Click on `Add request`
+- Put a name to the request like `delete user`
+- Change the `HTTP` method to `DELETE`
+- Get to the `get users` request and send a request
+- Grab one of the `id` of the `users`
+- Get back to the `delete user` tab
+- Add the `URL` of the request: http://localhost:3000/users/:id
+- Change `:id` to the `id` that you just grab it
+- Send the request
+- You should see the response with the data of the `user` that you just `deleted` it
+- Send the request again
+- You should see a `404` status on the response
+- Now get back to the `index.js` file
+- Follow the same process to add a new `task delete` endpoint
+
+    ```js
+    app.delete('/tasks/:id', async (req, res) => {
+        try {
+            const task = await Task.findByIdAndDelete(req.params.id);
+
+            if(!task) {
+                res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Go to `postman` and test the endpoint
