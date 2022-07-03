@@ -10579,3 +10579,139 @@ At this moment we can work with another `resource` in this case the `delete` end
     ```
 
 - Go to `postman` and test the endpoint
+
+### Separate Route files
+
+As you can see the `index.js` file has all `routes` of the app and in the future, we will add some more to this file so it will continue growing and will be a little bit difficult to track the code of this file; for this reason, we will separate the `routes` in it own file that represent each context in other words files that represent `users` and `tasks` for the app. Before we begin the process of separating the file we will need to see some basic `express route` syntax that will help us with this code separation.
+
+- On your editor; go to the `index.js` file on the `task-manager/src` directory
+- Below the `app.use(express.json());` line; create a new constant call `router`
+
+    `const router;`
+
+- Add the value of the `router` constant using a new instance of `express.Router()`
+
+    `const router = new express.Router();`
+
+    Now the `router` constant will have access to the same `HTTP` methods like `get` or `post` that we used before with `app`
+
+-  Use `router` to create a new endpoint for `/test` that uses the `get HTTP` method and sends a message to response(Below the `router` definition)
+
+    ```js
+    router.get('/test', (req, res) => {
+        res.send('This is from my other router');
+    });
+    ```
+
+By default; this `router` is not used at all because we still need to register it to work with the `express` application.
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; get to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to your browser
+- Get to http://localhost:3000/test
+- You will seed an `error`
+- Get back to the `index.js` file
+- Below the `/test` handler; register the `router` handler sending it as a parameter to the `use` method of `app`
+
+    `app.use(router);`
+
+- Save the file
+- Get to the browser and refresh the page
+- You should see the message of the `test` handler
+
+This is the structure that we are going to follow when we separate the `routes`.
+
+- Get to your editor and create a new folder called `routers` on the `task-manager/src` directory
+- Inside the newly created folder add a new file called `user.js`
+- Require `express`
+
+    `const express = require('express');`
+
+- Create a new `router` instance like the one we did before
+
+    `const router = new express.Router();`
+
+- Add a new `/test` endpoint that uses the `get http` method and responds with a message
+
+    ```js
+    router.get('/test', (req, res) => {
+        res.send('From a new file');
+    });
+    ```
+
+- Exports the `router` at the end of the file
+
+    `module.exports = router;`
+
+- Go to the `index.js` file
+- Remove the `router` example complete
+- Require the `router` from the `routers/user.js` file
+
+    `const userRouter = require('./routers/user');`
+
+    Since we will have more than one `router` we change the name of the constant to one that represents its purpose
+
+- Below the `app.use(express.json());` line; register the `userRouter`
+
+    `app.use(userRouter);`
+
+- Save the files
+- Go to your browser and refresh the page
+- You should see the message that you send from the `user.js` file
+
+Now that we register a `route` from another file we can move all the code related to the `users routes` to the new file.
+
+- Get to the `index.js` file
+- Cut all the `routes` related to the `users`
+- Get to the `routers/user.js` file
+- Before the export; paste all `users routes` that you cut before
+- Then change `app` to `router` in each endpoint like this
+
+    `router.post('/users', async (req, res) => {...});`
+
+- Finally; below the `express` require to call the `User` model
+
+    `const User = require('../models/user');`
+
+- Remove the `test` endpoint
+- Save the files
+- Go to `postman` and test every `user endpoint`
+- You should have the same results as before
+
+Now we will do the same process with the `task routes`
+
+- Go to the `index.js` file and cut all `task routes`
+- On the `routers` directory; create a new file called `task.js`
+- Require `express` and the `Task` model
+
+    ```js
+    const express = require('express');
+    const Task = require('../models/task');
+    ```
+
+- Create a new `router` instance
+
+    `const router = new express.Router();`
+
+- Below `router`; paste all `task routes`
+- Change `app` to `router` on all `routes` like
+
+    `router.post('/tasks', async (req, res) => {...});`
+- At the end of the file; export `router`
+
+    `module.exports = router;`
+
+- Go to the `index.js` file
+- Remove both models require
+- Below of the `userRouter`; require the `task routes`
+
+    `const taskRouter = require('./routers/task');`
+- Register the `taskRouter` below the `userRouter`
+
+    `app.use(taskRouter);`
+
+- Save the files
+- Go to `postman` and test all the `task endpoints`
+- You should have the same result as before
+
+Now we are finally finished with the basics of a `REST API` so we can continue with more advanced stuff that will help us to build our app.
