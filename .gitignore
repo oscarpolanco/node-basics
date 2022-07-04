@@ -1,6 +1,7 @@
 # general
 *.code-workspace
 node_modules
+.DS_Store
 
 # notes app
 notes.txt

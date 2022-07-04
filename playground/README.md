@@ -129,3 +129,19 @@ This is a folder with some mini examples outside of the applications that are bu
 - On your terminal; go to the `playground` directory
 - Run the `8-promises.js` script
 - You will see 2 messages after 2 seconds representing a `callback` pattern function and a `promise`
+
+### 9. Promise chaining
+
+Using `promise chaining` to call 2 `async` operations
+
+- On your terminal; go to the `playground` directory
+- Run the `9-promises.js` script using: `npm run 9-promise.js`
+- You will see a `2` after 2 seconds then `6` after 2 more seconds
+
+### 10. Async-Await
+
+Use `async/await` in `asynchronous` operations
+
+- On your terminal; go to the `playground` directory
+- Run the `10-promise.js` script using: `npm run 10-promise.js`
+- You will see An `error` message because of the 3rd `promise` call
