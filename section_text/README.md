@@ -10715,3 +10715,120 @@ Now we will do the same process with the `task routes`
 - You should have the same result as before
 
 Now we are finally finished with the basics of a `REST API` so we can continue with more advanced stuff that will help us to build our app.
+
+## Section 11: API Authentication and Security (Task App)
+
+In this section, we are going to lock all the data for the `task-manager app`. At this moment all the app endpoints are publicly accessible this means that anyone can access any of that endpoints and do something like `delete` every single piece of data in the database and to prevent this we will work with `authentication` means that every `user` will need to `sign up` and `login` before that they can do something. By forcing the `users` to `log in` we can create a relationship between the `user` and a `task` that they create so we will have that `user 1` can't `see` or `delete` a `task` from `user 2`.
+
+### Securely storing password
+
+At this moment we take the `password` from the `user` exactly as was typed so you can check it out on the database using `Robo 3T`; this is called storing the `password` in `plain text` and for it is a terrible idea because if our database is hacked the hackers will have direct access to the `passwords` of every `user` so the solution is to store a `hash password`. When we have a `hash password` an algorithm will be used to convert the `password` typed and that algorithm will not reversible so if someone has the access they can't do anything with that data. We will use a `bcrypt` algorithm and as you may think there is a [npm package](https://www.npmjs.com/package/bcryptjs) that will help us to implement this. Let's go ahead and install `bcrypt` and use it.
+
+- Get to your terminal and go to the `task-manager` directory
+- Install `bcrypt` using: `npm install bcryptjs`
+- On your editor; get to the `index.js` file
+- At the bottom require `bcrypt`(We will use the require at the bottom of the file just to do an example)
+- Create a new function called `myFunction` that will be `async` and call it before its definition
+
+    ```js
+    const myFunction = async () => {}
+    myFunction();
+    ```
+
+    We use `async` because the function of `bcrypt` is `asynchronous`
+
+- Now create a constant call `password` inside of `myFunction` with a test `plain text password`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+    }
+    ```
+
+- Create another constant call `hashedPassword` that its value will be the `hash` function of `bcrypt`; since this function return a `promise` you should use `await` before calling it
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash();
+    }
+    ```
+
+- Send the `password` to the `hash` function and the number `8`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+    }
+    ```
+
+    The second argument determining the number of rounds that the `hashing` algorithm is executed and is recommended by the original creators of the algorithm to use `8` rounds because too few rounds will be easy to crack and too many will take a lot of time and our app became useless
+
+- Now log the `password` and `hashedPassword`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+    }
+    ```
+
+- On your terminal; run the `index.js` file using: `npm run dev`
+- You should see the `password` and its `hash` version
+
+The `hash` version will be the one that we end up storing in our database but before continuing we need to make a distinction between the `hashing` algorithm and the `encryption` algorithm. With `encryption` we can get the original value back for example:
+
+`test -> jioejojoejojd -> test`
+
+The `hash` algorithm is one way so we can't revert the process so there is no way to have the first version back and this is by design.
+
+`test -> jioejojoejojd`
+
+You may ask how we will know that the `password` is correct after we store it in the database; all we need to do is take the `plain text password` that the `user` send us to `log in` and use the algorithm on it and compare it to the one that we have on our database that should be the same.
+
+- Get back to the `index.js` file
+- Create a new constant call `isMatch` and its value will be the `compare` method of `bcrypt`; since the function return a `promise` you will need to use `await`
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare();
+    }
+    ```
+
+- Send the `password` as its first argument(The same that you use on the `password` constant) and the `hashedPassword` as the second(This will represent the `password` that we store on our database)
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare('test12345', hashedPassword);
+    }
+    ```
+
+- Now log `isMatch`
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare('test12345', hashedPassword);
+        console.log(isMatch);
+    }
+    ```
+
+- Save the file
+- Go to the terminal and you should see `true` at the end of the logs that represent that the `password` is correct
