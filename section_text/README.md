@@ -10832,3 +10832,282 @@ You may ask how we will know that the `password` is correct after we store it in
 
 - Save the file
 - Go to the terminal and you should see `true` at the end of the logs that represent that the `password` is correct
+
+Now that we see an example of `bcrypt` we can implement it into the `task-manager` app. There are some places that we will use the `password hash` that is on the `routes` on the `post` and `patch` endpoint. To use `bcrypt` on a specific place of our app we will need what is called [middleware](https://mongoosejs.com/docs/middleware.html) which is a code that will run in a specific time after o before an operation like saving a document.
+
+Before implementing a `middleware` we will need to do a little of restructure on our `models` because as is at the moment we don't have access to some features of `mongoose`. When we use the `model` method; as you can see on the `task-manager/models/user.js` we send an object with all `fields` and its `validations` as a second argument and behind the scenes `mongoose` turn this object into a [schema](https://mongoosejs.com/docs/guide.html) so in order to take advantage of the `middleware`, we will need to define the `schema` first then send it to the `model` method.
+
+- On your editor; go to the `task-manager/models/user.js` file
+- Below the `validator` require; create a new constant call `userSchema` that will have a new instance of `Schema` that came from the `mongoose` object
+
+    `const userSchema = new mongoose.Schema();`
+
+- Now cut the complete object that we send as a second argument of the `model` method
+- Paste is as an argument on `Schema`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...}
+    });
+    ```
+
+- Then send as a second argument of the `model` method the `userSchema`
+
+    `const User = mongoose.model('User', userSchema);`
+
+Now we have access to the methods that are part of the `mongoose middleware`; there are 2 methods that we can use this moment:
+
+- `pre`: To do something before an `event`
+- `post`: To do something after an `event`
+
+In our case, we will need to run a function before the `save` process so we will need to use the `pre` method.
+
+- Below the `userSchema`; call the `pre` method sending to arguments: `save` string and a standart function
+
+    ```js
+    userSchema.pre('save', function() {}):
+    ```
+
+    The first argument of `pre` is the `event` that we want the function to run; in this case before the event takes place, and we will need to use a standard function because the `this` binding play an important role and the `arrow` functions don't bind `this`
+
+-  Since the `bcrypt` are `asynchronous` you will need to use `async` on the function
+
+    ```js
+    userSchema.pre('save', async function() {}):
+    ```
+
+- The function will receive an `argument` call `next`(We will talk about it in a moment)
+
+    ```js
+    userSchema.pre('save', async function(next) {}):
+    ```
+
+- Inside of the function; we have access to the `this` binding and it contains the `document` that we are `saving` so we are going to store it in a new constant call `user`
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+    }):
+    ```
+
+- Now log a message to test the function
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+        console.log('just before saving!');
+    }):
+    ```
+
+Before continuing we will talk a little bit about the `next` argument. The purpose of this `middleware` is to run before we `save` a document but how it will know that we finish running our code? You could say that it will know when the function is over but this doesn't take into consideration the `asynchronous` process so why `next` is provided. To finish the execution we will need to call `next` at the end of the function.
+
+- At the end of the function call `next`
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+        console.log('just before saving!');
+        next();
+    }):
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; go to the `task-manager` directory and run the local server using: `npm run dev`
+- Go to `postman`
+- Get to the `create user` request tab
+- Create a new valid `user`
+- You should have the response with the `user` data
+- Get to the local server tab on your terminal and you should see the log message send from the `middleware`
+
+At this moment things are not going to work when we `update` a `user`. Let's try it
+
+- Go to `postman` and grab the `id` of the `user` that you just created
+- Get to the `update user` request tab
+- Update something of that `user` and send the request
+- Go to the local server tab on your terminal
+- You should not see the log message send from the `middleware`
+
+On the `routers/user.js`; in the `patch` request you will see that we use `findByIdAndUpdate` and this method bypass `mongoose` and perform a direct operation on the database that is why we need to set a special option to run the `validators` so we will need to do a little refactoring of this code.
+
+- Get to the `user.js` file on the `routers` directory
+- In the `patch` endpoint; remove the `user` constant definition
+- Then create a new constant call `user` that has as its value the `findById` method sending the `id` that we receive on the request
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+We will need to `update` the `user` files with the ones that came on the `body` of the request and the `user` can send any combination of `updates fields` every time so we will need to use the `updates` constant for this
+
+- Below the `user` constant; call the `forEach` method from `updates`
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => {});
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Now use bracket notation to add and call the correct property for the `user` and the `res.body` then return the value
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => user[update] = req.body[update]);
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Finally; `save` the `user`
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => user[update] = req.body[update]);
+            await user.save();
+
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Get to `postman` and send the `update user` request; updating a value
+- Go to the local server tab on the terminal and you should see the `middleware` message
+
+At this moment we can begin to work with `bcrypt` but first, we need to mention that we will need to `hash` the `password` if it is not already `hashed` before and `mongoose` will help us with a method called `isModified` that will be `true` when the `user` first create the `password` or the `user` modify its data and the `password` was one of the modifications
+
+- Go to the `models/user.js`
+- Below the `user` constant on the `middleware`; add a condition that uses the `isModified` method of `user` to know if the `password` change and remove the log
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+
+        if (user.isModified('password')) {}
+
+        next();
+    }):
+    ```
+
+- Inside of the new condition call the `hash` function of `bcrypt` sending the `user.password` and 8 rounds then store the hash version on the same `password` property
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+
+        if (user.isModified('password')) {
+            user.password = await bcrypt.hash(user.password, 8);
+        }
+
+        next();
+    }):
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `create user` request and create a new `user`
+- You will see on the response the `hash password`
+- Get to the `update user` request and `update` the `password` of a `user`
+- You will get the `user` data with the new `hash password`
+
+For the moment we are sending the `password` on the response but in the future, we will remove it. Before we continue; we need to change the `patch` request on the `task` routes.
+
+- Go to the `router/task.js` file
+- Get to the `patch` request
+- remove the value of the `task` constant
+- Add the `findById` method as we did with the `user` before
+
+    ```js
+    router.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {...}
+
+        try {
+            const task = await Task.findById(req.params.id);
+
+            if(!task) {...}
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Use the `updates` constant to add the new data to `user` and `save` it
+
+    ```js
+    router.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {...}
+
+        try {
+            const task = await Task.findById(req.params.id);
+
+            updates.forEach((update) => task[update] = req.body[update]);
+            await task.save();
+
+            if(!task) {...}
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Get to `postman` and test the `update task` request
+- Should work normally
