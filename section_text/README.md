@@ -11444,3 +11444,206 @@ Now we can work with the `token` expiration
 - Change the `expiresIn` to a more reasonable time like `7 days`
 - Save the file
 - On your terminal, you should see the `token`
+
+### Generating authentication tokens
+
+At this moment we can begin to work with the `login` and `sign in` endpoints where we will create the `token` and send it back to the `user`. Since we will work on more than one endpoint we don't actually want to write the code on the endpoints so we will create a function that we can re-use on another file.
+
+- On your editor; go to the `task-manager/src/models` directory
+- In the `user.js` file; below the `userSchema` definition; call the `methods` property of the `userSchema`
+
+    `userSchema.methods`
+
+- Then call the method that you will be creating on the `methods` property in our case will be called `generateAuthToken` and will be an `async standard` function
+
+    `userSchema.methods.generateAuthToken = async function() {}`
+
+    The difference between the `methods` and `static` property is that `methods` the function that you set will be available on the `model instances` and `static` will be accessible on the `model`
+
+- Inside of the new function; create a constant call `user` that it value will be the `this` binding
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+    }
+    ```
+
+    Like we did before on the `pre` method we use a standard function because of the `this` binding and as you see we will have the `user` available there
+
+- Now require `jsonwebtoken` at the top
+
+    `const jwt = require('jsonwebtoken');`
+
+- Get back to the `generateAuthToken` and create a new constant call `token` that its value will be the result of the `sign` method of `jwt` sending the `user id` and the `secret` as a parameter
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+    }
+    ```
+
+    Since the `_id` of the `user` is an `objectID` we will need to convert it to a `string` because `sign` receives `string` values
+
+- Return the token
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        return token;
+    }
+    ```
+
+- Go to the `routers/user.js` file
+- On the `login` endpoint; create a new constant call `token` that its value will be the result of calling the `generateAuthToken` of the `user` instance
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send(user);
+        } catch (e) {
+            res.status(400).send();
+        }
+    });
+    ```
+
+- Then we will send on the response the `token` with the `user` data in an object
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send({ user, token });
+        } catch (e) {
+            res.status(400).send();
+        }
+    });
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of the terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Now go to `postman`
+- Get to the `login` request tab
+- Send the request to `log in` a `user`
+- You should receive the `user` data and `token` as a response
+
+One thing you can notice is that we are not keeping track of the `token` on the app and this is important because the `users` have the ability to `logout` and as long the `token` exist they are `logged in` on the app so if the `token` fall in the wrong hands the `user` will not able to invalidate the `token`. For this will be tracking the `token` and will allow the `user` to `log in` from multiple devices and be able to `log out` in one and still `login` to the other.
+
+- Get to the `models/user.js`
+- On the `userSchema` definition; add a new `field` called `token` and it will be an `array` of `objects`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{}]
+    });
+    ```
+
+- Each `token` object will have a property called `token` that will be a `string` and is `required`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{
+            token: {
+                type: String,
+                required: true
+            }
+        }]
+    });
+    ```
+
+- Go to the `generateAuthToken` method
+
+Now we will need to add the `token` that we generate to the `user` instance each time they `log in` and as part of the `sign in` process
+
+- Concat the new `token` to the current `tokens` array of the `user`
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        user.tokens = user.tokens.concat({ token });
+
+        return token;
+    }
+    ```
+
+- Save the `user`
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        user.tokens = user.tokens.concat({ token });
+        await user.save();
+
+        return token;
+    }
+    ```
+
+- Save the file
+- Go to `postman`
+- Send the `login` request
+- You should see that the `token` is part of the `user` data
+
+Later we will hide the `password` and the `token` properties from the `user` data in every response.
+
+- Go to `Robo 3t`
+- Get to the `users` collection
+- Check the `user` data that you just `log in`
+
+You should see the `tokens` property and inside of it; you will see that exists an `_id` and this is because is a `sub document` and for this type, it will add a `_id` automatically.
+
+Now we can do the same with the `sign in`(create `user`) endpoint.
+
+- Get to the `routers/user.js` file
+- In the `users post` endpoint; create a new constant call `token` that its value will be the result of the `generateAuthToken` method
+
+    ```js
+    router.post('/users', async (req, res) => {
+        const user = new User(req.body);
+
+        try {
+            await user.save();
+            const token = await user.generateAuthToken();
+
+            res.status(201).send(user);
+        } catch (e) {...}
+    });
+    ```
+- Send the `token` with the `user` data
+
+    ```js
+    router.post('/users', async (req, res) => {
+        const user = new User(req.body);
+
+        try {
+            await user.save();
+            const token = await user.generateAuthToken();
+
+            res.status(201).send({ user, token });
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Go to the `create user` request tab
+- Create a `user`
+- You should get the `user` data and the `token`
