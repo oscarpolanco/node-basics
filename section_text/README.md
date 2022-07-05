@@ -11303,3 +11303,144 @@ The `unique` property will create an `index` in the database to guarantee unique
 - Mess with the `email` or `password`
 - Send the request
 - You should see an error on the response
+
+### JSON web token
+
+At this moment we begin with the process of actually `login` process that will allow the `user` to do certain actions. At this moment all routes of the application will be in one of 2 categories:
+
+- Public; accessible to anyone
+- Private; accessible for `logged-in users`
+
+The only 2 routes that will be public will be the `sign up` and `login` routes; everything else will require you to be authenticated. To do this last part we will need that the `login` endpoint sends an `authentication token` and this is something that the `user` will use to make requests that require that you be `authenticated`. To work with `authentication` we will use a `JSON web token`(JWT) that will help us to work with all features that we need to work with `authentication`. To work with `JWT` we will use the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library. Like we did with `bcrypt` let's do an example.
+
+- On your terminal; go to the `task-manage` directory
+- Install `jsonwebtoken` using: `npm install jsonwebtoken`
+- Go to the `task-manage/index.js` file
+- Remove the `bcrypt` require
+- At the line that was the `bcrypt` require; add a `jsonwebtoken` require
+
+    `const jwt = require('jsonwebtoken');`
+
+- Remove all content of `myFunction`
+- Inside of `myFunction`; create a new constant call `token` that its value will be the `sing` method of `jwt`
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign();
+    }
+    ```
+
+- Send the following as the first argument of the `sign` method
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' });
+    }
+    ```
+
+    The first argument of the `sign` method is the data that will be embedded on the `token` here we will put a unique identifier that will identify each `user` like the `_id` in this case we will use a fake `id` and later we will use the `user id` from our database
+
+- Now add a `string` with a random set of characters as a second argument
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+    }
+    ```
+
+    This will be a `secret` that will be used to `sign` the `token` to make sure that the `token` is not altered in any way. You can provide any series of characters
+
+- Log the `token` value
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+    }
+    ```
+
+- On your terminal; run your local server using: `npm run dev`
+- You will see a long set of characters and that is the `jwt`
+
+The `jwt` is made of 3 parts separated by dots; the first part is a `base64` encoded `string` that represents the `header` that contains some meta-information about what type of `token` it is like this `token` is `jwt` and the algorithm used to generate. The second piece represents the `payload` or `body` that is another `base64 string` that contains the data that we provide in this case the `_id`. The last part is the `signature` that is used to verify the `token`.
+
+The purpose of the `jwt` is not to hide data actually anyone with access to the `token` will have the data; the goal is to create data that we can verify via `signature`.
+
+- Copy the middle value of the `toke`(The one that is between the 2 dots)
+- On your browser go to https://www.base64decode.org/
+- Paste the value that you just grab in the first input
+- Click on the `decode` button
+- You should see the value of your `_id` with another value like this
+
+    `{"_id":"test","iat":1656980915}`
+
+    `iat` stands for `issue at` and have as its value a `timestand` when the `token` is created
+
+Now we are going to `verify` the `token` using other of the `jwt` and the `token` that we just created
+
+- Get back to the `index.js` file
+- Below the log; create a new constant call `data` that it value will be the `verify` method result of `jwt`
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify();
+    }
+    ```
+
+- Send the `token` and the `secret` that you use on the `sign` method as the first and second argument of the `verify` method
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+    }
+    ```
+
+- Log data
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+        console.log(data);
+    }
+    ```
+
+    Later we will put the `secret` on environment variables so it will not be saved on your code
+
+- Save the file
+- You will see the `token` then the data that you added on the `token` creation
+- Change the `secret` on the `verify` method
+- Save the file
+- On your terminal, you'll see an error
+- Go and fix the `verify secret` again
+- Save the file
+
+Now we can work with the `token` expiration
+
+- On the `sign` method; send a third argument that will be an object with the `expiresIn` and the following value
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret', { expiresIn: '0 seconds' });
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+        console.log(data);
+    }
+    ```
+
+    We can provide as a `string` the amount of time time to expire the `token` like `2 weeks`; `7 days` or in our case `0 seconds` to expire the `token` immediately
+
+- Save the file
+- On your terminal, you should see an `error` because the `token` is already expired
+- Change the `expiresIn` to a more reasonable time like `7 days`
+- Save the file
+- On your terminal, you should see the `token`
