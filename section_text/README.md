@@ -11111,3 +11111,195 @@ For the moment we are sending the `password` on the response but in the future, 
 
 - Get to `postman` and test the `update task` request
 - Should work normally
+
+### Logging in Users
+
+Here we will provide the `user` with a new endpoint that will allow to `login`. This endpoint will receive the credential(`email` and `password`) and will verify that a `user` exits with those credentials. On this endpoint we won't do all the code that we will need; we will add a reusable function on the `user model` in order to help us with this.
+
+- On your editor; go to the `task-manager/routers` directory
+- In the `user.js` file; below the `users post` request; create a new `post` endpoint with a `/users/login` path and a `async` function
+
+    ```js
+    router.post('/users/login', async (req, res) => {});
+    ```
+
+Now we will need to define a new function that finds a `user` by the `email` and compare the `password` and that function will live on the `user model` file. To do this `mongoose` provide us a way to add function to the `model` instance so we can call it whenever we have an instance of the `user model`.
+
+- Go to the `models/user.js` file
+- Below the `userSchema` definition; call the `statics` property of the `userSchema` and call the function that you will create (In other words call the new method name) and its value will be an `async` function
+
+    `userSchema.statics.findByCredentials = async () => {}`
+
+- The function will receive an `email` and `password`
+
+    `userSchema.statics.findByCredentials = async (email, password) => {}`
+
+Now we will need to search the `user` by its `email` not the `email` and `password` just it `email` because we have the `plain text password` and we just `save` the `hash` version.
+
+- Create a new constant call `user` that its value will be the result of `findOne` of `User` and as search criteria send the `email`
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+    }
+    ```
+
+- Now if we don't have a `user` we will throw an `error` with a condition
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+    }
+    ```
+
+- Then we can compare if the `password` that we get is the same as the one that we store on the database using the `compare` function of `bcrypt` so create a new constant that will be called `isMatch` and the `compare` function will give it value 
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+    }
+    ```
+
+- If there is no match with the `password`; we will throw another `error` with a condition
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            throw new Error('Unable to login');
+        }
+    }
+    ```
+
+- Finally; if everything goes as expected return the `user` data
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            throw new Error('Unable to login');
+        }
+
+        return user;
+    }
+    ```
+
+    We need that the `error` messages don't give too much information to the end `user` that is why we use the same message for both errors
+
+- Get back to the `routers/user.js` file
+- In the `login` route; add a `try/catch` block
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+        } catch (e) {
+
+        }
+    }
+    ```
+- On the `try` block; add a new constant call `user` that its value will be the new `findByCredentials` from the `User` model and send the `email` and `password` of the request as its credentials
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+        } catch (e) {
+
+        }
+    }
+    ```
+
+- For the moment if everything is ok with `findByCredentials` we send the `user` data
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            res.send(user);
+        } catch (e) {
+
+        }
+    }
+    ```
+
+- In case there is an `error` with `findByCredentials` send a `400` status
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            res.send(user);
+        } catch (e) {
+            res.status(400).send();
+        }
+    }
+    ```
+
+At this moment we will have an issue because more than one `user` can have the same `email` as another so we will need to restrict the `email`. Let's fix that.
+
+- On the `models/user.js` file
+- On the `email` field of the `userSchema`; add the `unique` property with a `true` value
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+            trim: true,
+            lowercase: true,
+            validate(value) {...}
+        },
+        password: {...},
+        age: {...}
+    });
+    ```
+
+The `unique` property will create an `index` in the database to guarantee uniqueness but in other this to work we will need to drop our database so from that moment every `email` of the `user` will have it unique `index`.
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Get to `Robo 3T`
+- Right-click on the `task-manager` database
+- Click on `drop database`
+- In another tab of your terminal and run your local server using: `npm run dev`(Need to re-run the server in other to create the database again)
+- Go to `postman`
+- Get to the `create user` request
+- Create a new valid `user`
+- Now right-click on the `task collection`
+- Click on `add request`
+- Add a name for the request like `login user`
+- Change the `HTTP` method to `POST`
+- Add the `URL`: `http://localhost:3000/users/login`
+- Click on the `body` tab
+- Then choose the `raw` check and choose `JSON` on the dropdown at the end
+- On the `body` section; add the `email` and `password` using the same that use on the new `user` that you just created
+- Send the request
+- You should receive a response with the `user` data
+- Mess with the `email` or `password`
+- Send the request
+- You should see an error on the response
