@@ -11647,3 +11647,107 @@ Now we can do the same with the `sign in`(create `user`) endpoint.
 - Go to the `create user` request tab
 - Create a `user`
 - You should get the `user` data and the `token`
+
+### Express middleware
+
+Now that we send the `token` we can see how we are going to use it for the `authentication` process. Remember that almost all the endpoints of the application will need to be `authenticated` to perform an action except the `login` and `sign up` endpoints and for this, we will use `express middleware`.
+
+Without `middleware`: `new request -> run route handler`
+
+When a request gets into the server the first thing that runs is the `route handler`.
+
+With `middleware`: `new request -> do something -> run route handler`
+
+We add a step between the `new request` and `route handler` and this step is a function that we are going to make that will do something for us. Let's make an example.
+
+- On your editor; go to the `task-manager/src/index.js` file
+- Before the first `use` method call; register a new `middleware` calling the `use` method of `app` and sending a function as an argument
+
+    `app.use(() => {});`
+
+- This function will receive `req`, `res`, and `next`
+
+    `app.use((req, res, next) => {});`
+
+    The `req` and `res` arguments contain the same data that we have when we use them in our `route handlers`. The `next` argument is the only `middleware` specific
+
+- Now log the `method` used on the incoming request and the `path`(both available on `req`) in the function
+
+    ```js
+    app.use((req, res, next) => {
+        console.log(req.method, req.path);
+    });
+    ```
+
+- Save the file
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of the terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- On the `read user` request tab; send a request
+
+    It will be `loading` without any result because we need to explicitly need to set that we want to continue with other operations outside of the `middleware`
+
+- Cancel the request
+- Get to the `index.js` file
+- On the callback function of the `middleware`; use the `next` method
+
+    ```js
+    app.use((req, res, next) => {
+        console.log(req.method, req.path);
+        next();
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- On the `read user` request tab; send a request
+- You should see that you get the correct `response` back
+
+Sometimes you don't want to call the `next` method because you will need to prevent the `handler` to run for example if a `user` is not `authenticated` and target an endpoint that needs to be `authenticated`. Let's do an example where we won't allow the `user` to do a `GET` request but the others can be made.
+
+- On the `index.js` file
+- In the callback function of the `middleware`; remove all content
+- On that function; add a condition that checks if the `HTTP` method is `GET` and is it not using the `next` method
+
+    ```js
+    app.use((req, res, next) => {
+        if (req.method === 'GET') {
+        } else {
+            next();
+        }
+    });
+    ```
+
+- Log a message to say that the `GET` method is disabled
+
+    ```js
+    app.use((req, res, next) => {
+        if (req.method === 'GET') {
+            res.send('GET request are disabled');
+        } else {
+            next();
+        }
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- On the `read user` request tab; send a request
+- You should see the message of the disabled `GET`
+- Get to the `create user` request tab; make a `user`
+- You should see that the `user` was created without any issues
+
+Now we will do a `middleware` to prevent the `user` from do any request to emulate when the site is under maintenance
+
+- Get to the `idex.html` file
+- Remove all content of the callback function of the `middleware`
+- On that function; send a `503` status with a maintenance message
+
+    ```js
+    app.use((req, res, next) => {
+        res.status(503).send('The site is under maintenance);
+    });
+    ```
+
+- Save the file and get to `postman`
+- Test with all the requests and you should see the same response for all of then
