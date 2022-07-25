@@ -11745,9 +11745,264 @@ Now we will do a `middleware` to prevent the `user` from do any request to emula
 
     ```js
     app.use((req, res, next) => {
-        res.status(503).send('The site is under maintenance);
+        res.status(503).send('The site is under maintenance');
     });
     ```
 
 - Save the file and get to `postman`
 - Test with all the requests and you should see the same response for all of then
+
+### Accepting authentication tokens
+
+Now we are going to do a function that will serve as a `middleware` on our application and that function will check if the `user` s `authenticated` or not when we use it on some of the endpoints of the application.
+
+- On your editor; go to the `task-manager/src` directory
+- Create a new folder called `middleware`
+- Inside of this newly created directory; create a new file called `auth.js`
+- In the newly created file; define a function call `auth` that will be `async` and will receive `req`, `res`, and `next`
+
+    `const auth = async (req, res, next) => {}`
+
+- Inside of the `auth` function; log a message and call the `next` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        console.log('auth middleware');
+        next();
+    }
+    ```
+
+- At the bottom of the file; export the `auth` function
+
+    `module.exports = auth;`
+
+- Now get to the `src/index.js` file
+- Remove the `middleware` that we created in the section before
+
+Since we don't want that the `middleware` run for each endpoint we will remove it from the `index` file and will specify where we want to call it.
+
+- Get to the `routers/user.js` file
+- Require the `auth` function; before the `router` constant definition
+
+    `const auth = require('../middleware/auth');`
+
+- Get to the `get users` handler
+
+To add a `middleware` to an endpoint we just need to send the function that we want to work as `middleware` on the second parameter before the handler function.
+
+- Add the `auth` function as a second parameter on the `get users` handler
+
+    `router.get('/users', auth, async (req, res) => {...}`
+
+Now when a `user` target this endpoint it will run the `auth` function first then the handler function
+
+- Save the files
+- On your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; get to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- Get to the `read users` request tab
+- Send the request
+- You should see the correct response
+- Get to your terminal tab where you run your local server and you should see the `middleware` message
+
+Now let's work with the `auth` function but first let's define the process that the `user` will follow. The first step will be that the `user` will get an `authentication token` from the `login` or `sign in` endpoints then provide it on the request that we are going to perform.
+
+-  Now get to the `login` request tab and send a request
+- Grad the `token` that is on the property of the same name
+- Go to the `read users` request tab
+
+Now we will provide the `token` when we send the `read users` request and we can add it to the `headers` of the request. The `headers` on a request are `key/value` pairs that we can provide as part of the request and we can have some `headers` back as part of the response.
+
+- Get to the `headers` tab; below the URL of the `read users` request
+- On the `key` input add: `Authorization`
+- In the `value` input next to the `Authorization key`; add the `Bearer` then the `token` that you copied before(Without quotes)
+
+    `Bearer my_token`
+
+- Now get to the `auth.js` file
+- Remove all the content of the function
+- At the top of the file; require the `jsonwebtoken` library and the `User` model
+
+    ```js
+    const jwt = require('jsonwebtoken');
+    const User = require('../models/user');
+    ```
+
+- Now on the `auth` function; add a `try/catch` block
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+        } catch (e) {}
+    }
+    ```
+
+- If the request doesn't have a `token` we will set an `error` to trigger the `catch` block sending a `401` status with a message
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Then we will need to get the value of the `token` that we receive with the request to create a `token` constant that its value will be the result of calling the `headers` property of `req` like the following
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    We will need to add the `Authorization key` so we get the correct `header` that we need.
+
+- Since we just want the `token` value and it will have `Bearer` at the beginning we will need to eliminate that value using the `replace` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    The `replace` method will change the `Bearer` part of the string for nothing at this case(Make sure that you also add a space after the `Bearer` word) and if the `token` doesn't exist will try to call the `replace` method of `undefined` and that will trigger an `error` that will call the `catch` block
+
+- Now we will need to get the value from the `token` so we will need to use the `jsonwebtoken` library. Create a constant call `decoded` that its value will be the result of calling the `verify` method of `jwt` providing the `token` and the `secret` that we use to create the `token`
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Then we can find the `user` on the database since we add the `_id` as the value that we send on the `token`. Create a constant call `user` that its value will be the result of the `findOne` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne();
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- On the search criteria of the `findOne` method we will search for the `_id` and we will make sure that the `token` is part of the `tokens` array
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    We will make sure that we are on the `tokens` array because at some moment the `user` will have the ability to `logout` and when this happens we will eliminate it from that `array` but the `user` can have multiple sessions and we need to close all of then.
+
+- Then if there is no `user` value; we will `throw an error` because the `token` is not valid
+
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Now if the code past the condition we will pass to the `route` the `user` and for this, we will add a `user` property on the `req` object
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+
+            req.user = user;
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    This is because we have the `user` so there is no need that the `route` handler to search for the `user` data again
+
+- Finally; call the `next` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+
+            req.user = user;
+            next();
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Save the file and go to `postman`
+- Go to the `read users` request and send the request
+- You should see the response with the correct data
+
+Before we move on with other `routes` we will need to address the `read users route handler` that we are using to test the `token` because this `route` is just for testing so we will need to change it in order to continue with the app because it exposes data from other `users`. To change this `route` we will just send the current `user` data as the response to that `route handler`.
+
+- Get to the `routers/user.js` file
+- On the `users get` handler; change the `/users` path to `/users/me`
+
+    `router.get('/users/me', auth, async (req, res) => {...}`
+
+- Remove all content of the function of the `users/me` handler
+- Send the `user` data(Remember that we add the `user` data on the `middleware`)
+
+    ```js
+    router.get('/users/me', auth, async (req, res) => {
+        res.send(req.user);
+    });
+    ```
+
+- Save the file and go to `postman`
+- Get to the `read users` request and change its name to `read profile`
+- Change the URL to `http://localhost:3000/users/me`
+- Send the request
+- You should see the information of the current `user`
