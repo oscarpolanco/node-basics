@@ -10715,3 +10715,1294 @@ Now we will do the same process with the `task routes`
 - You should have the same result as before
 
 Now we are finally finished with the basics of a `REST API` so we can continue with more advanced stuff that will help us to build our app.
+
+## Section 11: API Authentication and Security (Task App)
+
+In this section, we are going to lock all the data for the `task-manager app`. At this moment all the app endpoints are publicly accessible this means that anyone can access any of that endpoints and do something like `delete` every single piece of data in the database and to prevent this we will work with `authentication` means that every `user` will need to `sign up` and `login` before that they can do something. By forcing the `users` to `log in` we can create a relationship between the `user` and a `task` that they create so we will have that `user 1` can't `see` or `delete` a `task` from `user 2`.
+
+### Securely storing password
+
+At this moment we take the `password` from the `user` exactly as was typed so you can check it out on the database using `Robo 3T`; this is called storing the `password` in `plain text` and for it is a terrible idea because if our database is hacked the hackers will have direct access to the `passwords` of every `user` so the solution is to store a `hash password`. When we have a `hash password` an algorithm will be used to convert the `password` typed and that algorithm will not reversible so if someone has the access they can't do anything with that data. We will use a `bcrypt` algorithm and as you may think there is a [npm package](https://www.npmjs.com/package/bcryptjs) that will help us to implement this. Let's go ahead and install `bcrypt` and use it.
+
+- Get to your terminal and go to the `task-manager` directory
+- Install `bcrypt` using: `npm install bcryptjs`
+- On your editor; get to the `index.js` file
+- At the bottom require `bcrypt`(We will use the require at the bottom of the file just to do an example)
+- Create a new function called `myFunction` that will be `async` and call it before its definition
+
+    ```js
+    const myFunction = async () => {}
+    myFunction();
+    ```
+
+    We use `async` because the function of `bcrypt` is `asynchronous`
+
+- Now create a constant call `password` inside of `myFunction` with a test `plain text password`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+    }
+    ```
+
+- Create another constant call `hashedPassword` that its value will be the `hash` function of `bcrypt`; since this function return a `promise` you should use `await` before calling it
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash();
+    }
+    ```
+
+- Send the `password` to the `hash` function and the number `8`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+    }
+    ```
+
+    The second argument determining the number of rounds that the `hashing` algorithm is executed and is recommended by the original creators of the algorithm to use `8` rounds because too few rounds will be easy to crack and too many will take a lot of time and our app became useless
+
+- Now log the `password` and `hashedPassword`
+
+    ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+    }
+    ```
+
+- On your terminal; run the `index.js` file using: `npm run dev`
+- You should see the `password` and its `hash` version
+
+The `hash` version will be the one that we end up storing in our database but before continuing we need to make a distinction between the `hashing` algorithm and the `encryption` algorithm. With `encryption` we can get the original value back for example:
+
+`test -> jioejojoejojd -> test`
+
+The `hash` algorithm is one way so we can't revert the process so there is no way to have the first version back and this is by design.
+
+`test -> jioejojoejojd`
+
+You may ask how we will know that the `password` is correct after we store it in the database; all we need to do is take the `plain text password` that the `user` send us to `log in` and use the algorithm on it and compare it to the one that we have on our database that should be the same.
+
+- Get back to the `index.js` file
+- Create a new constant call `isMatch` and its value will be the `compare` method of `bcrypt`; since the function return a `promise` you will need to use `await`
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare();
+    }
+    ```
+
+- Send the `password` as its first argument(The same that you use on the `password` constant) and the `hashedPassword` as the second(This will represent the `password` that we store on our database)
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare('test12345', hashedPassword);
+    }
+    ```
+
+- Now log `isMatch`
+
+     ```js
+    const myFunction = async () => {
+        const password = 'test12345';
+        const hashedPassword = await bcrypt.hash(password, 8);
+        console.log(password);
+        console.log(hashedPassword);
+
+        const isMatch = await bcrypt.compare('test12345', hashedPassword);
+        console.log(isMatch);
+    }
+    ```
+
+- Save the file
+- Go to the terminal and you should see `true` at the end of the logs that represent that the `password` is correct
+
+Now that we see an example of `bcrypt` we can implement it into the `task-manager` app. There are some places that we will use the `password hash` that is on the `routes` on the `post` and `patch` endpoint. To use `bcrypt` on a specific place of our app we will need what is called [middleware](https://mongoosejs.com/docs/middleware.html) which is a code that will run in a specific time after o before an operation like saving a document.
+
+Before implementing a `middleware` we will need to do a little of restructure on our `models` because as is at the moment we don't have access to some features of `mongoose`. When we use the `model` method; as you can see on the `task-manager/models/user.js` we send an object with all `fields` and its `validations` as a second argument and behind the scenes `mongoose` turn this object into a [schema](https://mongoosejs.com/docs/guide.html) so in order to take advantage of the `middleware`, we will need to define the `schema` first then send it to the `model` method.
+
+- On your editor; go to the `task-manager/models/user.js` file
+- Below the `validator` require; create a new constant call `userSchema` that will have a new instance of `Schema` that came from the `mongoose` object
+
+    `const userSchema = new mongoose.Schema();`
+
+- Now cut the complete object that we send as a second argument of the `model` method
+- Paste is as an argument on `Schema`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...}
+    });
+    ```
+
+- Then send as a second argument of the `model` method the `userSchema`
+
+    `const User = mongoose.model('User', userSchema);`
+
+Now we have access to the methods that are part of the `mongoose middleware`; there are 2 methods that we can use this moment:
+
+- `pre`: To do something before an `event`
+- `post`: To do something after an `event`
+
+In our case, we will need to run a function before the `save` process so we will need to use the `pre` method.
+
+- Below the `userSchema`; call the `pre` method sending to arguments: `save` string and a standart function
+
+    ```js
+    userSchema.pre('save', function() {}):
+    ```
+
+    The first argument of `pre` is the `event` that we want the function to run; in this case before the event takes place, and we will need to use a standard function because the `this` binding play an important role and the `arrow` functions don't bind `this`
+
+-  Since the `bcrypt` are `asynchronous` you will need to use `async` on the function
+
+    ```js
+    userSchema.pre('save', async function() {}):
+    ```
+
+- The function will receive an `argument` call `next`(We will talk about it in a moment)
+
+    ```js
+    userSchema.pre('save', async function(next) {}):
+    ```
+
+- Inside of the function; we have access to the `this` binding and it contains the `document` that we are `saving` so we are going to store it in a new constant call `user`
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+    }):
+    ```
+
+- Now log a message to test the function
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+        console.log('just before saving!');
+    }):
+    ```
+
+Before continuing we will talk a little bit about the `next` argument. The purpose of this `middleware` is to run before we `save` a document but how it will know that we finish running our code? You could say that it will know when the function is over but this doesn't take into consideration the `asynchronous` process so why `next` is provided. To finish the execution we will need to call `next` at the end of the function.
+
+- At the end of the function call `next`
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+        console.log('just before saving!');
+        next();
+    }):
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; go to the `task-manager` directory and run the local server using: `npm run dev`
+- Go to `postman`
+- Get to the `create user` request tab
+- Create a new valid `user`
+- You should have the response with the `user` data
+- Get to the local server tab on your terminal and you should see the log message send from the `middleware`
+
+At this moment things are not going to work when we `update` a `user`. Let's try it
+
+- Go to `postman` and grab the `id` of the `user` that you just created
+- Get to the `update user` request tab
+- Update something of that `user` and send the request
+- Go to the local server tab on your terminal
+- You should not see the log message send from the `middleware`
+
+On the `routers/user.js`; in the `patch` request you will see that we use `findByIdAndUpdate` and this method bypass `mongoose` and perform a direct operation on the database that is why we need to set a special option to run the `validators` so we will need to do a little refactoring of this code.
+
+- Get to the `user.js` file on the `routers` directory
+- In the `patch` endpoint; remove the `user` constant definition
+- Then create a new constant call `user` that has as its value the `findById` method sending the `id` that we receive on the request
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+We will need to `update` the `user` files with the ones that came on the `body` of the request and the `user` can send any combination of `updates fields` every time so we will need to use the `updates` constant for this
+
+- Below the `user` constant; call the `forEach` method from `updates`
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => {});
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Now use bracket notation to add and call the correct property for the `user` and the `res.body` then return the value
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => user[update] = req.body[update]);
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Finally; `save` the `user`
+
+    ```js
+    router.patch('/users/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {...}
+
+        try {
+            const user = await User.findById(req.params.id);
+
+            updates.forEach((update) => user[update] = req.body[update]);
+            await user.save();
+
+            if (!user) {...}
+
+            res.send(user);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Get to `postman` and send the `update user` request; updating a value
+- Go to the local server tab on the terminal and you should see the `middleware` message
+
+At this moment we can begin to work with `bcrypt` but first, we need to mention that we will need to `hash` the `password` if it is not already `hashed` before and `mongoose` will help us with a method called `isModified` that will be `true` when the `user` first create the `password` or the `user` modify its data and the `password` was one of the modifications
+
+- Go to the `models/user.js`
+- Below the `user` constant on the `middleware`; add a condition that uses the `isModified` method of `user` to know if the `password` change and remove the log
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+
+        if (user.isModified('password')) {}
+
+        next();
+    }):
+    ```
+
+- Inside of the new condition call the `hash` function of `bcrypt` sending the `user.password` and 8 rounds then store the hash version on the same `password` property
+
+    ```js
+    userSchema.pre('save', async function(next) {
+        const user = this;
+
+        if (user.isModified('password')) {
+            user.password = await bcrypt.hash(user.password, 8);
+        }
+
+        next();
+    }):
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `create user` request and create a new `user`
+- You will see on the response the `hash password`
+- Get to the `update user` request and `update` the `password` of a `user`
+- You will get the `user` data with the new `hash password`
+
+For the moment we are sending the `password` on the response but in the future, we will remove it. Before we continue; we need to change the `patch` request on the `task` routes.
+
+- Go to the `router/task.js` file
+- Get to the `patch` request
+- remove the value of the `task` constant
+- Add the `findById` method as we did with the `user` before
+
+    ```js
+    router.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {...}
+
+        try {
+            const task = await Task.findById(req.params.id);
+
+            if(!task) {...}
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Use the `updates` constant to add the new data to `user` and `save` it
+
+    ```js
+    router.patch('/tasks/:id', async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {...}
+
+        try {
+            const task = await Task.findById(req.params.id);
+
+            updates.forEach((update) => task[update] = req.body[update]);
+            await task.save();
+
+            if(!task) {...}
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Get to `postman` and test the `update task` request
+- Should work normally
+
+### Logging in Users
+
+Here we will provide the `user` with a new endpoint that will allow to `login`. This endpoint will receive the credential(`email` and `password`) and will verify that a `user` exits with those credentials. On this endpoint we won't do all the code that we will need; we will add a reusable function on the `user model` in order to help us with this.
+
+- On your editor; go to the `task-manager/routers` directory
+- In the `user.js` file; below the `users post` request; create a new `post` endpoint with a `/users/login` path and a `async` function
+
+    ```js
+    router.post('/users/login', async (req, res) => {});
+    ```
+
+Now we will need to define a new function that finds a `user` by the `email` and compare the `password` and that function will live on the `user model` file. To do this `mongoose` provide us a way to add function to the `model` instance so we can call it whenever we have an instance of the `user model`.
+
+- Go to the `models/user.js` file
+- Below the `userSchema` definition; call the `statics` property of the `userSchema` and call the function that you will create (In other words call the new method name) and its value will be an `async` function
+
+    `userSchema.statics.findByCredentials = async () => {}`
+
+- The function will receive an `email` and `password`
+
+    `userSchema.statics.findByCredentials = async (email, password) => {}`
+
+Now we will need to search the `user` by its `email` not the `email` and `password` just it `email` because we have the `plain text password` and we just `save` the `hash` version.
+
+- Create a new constant call `user` that its value will be the result of `findOne` of `User` and as search criteria send the `email`
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+    }
+    ```
+
+- Now if we don't have a `user` we will throw an `error` with a condition
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+    }
+    ```
+
+- Then we can compare if the `password` that we get is the same as the one that we store on the database using the `compare` function of `bcrypt` so create a new constant that will be called `isMatch` and the `compare` function will give it value 
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+    }
+    ```
+
+- If there is no match with the `password`; we will throw another `error` with a condition
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            throw new Error('Unable to login');
+        }
+    }
+    ```
+
+- Finally; if everything goes as expected return the `user` data
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        const user =  await User.findOne({ email });
+
+        if (!user) {
+            throw new Error('Unable to login');
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            throw new Error('Unable to login');
+        }
+
+        return user;
+    }
+    ```
+
+    We need that the `error` messages don't give too much information to the end `user` that is why we use the same message for both errors
+
+- Get back to the `routers/user.js` file
+- In the `login` route; add a `try/catch` block
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+        } catch (e) {
+
+        }
+    }
+    ```
+- On the `try` block; add a new constant call `user` that its value will be the new `findByCredentials` from the `User` model and send the `email` and `password` of the request as its credentials
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+        } catch (e) {
+
+        }
+    }
+    ```
+
+- For the moment if everything is ok with `findByCredentials` we send the `user` data
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            res.send(user);
+        } catch (e) {
+
+        }
+    }
+    ```
+
+- In case there is an `error` with `findByCredentials` send a `400` status
+
+    ```js
+    userSchema.statics.findByCredentials = async (email, password) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            res.send(user);
+        } catch (e) {
+            res.status(400).send();
+        }
+    }
+    ```
+
+At this moment we will have an issue because more than one `user` can have the same `email` as another so we will need to restrict the `email`. Let's fix that.
+
+- On the `models/user.js` file
+- On the `email` field of the `userSchema`; add the `unique` property with a `true` value
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {
+            type: String,
+            unique: true,
+            required: true,
+            trim: true,
+            lowercase: true,
+            validate(value) {...}
+        },
+        password: {...},
+        age: {...}
+    });
+    ```
+
+The `unique` property will create an `index` in the database to guarantee uniqueness but in other this to work we will need to drop our database so from that moment every `email` of the `user` will have it unique `index`.
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Get to `Robo 3T`
+- Right-click on the `task-manager` database
+- Click on `drop database`
+- In another tab of your terminal and run your local server using: `npm run dev`(Need to re-run the server in other to create the database again)
+- Go to `postman`
+- Get to the `create user` request
+- Create a new valid `user`
+- Now right-click on the `task collection`
+- Click on `add request`
+- Add a name for the request like `login user`
+- Change the `HTTP` method to `POST`
+- Add the `URL`: `http://localhost:3000/users/login`
+- Click on the `body` tab
+- Then choose the `raw` check and choose `JSON` on the dropdown at the end
+- On the `body` section; add the `email` and `password` using the same that use on the new `user` that you just created
+- Send the request
+- You should receive a response with the `user` data
+- Mess with the `email` or `password`
+- Send the request
+- You should see an error on the response
+
+### JSON web token
+
+At this moment we begin with the process of actually `login` process that will allow the `user` to do certain actions. At this moment all routes of the application will be in one of 2 categories:
+
+- Public; accessible to anyone
+- Private; accessible for `logged-in users`
+
+The only 2 routes that will be public will be the `sign up` and `login` routes; everything else will require you to be authenticated. To do this last part we will need that the `login` endpoint sends an `authentication token` and this is something that the `user` will use to make requests that require that you be `authenticated`. To work with `authentication` we will use a `JSON web token`(JWT) that will help us to work with all features that we need to work with `authentication`. To work with `JWT` we will use the [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) library. Like we did with `bcrypt` let's do an example.
+
+- On your terminal; go to the `task-manage` directory
+- Install `jsonwebtoken` using: `npm install jsonwebtoken`
+- Go to the `task-manage/index.js` file
+- Remove the `bcrypt` require
+- At the line that was the `bcrypt` require; add a `jsonwebtoken` require
+
+    `const jwt = require('jsonwebtoken');`
+
+- Remove all content of `myFunction`
+- Inside of `myFunction`; create a new constant call `token` that its value will be the `sing` method of `jwt`
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign();
+    }
+    ```
+
+- Send the following as the first argument of the `sign` method
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' });
+    }
+    ```
+
+    The first argument of the `sign` method is the data that will be embedded on the `token` here we will put a unique identifier that will identify each `user` like the `_id` in this case we will use a fake `id` and later we will use the `user id` from our database
+
+- Now add a `string` with a random set of characters as a second argument
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+    }
+    ```
+
+    This will be a `secret` that will be used to `sign` the `token` to make sure that the `token` is not altered in any way. You can provide any series of characters
+
+- Log the `token` value
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+    }
+    ```
+
+- On your terminal; run your local server using: `npm run dev`
+- You will see a long set of characters and that is the `jwt`
+
+The `jwt` is made of 3 parts separated by dots; the first part is a `base64` encoded `string` that represents the `header` that contains some meta-information about what type of `token` it is like this `token` is `jwt` and the algorithm used to generate. The second piece represents the `payload` or `body` that is another `base64 string` that contains the data that we provide in this case the `_id`. The last part is the `signature` that is used to verify the `token`.
+
+The purpose of the `jwt` is not to hide data actually anyone with access to the `token` will have the data; the goal is to create data that we can verify via `signature`.
+
+- Copy the middle value of the `toke`(The one that is between the 2 dots)
+- On your browser go to https://www.base64decode.org/
+- Paste the value that you just grab in the first input
+- Click on the `decode` button
+- You should see the value of your `_id` with another value like this
+
+    `{"_id":"test","iat":1656980915}`
+
+    `iat` stands for `issue at` and have as its value a `timestand` when the `token` is created
+
+Now we are going to `verify` the `token` using other of the `jwt` and the `token` that we just created
+
+- Get back to the `index.js` file
+- Below the log; create a new constant call `data` that it value will be the `verify` method result of `jwt`
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify();
+    }
+    ```
+
+- Send the `token` and the `secret` that you use on the `sign` method as the first and second argument of the `verify` method
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+    }
+    ```
+
+- Log data
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret');
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+        console.log(data);
+    }
+    ```
+
+    Later we will put the `secret` on environment variables so it will not be saved on your code
+
+- Save the file
+- You will see the `token` then the data that you added on the `token` creation
+- Change the `secret` on the `verify` method
+- Save the file
+- On your terminal, you'll see an error
+- Go and fix the `verify secret` again
+- Save the file
+
+Now we can work with the `token` expiration
+
+- On the `sign` method; send a third argument that will be an object with the `expiresIn` and the following value
+
+    ```js
+    const myFunction = async () => {
+        const token = jwt.sign({ _id: 'test' }, 'thisismysecret', { expiresIn: '0 seconds' });
+        console.log(token);
+
+        const data = jwt.verify(token, 'thisismysecret');
+        console.log(data);
+    }
+    ```
+
+    We can provide as a `string` the amount of time time to expire the `token` like `2 weeks`; `7 days` or in our case `0 seconds` to expire the `token` immediately
+
+- Save the file
+- On your terminal, you should see an `error` because the `token` is already expired
+- Change the `expiresIn` to a more reasonable time like `7 days`
+- Save the file
+- On your terminal, you should see the `token`
+
+### Generating authentication tokens
+
+At this moment we can begin to work with the `login` and `sign in` endpoints where we will create the `token` and send it back to the `user`. Since we will work on more than one endpoint we don't actually want to write the code on the endpoints so we will create a function that we can re-use on another file.
+
+- On your editor; go to the `task-manager/src/models` directory
+- In the `user.js` file; below the `userSchema` definition; call the `methods` property of the `userSchema`
+
+    `userSchema.methods`
+
+- Then call the method that you will be creating on the `methods` property in our case will be called `generateAuthToken` and will be an `async standard` function
+
+    `userSchema.methods.generateAuthToken = async function() {}`
+
+    The difference between the `methods` and `static` property is that `methods` the function that you set will be available on the `model instances` and `static` will be accessible on the `model`
+
+- Inside of the new function; create a constant call `user` that it value will be the `this` binding
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+    }
+    ```
+
+    Like we did before on the `pre` method we use a standard function because of the `this` binding and as you see we will have the `user` available there
+
+- Now require `jsonwebtoken` at the top
+
+    `const jwt = require('jsonwebtoken');`
+
+- Get back to the `generateAuthToken` and create a new constant call `token` that its value will be the result of the `sign` method of `jwt` sending the `user id` and the `secret` as a parameter
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+    }
+    ```
+
+    Since the `_id` of the `user` is an `objectID` we will need to convert it to a `string` because `sign` receives `string` values
+
+- Return the token
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        return token;
+    }
+    ```
+
+- Go to the `routers/user.js` file
+- On the `login` endpoint; create a new constant call `token` that its value will be the result of calling the `generateAuthToken` of the `user` instance
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send(user);
+        } catch (e) {
+            res.status(400).send();
+        }
+    });
+    ```
+
+- Then we will send on the response the `token` with the `user` data in an object
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send({ user, token });
+        } catch (e) {
+            res.status(400).send();
+        }
+    });
+    ```
+
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of the terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Now go to `postman`
+- Get to the `login` request tab
+- Send the request to `log in` a `user`
+- You should receive the `user` data and `token` as a response
+
+One thing you can notice is that we are not keeping track of the `token` on the app and this is important because the `users` have the ability to `logout` and as long the `token` exist they are `logged in` on the app so if the `token` fall in the wrong hands the `user` will not able to invalidate the `token`. For this will be tracking the `token` and will allow the `user` to `log in` from multiple devices and be able to `log out` in one and still `login` to the other.
+
+- Get to the `models/user.js`
+- On the `userSchema` definition; add a new `field` called `token` and it will be an `array` of `objects`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{}]
+    });
+    ```
+
+- Each `token` object will have a property called `token` that will be a `string` and is `required`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{
+            token: {
+                type: String,
+                required: true
+            }
+        }]
+    });
+    ```
+
+- Go to the `generateAuthToken` method
+
+Now we will need to add the `token` that we generate to the `user` instance each time they `log in` and as part of the `sign in` process
+
+- Concat the new `token` to the current `tokens` array of the `user`
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        user.tokens = user.tokens.concat({ token });
+
+        return token;
+    }
+    ```
+
+- Save the `user`
+
+    ```js
+    userSchema.methods.generateAuthToken = async function() {
+        const user = this;
+        const token = jwt.sign({ _id: user._id.toString() }, 'thisisthesecret');
+
+        user.tokens = user.tokens.concat({ token });
+        await user.save();
+
+        return token;
+    }
+    ```
+
+- Save the file
+- Go to `postman`
+- Send the `login` request
+- You should see that the `token` is part of the `user` data
+
+Later we will hide the `password` and the `token` properties from the `user` data in every response.
+
+- Go to `Robo 3t`
+- Get to the `users` collection
+- Check the `user` data that you just `log in`
+
+You should see the `tokens` property and inside of it; you will see that exists an `_id` and this is because is a `sub document` and for this type, it will add a `_id` automatically.
+
+Now we can do the same with the `sign in`(create `user`) endpoint.
+
+- Get to the `routers/user.js` file
+- In the `users post` endpoint; create a new constant call `token` that its value will be the result of the `generateAuthToken` method
+
+    ```js
+    router.post('/users', async (req, res) => {
+        const user = new User(req.body);
+
+        try {
+            await user.save();
+            const token = await user.generateAuthToken();
+
+            res.status(201).send(user);
+        } catch (e) {...}
+    });
+    ```
+- Send the `token` with the `user` data
+
+    ```js
+    router.post('/users', async (req, res) => {
+        const user = new User(req.body);
+
+        try {
+            await user.save();
+            const token = await user.generateAuthToken();
+
+            res.status(201).send({ user, token });
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Go to the `create user` request tab
+- Create a `user`
+- You should get the `user` data and the `token`
+
+### Express middleware
+
+Now that we send the `token` we can see how we are going to use it for the `authentication` process. Remember that almost all the endpoints of the application will need to be `authenticated` to perform an action except the `login` and `sign up` endpoints and for this, we will use `express middleware`.
+
+Without `middleware`: `new request -> run route handler`
+
+When a request gets into the server the first thing that runs is the `route handler`.
+
+With `middleware`: `new request -> do something -> run route handler`
+
+We add a step between the `new request` and `route handler` and this step is a function that we are going to make that will do something for us. Let's make an example.
+
+- On your editor; go to the `task-manager/src/index.js` file
+- Before the first `use` method call; register a new `middleware` calling the `use` method of `app` and sending a function as an argument
+
+    `app.use(() => {});`
+
+- This function will receive `req`, `res`, and `next`
+
+    `app.use((req, res, next) => {});`
+
+    The `req` and `res` arguments contain the same data that we have when we use them in our `route handlers`. The `next` argument is the only `middleware` specific
+
+- Now log the `method` used on the incoming request and the `path`(both available on `req`) in the function
+
+    ```js
+    app.use((req, res, next) => {
+        console.log(req.method, req.path);
+    });
+    ```
+
+- Save the file
+- On your terminal; begin the `mongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of the terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- On the `read user` request tab; send a request
+
+    It will be `loading` without any result because we need to explicitly need to set that we want to continue with other operations outside of the `middleware`
+
+- Cancel the request
+- Get to the `index.js` file
+- On the callback function of the `middleware`; use the `next` method
+
+    ```js
+    app.use((req, res, next) => {
+        console.log(req.method, req.path);
+        next();
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- On the `read user` request tab; send a request
+- You should see that you get the correct `response` back
+
+Sometimes you don't want to call the `next` method because you will need to prevent the `handler` to run for example if a `user` is not `authenticated` and target an endpoint that needs to be `authenticated`. Let's do an example where we won't allow the `user` to do a `GET` request but the others can be made.
+
+- On the `index.js` file
+- In the callback function of the `middleware`; remove all content
+- On that function; add a condition that checks if the `HTTP` method is `GET` and is it not using the `next` method
+
+    ```js
+    app.use((req, res, next) => {
+        if (req.method === 'GET') {
+        } else {
+            next();
+        }
+    });
+    ```
+
+- Log a message to say that the `GET` method is disabled
+
+    ```js
+    app.use((req, res, next) => {
+        if (req.method === 'GET') {
+            res.send('GET request are disabled');
+        } else {
+            next();
+        }
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- On the `read user` request tab; send a request
+- You should see the message of the disabled `GET`
+- Get to the `create user` request tab; make a `user`
+- You should see that the `user` was created without any issues
+
+Now we will do a `middleware` to prevent the `user` from do any request to emulate when the site is under maintenance
+
+- Get to the `idex.html` file
+- Remove all content of the callback function of the `middleware`
+- On that function; send a `503` status with a maintenance message
+
+    ```js
+    app.use((req, res, next) => {
+        res.status(503).send('The site is under maintenance');
+    });
+    ```
+
+- Save the file and get to `postman`
+- Test with all the requests and you should see the same response for all of then
+
+### Accepting authentication tokens
+
+Now we are going to do a function that will serve as a `middleware` on our application and that function will check if the `user` s `authenticated` or not when we use it on some of the endpoints of the application.
+
+- On your editor; go to the `task-manager/src` directory
+- Create a new folder called `middleware`
+- Inside of this newly created directory; create a new file called `auth.js`
+- In the newly created file; define a function call `auth` that will be `async` and will receive `req`, `res`, and `next`
+
+    `const auth = async (req, res, next) => {}`
+
+- Inside of the `auth` function; log a message and call the `next` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        console.log('auth middleware');
+        next();
+    }
+    ```
+
+- At the bottom of the file; export the `auth` function
+
+    `module.exports = auth;`
+
+- Now get to the `src/index.js` file
+- Remove the `middleware` that we created in the section before
+
+Since we don't want that the `middleware` run for each endpoint we will remove it from the `index` file and will specify where we want to call it.
+
+- Get to the `routers/user.js` file
+- Require the `auth` function; before the `router` constant definition
+
+    `const auth = require('../middleware/auth');`
+
+- Get to the `get users` handler
+
+To add a `middleware` to an endpoint we just need to send the function that we want to work as `middleware` on the second parameter before the handler function.
+
+- Add the `auth` function as a second parameter on the `get users` handler
+
+    `router.get('/users', auth, async (req, res) => {...}`
+
+Now when a `user` target this endpoint it will run the `auth` function first then the handler function
+
+- Save the files
+- On your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- In another tab of your terminal; get to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- Get to the `read users` request tab
+- Send the request
+- You should see the correct response
+- Get to your terminal tab where you run your local server and you should see the `middleware` message
+
+Now let's work with the `auth` function but first let's define the process that the `user` will follow. The first step will be that the `user` will get an `authentication token` from the `login` or `sign in` endpoints then provide it on the request that we are going to perform.
+
+-  Now get to the `login` request tab and send a request
+- Grad the `token` that is on the property of the same name
+- Go to the `read users` request tab
+
+Now we will provide the `token` when we send the `read users` request and we can add it to the `headers` of the request. The `headers` on a request are `key/value` pairs that we can provide as part of the request and we can have some `headers` back as part of the response.
+
+- Get to the `headers` tab; below the URL of the `read users` request
+- On the `key` input add: `Authorization`
+- In the `value` input next to the `Authorization key`; add the `Bearer` then the `token` that you copied before(Without quotes)
+
+    `Bearer my_token`
+
+- Now get to the `auth.js` file
+- Remove all the content of the function
+- At the top of the file; require the `jsonwebtoken` library and the `User` model
+
+    ```js
+    const jwt = require('jsonwebtoken');
+    const User = require('../models/user');
+    ```
+
+- Now on the `auth` function; add a `try/catch` block
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+        } catch (e) {}
+    }
+    ```
+
+- If the request doesn't have a `token` we will set an `error` to trigger the `catch` block sending a `401` status with a message
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Then we will need to get the value of the `token` that we receive with the request to create a `token` constant that its value will be the result of calling the `headers` property of `req` like the following
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    We will need to add the `Authorization key` so we get the correct `header` that we need.
+
+- Since we just want the `token` value and it will have `Bearer` at the beginning we will need to eliminate that value using the `replace` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    The `replace` method will change the `Bearer` part of the string for nothing at this case(Make sure that you also add a space after the `Bearer` word) and if the `token` doesn't exist will try to call the `replace` method of `undefined` and that will trigger an `error` that will call the `catch` block
+
+- Now we will need to get the value from the `token` so we will need to use the `jsonwebtoken` library. Create a constant call `decoded` that its value will be the result of calling the `verify` method of `jwt` providing the `token` and the `secret` that we use to create the `token`
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Then we can find the `user` on the database since we add the `_id` as the value that we send on the `token`. Create a constant call `user` that its value will be the result of the `findOne` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne();
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- On the search criteria of the `findOne` method we will search for the `_id` and we will make sure that the `token` is part of the `tokens` array
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    We will make sure that we are on the `tokens` array because at some moment the `user` will have the ability to `logout` and when this happens we will eliminate it from that `array` but the `user` can have multiple sessions and we need to close all of then.
+
+- Then if there is no `user` value; we will `throw an error` because the `token` is not valid
+
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Now if the code past the condition we will pass to the `route` the `user` and for this, we will add a `user` property on the `req` object
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+
+            req.user = user;
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+    This is because we have the `user` so there is no need that the `route` handler to search for the `user` data again
+
+- Finally; call the `next` method
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+
+            req.user = user;
+            next();
+        } catch (e) {
+            res.status(401).send({ error: 'Please authenticate.' });
+        }
+    }
+    ```
+
+- Save the file and go to `postman`
+- Go to the `read users` request and send the request
+- You should see the response with the correct data
+
+Before we move on with other `routes` we will need to address the `read users route handler` that we are using to test the `token` because this `route` is just for testing so we will need to change it in order to continue with the app because it exposes data from other `users`. To change this `route` we will just send the current `user` data as the response to that `route handler`.
+
+- Get to the `routers/user.js` file
+- On the `users get` handler; change the `/users` path to `/users/me`
+
+    `router.get('/users/me', auth, async (req, res) => {...}`
+
+- Remove all content of the function of the `users/me` handler
+- Send the `user` data(Remember that we add the `user` data on the `middleware`)
+
+    ```js
+    router.get('/users/me', auth, async (req, res) => {
+        res.send(req.user);
+    });
+    ```
+
+- Save the file and go to `postman`
+- Get to the `read users` request and change its name to `read profile`
+- Change the URL to `http://localhost:3000/users/me`
+- Send the request
+- You should see the information of the current `user`
