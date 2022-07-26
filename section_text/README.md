@@ -12006,3 +12006,141 @@ Before we move on with other `routes` we will need to address the `read users ro
 - Change the URL to `http://localhost:3000/users/me`
 - Send the request
 - You should see the information of the current `user`
+
+### Advance Postman
+
+Before continuing with the app we will see some settings in `Postman` that will help us to test our app easily.
+
+The first thing that we are going to see is the `environment variable` on `Postman` that will help us to set a value just one time instead of copying and pasting the actual value where is needed. One example of this is the `localhost` part of the `URL` on each endpoint because we in the near future will deploy our app to `Heroku` and we don't longer need `localhost` so we will need to have `dev` and `prod` requests and that is where the `environment variables` came into action.
+
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- Then on another tab and start your local server using `npm run dev`
+- Go to `postman`
+- Get to the `create users` request tab
+- On the right side; click on an `eye` button next to the `No Environment` dropdown
+- A popup should show up
+- Click on the `add` button on the `Environment` section
+- Add the `name` of the new `environment` like `Task Manager API (dev)`(Make sure that you specify that is the `dev` version of the `environment variables`)
+- On the `variable` input add `URL`
+- In the `initial value` input add `localhost:3000`
+- Then click on the `save` button
+- Now get to the `create users` request tab
+- In the `No Environment` dropdown; choose your `environment` name(In the case of the example `Task Manager API (dev)`)
+- Now on the `URL` of the `create users` request; remove `localhost:3000`(If you use `http://`; eliminate it)
+- Then add the `URL` variable like this
+
+    `{{url}}/users`
+
+    To use an `environment variable` on `postman` you will need to add the name on double `curly brackets`(Choosing the correct `environment` before)
+
+- Hover the `URL` variable
+- You should see the value of `URL`
+- Send the request
+- You should see that the request works as expected
+- Go to every request and use the `URL` variable and test
+
+Now we will work with the `authentication`. At this moment we obtain the `token` from a request; copy its value and paste it on the request that we need to be `authenticated` but there are some other ways to do this like the following:
+
+- Get to the `read profile` request tab
+- Grab the `token` that you use before on the `Headers` tab(Just the `token` value without `Beaber`)
+- Remove the `authorization` key and value from the `Headers`
+- Get to the `Authorization` tab that is below the `read profile` URL
+- Click the `Type` dropdown and choose `Bearer Token`
+- On the `token` input that appears on the right; paste the `token` value
+- Send the request
+- You should see that the request work as expected
+
+This way works but only works with this specific request but we actually need that the `token` we get to work for every request that needs `authentication`.
+
+- On the `Authorization` tab on the `read profile` request
+- Click on the `type` dropdown again and choose `inherit auth from parent`
+
+This option will allow us to set the `authentication` once and use it for every request with this option(which is the default option)
+
+- On the left side; click on the 3 dots of the `task app` collection
+- A menu should popup
+- Click on `edit`
+- Choose the `Authorization` tab; below the name of the collection(`task app`)
+- Click on the `type` dropdown and choose `Bearer Token`
+- On the `token` input; paste the `token` value that you use before
+- Click on save
+
+Now every request that has the `inherit auth from parent` on the `Authorization` section will use the `token` that you just set.
+
+- Go to the `read profile` request tab
+- Send the request
+- The request should work as expected
+
+We need to remember that there is 2 request that will not need `authentication` so we will need to change the `authorization` type.
+
+- Get to the `create user` and `login user` request tabs
+- Get to the `Authorization` tab below the `URL`
+- On the `type` dropdown; choose `No Auth`
+
+Finally, we will need to set some automation in order to take the `token` every time that we `create` or `login` a `user` instead of copying the value on the `token` input of the collection's `authorization` section because the `token` will be deprecated after some time.
+
+- Click on the 3 dots on the `task app` collection on the left
+- Choose edit
+- Click on the `Authorization` tab
+- Remove the `token` value
+- On the `token` input; add an `environment variable call `authToken`(Which doesn't exist yet but we will add it in a moment)
+- Click on save
+- Get to the `login user` request tab
+- Below the `URL` click on the `test` tab
+
+    The `test` tab will let you add some `js` script that runs after the response is received (The `pre-request Script` will run a `js` script before the request is sent). There we will set a script that set an `environment variable` with the `token` value
+
+- On the `test` work area; add a condition
+
+    `if () {}`
+
+
+We will need to make sure that the request has a `200` status and for this `postman` to give us access to an object called `pm` that has a property called `response` that contains the `response` data and it `code`
+
+- On the condition that you just created; use the `pm` object to make sure that the `status code is `200`
+
+    `if (pm.response.code === 200) {}`
+
+Now we will need to set the `authToken` variable that you just created and the `pm` object has access to an `environment` property that has a `set` method for this purpose
+
+- Inside of the condition use `pm` to set the `authToken` variable
+
+    ```js
+    if (pm.response.code === 200) {
+        pm.environment.set();
+    }
+    ```
+
+The `set` method receives 2 arguments; the name of the `environment variable` and the value. To get the actual value of the `token` like we did before we will need to get the data of the `response` but we need to convert it into an object because is a `JSON` and then get the correct property.
+
+- Send the `authToken` name as the first argument of the `set` method and the `token` value as the second argument like this
+
+    ```js
+    if (pm.response.code === 200) {
+        pm.environment.set('authToken', pm.response.json().token);
+    }
+    ```
+
+- Click on save
+- Copy the condition
+- Get to the `create user` request tab
+- Click on the `test` tab below the `URL` of `create user`
+- Paste the condition
+- On the condition change the `200` status  to `201`
+
+    ```js
+    if (pm.response.code === 201) {
+        pm.environment.set('authToken', pm.response.json().token);
+    }
+    ```
+
+- Click on save
+- Get to the `read profile` request tab
+- Send the request
+- It will send you the `authentication error`
+- Get to the `login user` request tab
+- Send the request
+- The request should work as expected
+- Get to the `read profile` request tab
+- Send the request
+- The request should work without any issues
