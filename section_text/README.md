@@ -12335,3 +12335,174 @@ We can continue with another `logout` handler; this time we will work `logging o
 - Get to `Robo 3T`
 - On the `user` collection; check the `user` that you just `logout` from all sessions
 - You should see that don't have any `tokens` on its array of `tokens`
+
+### Hiding private data
+
+We now can make more secure the response that we send with the `user` data because at this moment we send back its `password` and the `tokens` that represent all his active sections. In this section, we will explore 2 possible solutions for this.
+
+- Get to the `task-manager/src/routers/user.js` file on your editor
+- Go to the `login` handler
+- On the response; change the `user` shorthand syntax to the normal property call and its value will be the result of the following `user` method
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send({ user: user.getPublicProfile(), token });
+        } catch (e) {...}
+    });
+    ```
+
+    The `getPublicProfile` doesn't exist yet but we will make that function shortly and it will return to us just the public data of the `user`
+
+- Go to the `models/user.js` file
+- Before the `getPublicProfile` method definition; call the `methods` property of the `userSchema` then add as a property of `methods` the name of the function that you use on the `login` handler
+
+    `userSchema.methods.getPublicProfile;`
+
+    As you remember the `statics` property of the `schema` will allow us to make a method for the `model` and `methods` will allow us to make a method for the actual instance
+
+- The value of `getPublicProfile` will be a standard `async` function
+
+    `userSchema.methods.getPublicProfile = async function() {};`
+
+    We will need to use a standard function because we will receive the `user` on the `this` instance
+
+- On the newly created function; create a constant call `user` that its value will be `this`
+
+    ```js
+    userSchema.methods.getPublicProfile = async function() {
+        const user = this;
+    };
+    ```
+
+Now we will need the `raw` object will all the `user` data in other words all the `user` data without all the things that `mongoose` add to the `user`
+
+- Below the `user` constant; create another one called `userObject` it value will be the result of calling the `toObject` method of `user`
+
+    ```js
+    userSchema.methods.getPublicProfile = async function() {
+        const user = this;
+        const userObject = user.toObject();
+    };
+    ```
+
+    The `toObject` method is provided by `mongoose` and returns the `raw` data of the document
+
+- Now return `userObject`
+
+    ```js
+    userSchema.methods.getPublicProfile = async function () {
+        const user = this;
+        const userObject = user.toObject();
+
+        return userObject;
+    };
+    ```
+
+- Save both files
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Get to `postman`
+- On the `login user` request tab; send the request
+- You will see that the request-response with the `user` data like we have it before
+
+Now that we have the `getPublicProfile` we can manipulate the `user` data in other to just show the public data
+
+- Get to the `models/user.js` file
+- On the `getPublicProfile`; below the `userObject`; use `delete` to remove the `password` and the `tokens` properties from `userObject`
+
+    ```js
+    userSchema.methods.getPublicProfile = async function () {
+        const user = this;
+        const userObject = user.toObject();
+
+        delete userObject.password;
+        delete userObject.tokens;
+
+        return userObject;
+    };
+    ```
+
+- Save the file and get to `postman`
+- On the `login user` request tab; send the request
+- You should see that the `user` data without the `password` and the `tokens` array
+
+This approach is a little bit manual because we still need to call the `getPublicProfile` method in our `login` handler every single time we send the `user` back but there is another way that will allow us not to make any changes like this in our handlers.
+
+- Get to `routers/user.js` file
+- Go to the `login` handler
+- On the `send` method; get back to the shorthand syntax on `user`
+
+    ```js
+    router.post('/users/login', async (req, res) => {
+        try {
+            const user = await User.findByCredentials(req.body.email, req.body.password);
+            const token = await user.generateAuthToken();
+
+            res.send({ user, token });
+        } catch (e) {...}
+    });
+    ```
+
+- Get to the `models/user.js` file
+- Change `getPublicProfile` to `toJSON`(Need to match exactly like this)
+
+    `userSchema.methods.toJSON = function() {...}`
+
+- Save both files and get to `postman`
+- On the `login` request tab; send the request
+- You should see that work as expected and don't show the `password` and `tokens` data
+- Get to the `read profile` request tab and send the request
+- You should see that work as expected and don't show the `password` and `tokens` data
+
+With this update, we target both handlers without changing it the actual code of the handlers. Now we will make an example to see why this approach works.
+
+- Go to the `src/index.js` file
+- Remove all the comment code and the example at the bottom
+- At the bottom of the file; create an object with a `string` property
+
+    ```js
+    const pet = {
+        name: 'test'
+    }
+    ```
+
+- Now we will convert the object to a `JSON` and log in to the terminal; so below the `pet` object add the following:
+
+    `console.log(JSON.stringify(pet));`
+
+- Save the file and go to the local server terminal
+- You should see the object data as a `JSON`
+
+When you pass an object to `res.send` it actually calls `JSON.stringify` behind the scene so let's add `toJSON` to the mix to see the effect.
+
+- Get back to the `index.js` file
+- Below the `pet` object definition; add a property to `pet` call `toJSON`(need to match exactly like this) and its value will be a function
+
+    `pet.toJSON = function() {}`
+
+- Inside of this function; log `this` and return it
+
+    ```js
+    pet.toJSON = function() {
+        console.log(this);
+
+        return this;
+    }
+    ```
+
+- Save the file and get to the local server terminal tab
+- You should see the same result as before
+
+Now we can manipulate what we get back when we `stringify` the `pet` object using the `toJSON` method.
+
+- Get to the `index.js` file
+- Remove all content of the `toJSON` method
+- Return an empty object on the `toJSON` method
+- Save the file and get to the local server terminal tab
+- You should see an empty object
+
+Now you see why the approach that we use for the handler works as we expected.
