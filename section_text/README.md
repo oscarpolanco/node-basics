@@ -12144,3 +12144,194 @@ The `set` method receives 2 arguments; the name of the `environment variable` an
 - Get to the `read profile` request tab
 - Send the request
 - The request should work without any issues
+
+### Logging out
+
+Now we are going to complete the `authentication` cycle making a `log out` route so the `user` remove the `token` when he wants.
+
+- On your editor; go to the `task-manager/src/routers` directory
+- In the `user.js` file; below of the `login` route and before the `/users/me` route; add a new `post` route with a `path /users/logout`; the `authentication` is `required` and a `async` function
+
+    `router.post('/users/logout', auth, async (req, res) => {});`
+
+- Inside of the `logout` handler function add a `try/catch` block
+
+    ```js
+    router.post('/users/logout', auth, async (req, res) => {
+        try {
+        } catch (e) {}
+    });
+    ```
+
+On this endpoint we will need to eliminate the `token` that the `user` use when it makes the `login` or `create` process; as you may recall; the `user` has an `array` of `tokens` so we will need to search the correct one in other to eliminate it from the `array` when the `user` try to `logout`. For this, we will need to add one line on the `auth middleware`.
+
+- Get to the `middleware/auth.js` file
+- Below the `error` condition; add a new property to the `req` object called `token` and its value will be the actual value of the `token`
+
+    ```js
+    const auth = async (req, res, next) => {
+        try {
+            const token = req.header('Authorization').replace('Bearer ', '');
+            const decoded = jwt.verify(token, 'thisisthesecret');
+            const user = await User.findOne({ _id: decoded._id, 'tokens.token': token });
+
+            if(!user) {
+                throw new Error();
+            }
+
+            req.token = token;
+            req.user = user;
+            next();
+        } catch (e) {...}
+    }
+    ```
+
+- Get back to the `router/user.js` file
+- On the `logout` handler; send a `500` status in case of an `error`
+
+    ```js
+    router.post('/users/logout', auth, async (req, res) => {
+        try {
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+Now we can concentrate on removing the `token` from the `user`. Since we are `authenticated` we have access to the `user` data and we just need to look for a way to remove the correct one.
+
+- On the `try` block change the value of the `user.tokens` array using the `filter` method on each element of the `array` of `token` and remove the one that `match` with the one on the `token` property of `req`
+
+    ```js
+    router.post('/users/logout', auth, async (req, res) => {
+        try {
+            req.user.tokens = req.user.tokens.filter((token) => {
+                return token.token !== req.token;
+            });
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Now we just need to `save` the `user` with the `save` method
+
+    ```js
+    router.post('/users/logout', auth, async (req, res) => {
+        try {
+            req.user.tokens = req.user.tokens.filter((token) => {
+                return token.token !== req.token;
+            });
+            await req.user.save();
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Finally; send a `response`
+
+    ```js
+    router.post('/users/logout', auth, async (req, res) => {
+        try {
+            req.user.tokens = req.user.tokens.filter((token) => {
+                return token.token !== req.token;
+            });
+            await req.user.save();
+
+            res.send();
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the files
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal; go to the `task-manager` directory and run your local server using: `npm run dev`
+- Go to `postman`
+- Right-click to the `task manager` collection
+- Click on `Add request`
+- Add the name for the new request like `logout user`
+- Change to `POST` the `HTTP` method
+- Add the `URL` using `environment variables`
+
+    `{{url}}/users/logout`
+
+- Save the request
+- Make sure that you `log in` or `create` a `user` so you have a valid `token`
+- Get to the `read profile` request tab
+- Send the request
+- You should receive the `user` profile
+- Get to the `logout user` request tab
+- Send the request
+- You should receive a `200` status
+- Get to the `read profile` request tab
+- You should get the `unauthenticated` response
+
+We can continue with another `logout` handler; this time we will work `logging out` the `user` from all active sessions in other words remove all the `tokens` of a `user`.
+
+- On your editor; go to the `routers/user.js` file
+- Below the `logout` handler; create a new handler that uses the `POST HTTP` method; with a `/users/logoutAll` path; also the `authentication` is required and the handler function will be `async`
+
+    `router.post('/users/logoutAll', auth, async (req, res) => {});`
+
+- On the `logoutAll` handler; add a `try/catch` block
+
+    ```js
+    router.post('/users/logoutAll', auth, async (req, res) => {
+        try {
+        } catch (e) {}
+    });
+    ```
+
+- On the `catch` block; send a `500` status in case of an `error`
+
+    ```js
+    router.post('/users/logoutAll', auth, async (req, res) => {
+        try {
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Now on the `try` block; change the value of the `tokens` array of `req.user` to an `empty` array
+
+    ```js
+    router.post('/users/logoutAll', auth, async (req, res) => {
+        try {
+            req.user.tokens = [];
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the `user` data and respond to the request
+
+    ```js
+    router.post('/users/logoutAll', auth, async (req, res) => {
+        try {
+            req.user.tokens = [];
+            await req.user.save();
+
+            res.send();
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- Right-click on the `logout user` request
+- Click on duplicate
+- Change the `logout user copy` name to `logout all`
+- Change the `URL` from `/users/logout` to `/users/logoutAll`
+- Make sure that the current `logged in user` have more than one `token` on its array
+- Send the `logout all` request
+- You should receive a `200` status response
+- Get to `Robo 3T`
+- On the `user` collection; check the `user` that you just `logout` from all sessions
+- You should see that don't have any `tokens` on its array of `tokens`
