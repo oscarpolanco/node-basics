@@ -12506,3 +12506,130 @@ Now we can manipulate what we get back when we `stringify` the `pet` object usin
 - You should see an empty object
 
 Now you see why the approach that we use for the handler works as we expected.
+
+### Authenticating user endpoints
+
+Now we can finish with the `user authentication` for all the endpoints that need it to pass to the `task` routes.
+
+- On your editor; go to the `routers/user.js` file
+- Get to the `/users/:id get` handler
+
+This handler will return the data of any `user` if you send it `id` but each `user` should only have access to its own data and for this, we already have an endpoint call `/users/me` so we no longer need the `/users/:id` handler.
+
+- Remove the `/users/:id get` handler
+- Now get to the `/users/:id delete` handler
+- Add the `auth` middleware
+
+    `router.delete('/users/:id', auth, async (req, res) => {...}`
+
+- Now update the path from `/users/:id` to `/users/me`
+
+    `router.delete('/users/me', auth, async (req, res) => {...}`
+
+    This is because we can't permit a `user` delete any other `user` but itself so from now on the `delete user` endpoint will `delete` the current `user`
+
+We will need to change a little the handler code because we don't longer receive the `id` and we actually have the `user` data on the request because we added the `auth` middleware.
+
+- On the `delete` handler; remove the `user` constant and the `check user` condition
+
+    ```js
+    router.delete('/users/me', auth, async (req, res) => {
+        try {
+            res.send(user);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Now use the `remove` method of `user` before the response
+
+    ```js
+    router.delete('/users/me', auth, async (req, res) => {
+        try {
+            await req.user.remove();
+
+            res.send(user);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+    `Mongoose` provide us with a `remove` method that will `delete` the data of the instance that call that method
+
+- Since we no longer have a `user` constant; we will need to update the response to use the `user` property of `req`
+
+    ```js
+    router.delete('/users/me', auth, async (req, res) => {
+        try {
+            await req.user.remove();
+
+            res.send(req.user);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `login user` request tab
+- Send the request
+- You should have the response as expected
+- Go to the `delete user` request tab
+- Change the `URL` to `{{url}}/users/me`
+- Save the request
+- Send the request
+- You should see the `user` deleted data as a response
+
+Now we can continue working with the `update user` endpoint.
+
+- Get to the `router/user.js`
+- Get to the `/users/:id patch` handler
+- Add the `auth` middleware
+
+    `router.patch('/users/:id', auth, async (req, res) => {...}`
+
+- Change the `path` of the handler to `/users/me`
+
+    `router.patch('/users/:id', auth, async (req, res) => {...}`
+
+    A `user` should not have the ability to change any other `user` just itself
+
+- Get to the `try` block and change the value of the `user` constant to this
+
+    ```js
+    router.patch('/users/me', auth, async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['name', 'email', 'password', 'age'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' })
+        }
+
+        try {
+            const user = req.user;
+            updates.forEach((update) => user[update] = req.body[update]);
+            await user.save();
+
+            res.send(user);
+        } catch (e) {
+            res.status(400).send(e);
+        }
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `create user` request tab(update the values of the `body` as you wish)
+- Send the request
+- Get to the `update user` request tab
+- Update the `body` of the request; adding some valid properties that you want to update
+- Send the request
+- Go to `read profile` request tab
+- Send the request
+- You should see that the data of the properties that you update have the correct value(If you update the `password` use the `login user` request to test)
