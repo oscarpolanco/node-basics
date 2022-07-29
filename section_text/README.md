@@ -12633,3 +12633,363 @@ Now we can continue working with the `update user` endpoint.
 - Go to `read profile` request tab
 - Send the request
 - You should see that the data of the properties that you update have the correct value(If you update the `password` use the `login user` request to test)
+
+### The User/Task relationship
+
+Now that we add `authentication` to the `users` endpoints we can continue adding the `authentication` to the `tasks` endpoints but first, we will need to do something that is the `relationship` of the `users` and `tasks`. This is important because we need that the `user` can only see their `task` and perform operations with it and don't mess with the `tasks` of other `users`. Let's begin with the process of the `task model`.
+
+- On your editor; go to the `task-manager/src/models/task.js`
+
+There are 2 ways that we can set up the `task/user relationship`:
+
+1. The `user` can store all of the `ids` of the `tasks` they created
+2. The individual `task` can store the `id` of the `user` that created it
+
+We will be up for the second approach.
+
+- On the `Task` model; add a new `field` in this case we will call it `owner`
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {...},
+        completed: {...},
+        owner: {}
+    });
+    ```
+
+    We can call the new `field` whatever we want but is better to choose something that represents the data that we are going to receive on that `field` in this case the `id` of the `user` that is the `owner` of this `task`
+
+- Now we will need to add the `type` that will be an `ObjectID` and we can add it like this
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {...},
+        completed: {...},
+        owner: {
+            type: mongoose.Schema.Types.ObjectId
+        }
+    });
+    ```
+
+- The `owner` should be `required` so nobody can create anonymous `tasks`
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {...},
+        completed: {...},
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            require: true,
+        }
+    });
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Open `Robo 3T`
+- Drop the current `task-manager-api` database
+
+    We will eliminate our current database because we have some `task` created that doesn't have any `user` related but we quickly restore the database when our app runs the `index.js` file again
+
+- Get to the `routers/task.js` file
+
+Now we will begin to change the `task` endpoints to get the necessary data to create the `user/task relationship`
+
+- Require the `auth` middleware below the `Task` model at the top of the file
+
+    `const auth = require('../middleware/auth');`
+
+- On the `/tasks post` endpoint; use the `auth` middleware
+
+    `router.post('/tasks', auth, async (req, res) => {...}`
+
+- On the `/tasks post` handler; remove the `req.body` from the `Task` model constructor in the `task` constant definition
+
+    ```js
+    router.post('/tasks', auth, async (req, res) => {
+        const task = new Task();
+
+        try {
+            await task.save();
+            res.status(201).send(task);
+        } catch (e) {
+            res.status(400).send(e);
+        }
+    });
+    ```
+
+- In the `Task` constructor add an `object` that value will be the spread of the `req.body` and an `owner` property whose value will be the `req.user._id`
+
+    ```js
+    router.post('/tasks', auth, async (req, res) => {
+        const task = new Task({
+            ...req.body,
+            owner: req.user._id
+        });
+
+        try {
+            await task.save();
+            res.status(201).send(task);
+        } catch (e) {
+            res.status(400).send(e);
+        }
+    });
+    ```
+
+    With this we continue creating the `task` will all the necessary data that we receive from the `user` request and add the `user id` that we receive from the `auth` middleware
+
+- Save the file
+- Get to `postman`
+- Go to the `create user` request tab
+- Fill the `body` with the correct values
+- Send the request
+- You should see that a `user` is created
+- Get to the `create task` request tab
+- Fill the `body` with the necessary data that a `task` needs
+- Send the request
+- You should receive the `task` data and should have the `ObjectId` of the `owner`
+
+Before we continue with the other endpoints; we will make a little example of some things that we will need to do with the `user/task relationship`.
+
+- Get to the `src/index.js` file
+- At the bottom of the file `require` the `Task` model
+
+    `const Task = require('./models/task');`
+
+- Then create a `main` function that will be `async`
+
+    `const main = async () => {}`
+
+- Below the `main` definition; call it
+
+    ```js
+    const main = async () => {}
+
+    main();
+    ```
+
+Now we will find a `task` by its `id` and log its value.
+
+- Get to `postman`
+- In the `create task` request tab; copy the `_id` value on the response
+- Get to the `index.js` file
+- On the `main` function; create a constant call `task` and use the `findById` method from `user` sending the `_id` value that you just copied from `postman` as a parameter
+
+    ```js
+    const main = async () => {
+        const task = await Task.findById('my_task_id');
+    }
+    ```
+
+- Log the `task` value
+
+    ```js
+    const main = async () => {
+        const task = await Task.findById('my_task_id');
+        console.log(task);
+    }
+    ```
+
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- Get to the `index.js` file
+- Log the `owner` property of the `task`
+
+    ```js
+    const main = async () => {
+        const task = await Task.findById('my_task_id');
+        console.log(task.owner);
+    }
+    ```
+
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- You should see the `ObjectId` of the `user` that is `owner` of the `tasks`
+
+Now, what if we want some more information about the `user` that creates the `task` not just its `id`. You may think that we just grab the `id` and use the `findById` method on the `User` model using the `id` that we just get but this is a manual process. For this situation `mongoose` there is a way of setting the `relationship` between the 2 models providing us with some helper functions that will make this possible with very minimal code.
+
+- Get to the `models/task.js` file
+- On the `owner` file; add a new property called `ref`
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {...},
+        completed: {...},
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            require: true,
+            ref:
+        }
+    });
+    ```
+
+    The `ref` property will allow us to create a `reference` to the `field`(in this case `owner`) to another model
+
+- On the `ref` property; add the model name that we need to create the `reference` and that will be `User`(Need to be the exact match to the `name` that you set on the `mongoose.model` method)
+
+    ```js
+    const Task = mongoose.model('Task', {
+        description: {...},
+        completed: {...},
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            require: true,
+            ref: 'User'
+        }
+    });
+    ```
+
+- Get to the `src/index.js` file
+- Below the `task` constant definition; use `await` then call the `populate` method of `task`
+
+    ```js
+    const main = async () => {
+        const task = await Task.findById('my_task_id');
+        await task.populate();
+        console.log(task.owner);
+    }
+    ```
+
+    The `populate` method allows us to `populate` data from a `relationship`
+
+- As a parameter of the `populate` method; send a string with the `name` of the `field` that you need to `populate` with data; in this case `owner`
+
+    ```js
+    const main = async () => {
+        const task = await Task.findById('my_task_id');
+        await task.populate('owner');
+        console.log(task.owner);
+    }
+    ```
+
+    Now the `populate` method will go and find the `user` that is associated with this `task` and then send the entire document to the `task.owner` property
+
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- You should see the data of the `user` that create the `task`
+
+Now we will have a `relationship` with the `task` and the `owner` and we can see the data of the `owner` that create that mentioned `task` but what if we want to find all the `task` of a `user` using the `user` data.
+
+- Get to `postman`
+- On the `create task` request tab; copy the `owner` value
+- Get to the `index.js` file
+- `Require` the `User` model; below the `Task` model `require`
+
+    `const User = require('./models/user');`
+
+- Remove all content of the `main` function
+- In the `main` function; create a new constant call `user` that it value will be the result of the `findById` method of the `User` model
+
+    ```js
+    const main = async () => {
+        const user = await User.findById();
+    }
+    ```
+
+- Paste the `owner id` that you copied from `postman` as a parameter of the `findById` method
+
+    ```js
+    const main = async () => {
+        const user = await User.findById('my_owner_id');
+    }
+    ```
+
+- Log the `task` property of the `user`
+
+    ```js
+    const main = async () => {
+        const user = await User.findById('my_owner_id');
+        console.log(user.tasks);
+    }
+    ```
+
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- You should see `undefined`
+
+We get this result because the `tasks field` doesn't exist on that document so as you may think we will need to adjust that on the `User` model but we actually are not going to create a `tasks` array on the `User` model because the `tasks` live on a different `collection` so we will need to add what is know as a `virtual property that won't have any data store on the database instead will get all it data from a `relationship` with another model in this case the `Task` model.
+
+- Get to the `models/task.js`
+- Below the `userSchema` definition; call it `virtual` method
+
+    `userSchema.virtual();`
+
+    The `virtual` method will allow us to set the `virtual` attributes. Is `virtual` because we don't actually change what is stored on the `user` document because is way from `mongoose` to say that these 2 things are related
+
+- As the first argument of the `virtual` method you need to send a string that represents the name of the `virtual field` in this case we will use `task`
+
+    `userSchema.virtual('tasks');`
+
+- As a second parameter we will send a `configuration object`
+
+    `userSchema.virtual('tasks', {});`
+
+- The first property we will set is the `ref` property and its value will be the `Task` model name
+
+
+    ```js
+    userSchema.virtual('tasks', {
+        ref: 'Task'
+    });
+    ```
+
+- Now the following properties to the `configuration object`
+
+    ```js
+    userSchema.virtual('tasks', {
+        ref: 'Task',
+        localField: '',
+        foreignField: ''
+    });
+    ```
+
+The name of the `foreignField` is the of the `field` on the other model; in this case on the `Task` model; that is going to create this `relationship` and that `field` will be the `owner`.
+
+- Add `owner` to the `foreignField`
+
+    ```js
+    userSchema.virtual('tasks', {
+        ref: 'Task',
+        localField: '',
+        foreignField: 'owner'
+    });
+    ```
+
+The `localField` will be the `field` where the local data is stored so since the `owner` has the `ObjectId` of the `user` we will need the `field` that has the same value in this case the `_id`.
+
+- Add `_id` as the `localField` value
+
+    ```js
+    userSchema.virtual('tasks', {
+        ref: 'Task',
+        localField: '_id',
+        foreignField: 'owner'
+    });
+    ```
+
+- Get to the `src/index.js` file
+- Below the `user` constant definition; use `await` and call the `populate` method of `user` sending the `virtual field` name
+
+    ```js
+    const main = async () => {
+        const user = await User.findById('my_owner_id');
+        await user.populate('tasks');
+        console.log(user.tasks);
+    }
+    ```
+
+    At the moment we call `populate` will find all `tasks` related to the `user` and store them on an `array`
+
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- You should see the data of the `task` associated with the `user`
+- Get to `postman`
+- Go to the `create task` request tab
+- Fill the `body` with the data of another `task`
+- Send the request
+- Go to the `index.js` file
+- Add a line before the `console.log` of the `main` function
+- Save the file
+- Check on the tab of the terminal of your local server and you should see the `task` value
+- You should see both `task`
