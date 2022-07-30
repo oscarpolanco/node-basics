@@ -12993,3 +12993,232 @@ The `localField` will be the `field` where the local data is stored so since the
 - Save the file
 - Check on the tab of the terminal of your local server and you should see the `task` value
 - You should see both `task`
+
+### Authentication task endpoints
+
+Now we can finish adding the `authentication` on the remaining `task endpoints`.
+
+- Get to the `task-manager/src/router/task.js`
+- Go to the `/task/:id get` request(Get a `task` by its `id`)
+
+For this endpoint, we still want to show the data of the `task` by its `id` but we need that the `user` to check `tasks` that are not related to the current `user`.
+
+- Add the `auth` middleware to the `/task/:id get` request
+
+    `router.get('/tasks/:id', auth, async (req, res) => {...}`
+
+- Now remove the `findById` method call
+
+    ```js
+    router.get('/tasks/:id', auth, async (req, res) => {
+        const _id = req.params.id;
+
+        try {
+            const task = await Task
+
+            if (!task) {
+                return res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+As we made for the other endpoints we will need to take into account the `user id` to search a `task` so we will need to change the `findById` and use the `findOne` method.
+
+- Call the `findOne` method of `Task` sending the `id` of the `task` and the `owner` property with the `user id` as its value
+
+    ```js
+    router.get('/tasks/:id', auth, async (req, res) => {
+        const _id = req.params.id;
+
+        try {
+            const task = await Task.findOne({
+                _id,
+                owner: req.user._id
+            });
+
+            if (!task) {
+                return res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `create user` request tab
+- Fill the `body` of the request with data different from the first `user` that you created
+- Send the request
+- Go to the `create task` request tab
+- Fill the `body` with data and send the request(Do it at least twice; both different data)
+- Copy the `_id` value from the response
+- Get to the `read task` request tab
+- Paste the `id` that you just copied on the `URL` of the request
+- Send the request
+- You should see the data of the `task` that you use the `id` on the `URL`
+- Get to the `login user` request tab
+- Change to the other `user` and send the request
+-  Go to the `read task` request tab
+- Send the request with the same `id` that you used before
+- You should receive the `404` status
+
+Now you can `read tasks` that belong to the current `user`. We will continue with the `get all task` endpoint.
+
+- Go to the `router/task.js`
+- Get to the `/tasks get` request
+- Add the `auth` middleware
+
+    `router.get('/tasks', auth, async  (req, res) => {...}`
+
+- Remove the `task` constant
+- Before the `response` of the handler in the `try` block; call the `populate` method of the `user` sending `task` as a parameter
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        try {
+            await req.user.populate('tasks');
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- Go to the `read tasks` request tab
+- Send the request
+- You should see only the `tasks` of the first `user`
+
+We will continue with the `update task` endpoint.
+
+- Get to the `router/task.js` file
+- Go to the `/tasks/:id patch` request
+- Add the `auth` middleware
+
+    `router.patch('/tasks/:id', auth, async (req, res) => {...}`
+
+- Update the value of the `task` content using the `findOne` method sending the `_id` of the `task` and the `id` of the `owner`
+
+    ```js
+    router.patch('/tasks/:id', auth, async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findOne({
+                _id: req.params.id,
+                owner: req.user._id
+            });
+
+            updates.forEach((update) => task[update] = req.body[update]);
+            await task.save();
+
+            if(!task) {
+                return res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+- Now move the `updates.forEach` and `save` lines below the `!task` condition
+
+    ```js
+    router.patch('/tasks/:id', auth, async (req, res) => {
+        const updates = Object.keys(req.body);
+        const allowedUpdates = ['description', 'completed'];
+        const isValid = updates.every((update) => allowedUpdates.includes(update));
+
+        if(!isValid) {
+            res.status(400).send({ error: 'Invalid updates!' });
+        }
+
+        try {
+            const task = await Task.findOne({
+                _id: req.params.id,
+                owner: req.user._id
+            });
+
+            if(!task) {
+                return res.status(404).send();
+            }
+
+            updates.forEach((update) => task[update] = req.body[update]);
+            await task.save();
+
+            res.send(task);
+        } catch (e) {...}
+    });
+    ```
+
+    This makes sure that the `task` exits in order to `update`
+
+- Save the file
+- Go to `postman`
+- Get to the `read task` request task
+- Copy one of the `_id` values of one of the `tasks`
+- Go to the `update task` request tab
+- Paste the `id` that you just copied on the `URL`
+- Change the `body` of the request with a valid `field` that you need to update
+- Send the request
+- You should see that the data of the `field` that you update have the correct value
+- Go to the `login request` tab
+- `Login` as the second `user`
+- Get to the `update task` request tab
+- Send the request
+- You should get a `404` status
+
+Finally, we will work with the `delete task` endpoint!!
+
+- Go to the `router/task.js`
+- Get to the `/tasks/:id delete` request
+- Add the `auth` middleware
+
+    `router.delete('/tasks/:id', auth, async (req, res) => {...}`
+
+- Change the `task` value to use the `findOneAndDelete` method sending the `_id` and `owner id`
+
+    ```js
+    router.delete('/tasks/:id', auth, async (req, res) => {
+        try {
+            const task = await Task.findOneAndDelete({
+                _id: req.params.id,
+                owner: req.user._id
+            });
+
+            if(!task) {
+                return res.status(404).send();
+            }
+
+            res.send(task);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Save the file
+- Get to `postman`
+- Go to the `read tasks` request tab
+- Send the request
+- Copy the `_id` value of one of the `tasks`
+- Go to the `delete task` request tab
+- Paste the `id` on the `URL` of the request
+- Send the request
+- You should receive the data of the `task` deleted
+
+Now we finish adding `authentication` to all `tasks` endpoints and create the `relation` between the `users` and `tasks`.
