@@ -56,13 +56,6 @@ router.get('/users/me', auth, async (req, res) => {
     res.send(req.user);
 });
 
-// Goal: Refactor the update profile route
-//
-// 1. Update the URL to /users/me
-// 2. Add the authentication middleware into the mix
-// 3. Use the existing user document instead of fetching via param id
-// 4. Test your work with Postman
-
 router.patch('/users/me', auth, async (req, res) => {
     const updates = Object.keys(req.body);
     const allowedUpdates = ['name', 'email', 'password', 'age'];

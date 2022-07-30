@@ -9314,8 +9314,8 @@ Now we can continue with the next part of the `read resource` that is the same p
         const _id = req.params.id;
 
         Task.findById(_id).then((task) => {
-             if(!task) {
-                res.status(404).send();
+             if (!task) {
+                return res.status(404).send();
             }
         })
         .catch((e) => {});
@@ -9329,8 +9329,8 @@ Now we can continue with the next part of the `read resource` that is the same p
         const _id = req.params.id;
 
         Task.findById(_id).then((task) => {
-             if(!task) {
-                res.status(404).send();
+             if (!task) {
+                return res.status(404).send();
             }
 
             res.send(task);
@@ -9346,8 +9346,8 @@ Now we can continue with the next part of the `read resource` that is the same p
         const _id = req.params.id;
 
         Task.findById(_id).then((task) => {
-             if(!task) {
-                res.status(404).send();
+             if (!task) {
+                return res.status(404).send();
             }
 
             res.send(task);
@@ -10082,7 +10082,7 @@ app.get('/tasks/:id', async (req, res) => {
         const task = await Task.findById(_id);
 
         if (!task) {
-            res.status(404).send();
+            return res.status(404).send();
         }
 
         res.send(task);
@@ -10352,8 +10352,8 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
     });
     ```
@@ -10366,8 +10366,8 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
@@ -10383,8 +10383,8 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
@@ -10401,15 +10401,15 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
             const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
-            if(!task) {
-                res.status(404).send();
+            if (!task) {
+                return res.status(404).send();
             }
         } catch (e) {}
     });
@@ -10423,15 +10423,15 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
             const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
-            if(!task) {
-                res.status(404).send();
+            if (!task) {
+                return res.status(404).send();
             }
 
             res.send(task);
@@ -10447,15 +10447,15 @@ Now we can follow the process with the `tasks`!!
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
             const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
-            if(!task) {
-                res.status(404).send();
+            if (!task) {
+               return res.status(404).send();
             }
 
             res.send(task);
@@ -10567,8 +10567,8 @@ At this moment we can work with another `resource` in this case the `delete` end
         try {
             const task = await Task.findByIdAndDelete(req.params.id);
 
-            if(!task) {
-                res.status(404).send();
+            if (!task) {
+                return res.status(404).send();
             }
 
             res.send(task);
@@ -11074,12 +11074,12 @@ For the moment we are sending the `password` on the response but in the future, 
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {...}
+        if (!isValid) {...}
 
         try {
             const task = await Task.findById(req.params.id);
 
-            if(!task) {...}
+            if (!task) {...}
 
             res.send(task);
         } catch (e) {...}
@@ -11094,7 +11094,7 @@ For the moment we are sending the `password` on the response but in the future, 
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {...}
+        if (!isValid) {...}
 
         try {
             const task = await Task.findById(req.params.id);
@@ -11102,7 +11102,7 @@ For the moment we are sending the `password` on the response but in the future, 
             updates.forEach((update) => task[update] = req.body[update]);
             await task.save();
 
-            if(!task) {...}
+            if (!task) {...}
 
             res.send(task);
         } catch (e) {...}
@@ -13113,8 +13113,8 @@ We will continue with the `update task` endpoint.
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
@@ -13126,7 +13126,7 @@ We will continue with the `update task` endpoint.
             updates.forEach((update) => task[update] = req.body[update]);
             await task.save();
 
-            if(!task) {
+            if (!task) {
                 return res.status(404).send();
             }
 
@@ -13143,8 +13143,8 @@ We will continue with the `update task` endpoint.
         const allowedUpdates = ['description', 'completed'];
         const isValid = updates.every((update) => allowedUpdates.includes(update));
 
-        if(!isValid) {
-            res.status(400).send({ error: 'Invalid updates!' });
+        if (!isValid) {
+            return res.status(400).send({ error: 'Invalid updates!' });
         }
 
         try {
@@ -13153,7 +13153,7 @@ We will continue with the `update task` endpoint.
                 owner: req.user._id
             });
 
-            if(!task) {
+            if (!task) {
                 return res.status(404).send();
             }
 
@@ -13200,7 +13200,7 @@ Finally, we will work with the `delete task` endpoint!!
                 owner: req.user._id
             });
 
-            if(!task) {
+            if (!task) {
                 return res.status(404).send();
             }
 
