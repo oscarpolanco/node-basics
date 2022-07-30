@@ -13222,3 +13222,61 @@ Finally, we will work with the `delete task` endpoint!!
 - You should receive the data of the `task` deleted
 
 Now we finish adding `authentication` to all `tasks` endpoints and create the `relation` between the `users` and `tasks`.
+
+### Cascade delete tasks
+
+We still need something to do that when a `user` delete itself; all the `task` related to him should be deleted at the same time because they will stay on the database without purpose and with a `relation` data that doesn't exist. We can address this by removing all `tasks` on the `delete user` handler but we are not going to take that approach; instead, we will create a `middleware` on the `user` model that helps us with this.
+
+- Get to the `task-manage/src/models/user.js`
+- Before the `export` line at the bottom of the file; call the `pre` method of the `userSchema`
+
+    `userSchema.pre()`;
+
+- As a first parameter; send a string with a `remove` value and a standard `async` function as a second parameter(The function will receive the `next` parameter)
+
+    `userSchema.pre('remove', async function (next) {});`
+
+- Below the `jwt` definition at the top of the file; `require` the `Task` model
+
+    `const Task = require('./task');`
+
+- Get to the `remove` middleware
+- On the function; create a constant call `user` with a value of `this`
+
+    ```js
+    userSchema.pre('remove', async function (next) {
+        const user = this;
+    });
+    ```
+
+- Now call the `deleteMany` method of the `Task` model sending the `owner id` as a parameter
+
+    ```js
+    userSchema.pre('remove', async function (next) {
+        const user = this;
+        await Task.deleteMany({ owner: user._id });
+    });
+    ```
+
+- Finally; call the `next` method
+
+    ```js
+    userSchema.pre('remove', async function (next) {
+        const user = this;
+        await Task.deleteMany({ owner: user._id });
+        next();
+    });
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Open `Robo 3T`
+- Get to the `task` collection
+- Check the number of `tasks` present on the database
+- Go to `postman`
+- Get to the `delete user` request tab
+- Send the request
+- You should see the data of the deleted `user`
+- Get to `Robo 3T`
+- You should see that you have fewer `tasks` than before
