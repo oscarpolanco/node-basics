@@ -13280,3 +13280,99 @@ We still need something to do that when a `user` delete itself; all the `task` r
 - You should see the data of the deleted `user`
 - Get to `Robo 3T`
 - You should see that you have fewer `tasks` than before
+
+## Section 12: Sorting, pagination, and filtering(Task app)
+
+At this moment when a `user` make a request to get a list of data from the server like a list of `tasks`; the `user` has little control of what it comes back. If the client makes a request to get the list of `tasks` of a `user`; they will get back every single `task` in the order that was created on the database and that is not ideal because when the `user` add more and more `tasks` will constantly get a transfer back and forward which is going to slow down our app so we will give a little of control to the `user` so he can choose what is coming back. In this section, we will add some new features like giving the opportunity to a client to provide a `search term` so the app gets back only `tasks` that have that `search term` and get back just `completed` or `uncompleted` list of `tasks` in another word we are going to make possible to `filter` the data and add `pagination` as well. This will help us to make a more efficient application.
+
+### Working with Timestamps
+
+Here we will enable the `timestamps` for our `mongo` models. When we enable this option 2 new `fields` will be added; `createdAt` and `updateAt`; that will store when a `user` is `created` and the last time that the `user` data was `updated` this will also apply to the `task` model.
+
+- On your editor; go to the `task-manager/src/models/user.js`
+
+We will need to add a second parameter to the `Schema` that will receive a configuration object where we can set the `timestamp` functionality.
+
+- Send an object as a second parameter in the `schema` method
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{... }]
+    }, {});
+    ```
+
+- On the configuration object that you just added; set the `timestamps` with a `true` value
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{... }]
+    }, {
+        timestamps: true
+    });
+    ```
+
+    The default value of `timestamps` is `false` so in order to have this option we will need to use this configuration object
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+
+Since we already have data that doesn't have a `timestamp` we will need to drop our existing database so we can have all `fields`.
+
+- Get to `Robo 3T`
+- Right-click on the `task-manager-api` database
+- Select `drop database`
+- Get to `postman`
+- Go to the `create user` request
+- Fill the `body` of the request with valid data
+- Send the request
+- You should see the data of the new `user` and should have the new `timestamps` fields
+
+Now we will continue with the `task` model but that model doesn't use the `schema` method like the `user` model so we will need to refactor this model in order to have access to the `mongoose` features that will help us to set the `timestamp`.
+
+- Get to the `models/task.js` file
+- Below the `Task` constant definition; create a new constant call `taskSchema` that its value will be the `Schema` method of `mongoose`
+
+    `const taskSchema = mongoose.Schema();`
+
+- Get to the `Task` constant and cut the configuration object of the model
+- On the place of the configuration object that you just cut; add the `taskSchema` constant
+
+    `const Task = mongoose.model('Task', taskSchema);`
+
+- On the `Schema` method; send the configuration object as a first parameter
+
+    ```js
+    const taskSchema = mongoose.Schema({
+        description: {...},
+        completed: {...},
+        owner: {...}
+    });
+    ```
+
+- As a second parameter of the `Schema` method; send an object with the `timestamps` property set to `true`
+
+    ```js
+    const taskSchema = mongoose.Schema({
+        description: {...},
+        completed: {...},
+        owner: {...}
+    }, {
+        timestamps: true
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `create task` request tab
+- Send on the `body` of the request valid data
+- Send the request
+- You should see the data of the new `task` with the `timestamps` fields
