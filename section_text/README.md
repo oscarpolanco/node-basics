@@ -13285,6 +13285,8 @@ We still need something to do that when a `user` delete itself; all the `task` r
 
 At this moment when a `user` make a request to get a list of data from the server like a list of `tasks`; the `user` has little control of what it comes back. If the client makes a request to get the list of `tasks` of a `user`; they will get back every single `task` in the order that was created on the database and that is not ideal because when the `user` add more and more `tasks` will constantly get a transfer back and forward which is going to slow down our app so we will give a little of control to the `user` so he can choose what is coming back. In this section, we will add some new features like giving the opportunity to a client to provide a `search term` so the app gets back only `tasks` that have that `search term` and get back just `completed` or `uncompleted` list of `tasks` in another word we are going to make possible to `filter` the data and add `pagination` as well. This will help us to make a more efficient application.
 
+Before we begin; go to the `src/index.js` file and remove the example at the bottom of the file.
+
 ### Working with Timestamps
 
 Here we will enable the `timestamps` for our `mongo` models. When we enable this option 2 new `fields` will be added; `createdAt` and `updateAt`; that will store when a `user` is `created` and the last time that the `user` data was `updated` this will also apply to the `task` model.
@@ -13376,3 +13378,230 @@ Now we will continue with the `task` model but that model doesn't use the `schem
 - Send on the `body` of the request valid data
 - Send the request
 - You should see the data of the new `task` with the `timestamps` fields
+
+### Filtering data
+
+Now we will add some help options for the `user` that will allow them to target better the data that they need. We will work just in one route; the `get tasks` route where you can fetch all the `tasks` because this is the only route that returns an array of data so we can potentially get a lot of documents depending on all the data on the database and on the future can make this endpoint slow and send data that the `user` doesn't actually need so we will add an option that allows the `user` the data that it needs and we will do this using the `query string` so we can add an option as part of the `URL`. Let's begin
+
+- Get to the `task-manager/src/routes/task.js`
+- Go to the `get task` request handler
+
+On this endpoint we will still get the `tasks` normally but also will allow to `filter` by the `completed` field so we will get something like this for the `URL`:
+
+```bash
+GET /tasks
+GET /tasks?completed=true
+GET /tasks?completed=false
+```
+
+- Update the parameter of the `populate` parameter and send an object
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        try {
+            await req.user.populate({});
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- On the object that you send as a parameter on the `populate` method; add a `path` property with a `string` as its value and the `string` will be `tasks`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        try {
+            await req.user.populate({
+                path: 'tasks'
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+    At this moment we will have the same behavior as before the difference is when we use an object as the `populate` parameter we will be able to have access to more options for the method
+
+- Now add a new property called `match` that its value will be an object with a `completed` property set to `true`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match: {
+                    completed: true
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+    The `match` property will only return the documents that `match` certain criteria. I will receive an object with the criteria that you need for `filter` the documents on this case will return all the documents that have been `completed`
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `read tasks` request tab
+- Send the request
+- Depending on the `task` that you set before it will be returned(Play changing the `completed` property on the ` get tasks` route)
+
+At this moment we have a fixed object that allows us to return the `tasks` that are or are not `completed` but we actually need that this object gets its value from the `URL` if it is needed.
+
+- On the `read tasks` request tab; add the `completed` param on the `URL`
+
+    `{{url}}/tasks?completed=true`
+
+- Now get to the `get tasks` route
+- Create a new constant call `match` with an empty object as a value
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match: {
+                    completed: true
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+- Add a condition asking if `completed` is provided as a param on the `URL` using the `completed` property that will be part of the `req.query` property if the `user` provide it on the `URL`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {}
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match: {
+                    completed: true
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+Now we will need to set the value of the `completed` property inside of the `match` object but we can't use directly the value that we will have on `req` because this will be a `string` and we need a `boolean` so we will need to turn the `string` that we get into the `boolean` that we need.
+
+- Call the `completed` property on the `match` object and add as its value the following
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match: {
+                    completed: true
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+    Here we will compare the `string` that we get with the `string true` and this will return a `boolean` with the correct value
+
+- Then eliminate the object from the `match` property of the `populate` method
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {
+            res.status(500).send();
+        }
+    });
+    ```
+
+For the next part is better that all have the same `tasks` for a `user` in order to get the same results when we test everything that we need on this and the following sections so we will `delete` all the `tasks` of the current `user` and create some new.
+
+- Go to `postman`
+- Get all `_id` of all `tasks` of the current `user`
+- Get to the `delete task` request tab
+- Using all the `_id` on the `delete task URL` to `delete` all `tasks`
+- Get to the `create task` request tab
+- Create 4 `tasks` with the following specifications:
+
+    ```JSON
+    {
+        "description": "first",
+        "completed": true
+    }
+
+    {
+        "description": "second",
+        "completed": false
+    }
+
+    {
+        "description": "third",
+        "completed": true
+    }
+
+    {
+        "description": "fourth",
+        "completed": false
+    }
+    ```
+
+- Get to the `read task` request `tasks`
+- Remove the `completed` param of the `URL`
+- Send the request
+- You should see all `tasks`
+- Add the `completed` param with a `true` value
+
+    `{{url}}/tasks?completed=true`
+
+- Send the request
+- You should see the `first` and `third tasks` returned
+- Update the `completed` param with a `false` value
+
+    `{{url}}/tasks?completed=false`
+
+- Send the request
+- You should see the `second` and `fourth` returned
