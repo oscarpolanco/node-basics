@@ -11921,7 +11921,6 @@ Now we will provide the `token` when we send the `read users` request and we can
 
 - Then if there is no `user` value; we will `throw an error` because the `token` is not valid
 
-
     ```js
     const auth = async (req, res, next) => {
         try {
@@ -13605,3 +13604,188 @@ For the next part is better that all have the same `tasks` for a `user` in order
 
 - Send the request
 - You should see the `second` and `fourth` returned
+
+### Pagination data
+
+We are going to continue adding options on the `get tasks` endpoint that the `user` can use at this case we will add `pagination` options but first, let's see an example.
+
+- Go to your browser
+- Get to google.com
+- On the search input; type `paginations examples`
+- You will see that you have a lot of results for this search
+- Scroll to the bottom and you will see that you don't have all the results of the search just a couple then also you can go to the next page of results by clicking the numbers at the bottom of the page
+
+This is what we call `pagination` which is the idea to create `pages` of data that can be requested so you don't fetch everything on a single request. For us, we will need to make available a way that the `user` send the backend the specific `page` of data that it will need to fetch and we will do that by adding 2 options that are `limit` and `skip`. Here are the new options on the `URL`
+
+```bash
+// GET /tasks?limit=numeric_value&skip=numeric_value
+```
+
+The `limit` option will allow us to `limit` the numbers of results that we are going to get back from every request regarding the `page` of data that we are. The other option that we will have is the `skip` option which will allow us to iterate over pages.
+
+Now we will need to let `mongoose` know these 2 options when it searches the data.
+
+- Get to the `task-manager/src/routes/task.js`
+- Go to the `get tasks` route handler
+- On the `populate` method; add a new property call `options` with an empty object as its value on the configuration object that was sent as a parameter
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {}
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+- On the new `options` property object; add a `limit` property with a value of `2`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: 2
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `read tasks` request tab
+- Send the request
+- You should see only 2 results(first and second `task`)
+
+Now that we see that `limit` works; we will need to take the `limit` value from a param of the `URL` and you may remember that we receive a `string` value so we will need to convert it to a `number`
+
+- Get to the `get task` handler
+- Remove the `2` value of `limit`
+- Use the `parseInt` method ad the value of `limit`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt()
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    The `parseInt` method will convert a `string` that contains a `number` to an actual `integer`
+
+- Now send as `parseInt` parameter the `limit` property of `req.query`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit)
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    Now if the `limit` is not provided or non a `number`; `mongoose` will ignore the value
+
+- Save the file
+- Go to `postman`
+- Get to the `read tasks` request tab
+- Send the request
+- You will see that you have 4 results
+- Add a `limit` of `3` on the `URL` of the request
+
+    `{{url}}/tasks?limit=3`
+
+- Send the request
+- You should see `3` results back
+
+Now let's work with the `skip` option
+
+- Get to the `get tasks` handler
+- Add a `skip` property to the `options` object with the `parseInt` method as its value and as the parameter of the `parseInt` method will be the `skip` property of `req.query`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip)
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `get tasks` request tab
+- Add a `limit` of `2` and `skip` of `0` on the request `URL`
+
+    `{{url}}/tasks?limit=2&skip=0`
+
+- Send the request
+- You should see just `2` results
+- Change the `skip` value to `4`(It will go to the `3` page of data)
+- Send the request
+- You should see an empty `array` because the `3` page doesn't exist since there are only `4 tasks`
