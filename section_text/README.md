@@ -13789,3 +13789,251 @@ Now let's work with the `skip` option
 - Change the `skip` value to `4`(It will go to the `3` page of data)
 - Send the request
 - You should see an empty `array` because the `3` page doesn't exist since there are only `4 tasks`
+
+### Sorting data
+
+In this section, we continue with another option in this case `sort` the data. When this option is used the data will appear in the order that we choose like by the `task` date of creation or if a `task` is `completed` or not. We will have the following `URL` structure:
+
+```bash
+GET /tasks?sortBy=field:order
+```
+
+Here we see the `sortBy` option that will count with 2 parts divided by `:`(Could be anything you need but for the example, we will use this). The first part of the value will be the `field` that we want to take into consideration to order the data but this is not enough so we will add the second part of the value that will be the `order` that the data will have in this case `ascending` or `descending` in their short form: `asc` or `desc`.
+
+- Get to the `task-manage/src/routers/task.js`
+- Go to the `get tasks` handler
+- Add a new property call `sort` on the `populate` configuration object with an empty object as its value
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {}
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+- On the `sort` object; add a property called `createdAt` with a value of `-1`
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+
+        if (req.query.completed) {
+            match.completed = req.query.completed === 'true';
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {
+                        createdAt: -1
+                    }
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    The property of the `sort` object represents the `field` that we will take into consideration for the `sorting` and `-1` represent the `order` that we wanna `sort` where `-1` is `descending` and `1` is `ascending`
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `read task` request handler
+- Send the request
+- You should see the `tasks` from the `fourth` one(first to show) to the `first` one(last to show)
+
+Now that we see how the `sort` property work; we will need to make the request dynamic instead of a static value
+
+- On the `read tasks url`; add the `sortBy` option with a `createdAt:desc` value
+
+    `{{url}}/tasks?sortBy=createdAt:desc`
+
+- Get to the `get task` handler
+- Create a new constant call `sort` that has an empty object as its value below the `match` constant
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+        const sort = {};
+
+        if (req.query.completed) {...}
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {
+                        createdAt: -1
+                    }
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+Now we will need to create a condition to check if the `user` provide the `sortBy` option and if it does convert the value into something that we can use on the `populate` method
+
+- Below the `completed` condition; add a new condition that checks if the `user` provide the `sortBy` param
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+        const sort = {};
+
+        if (req.query.completed) {...}
+
+        if(req.query.sortBy) {}
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {
+                        createdAt: -1
+                    }
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+- Now inside of the `sortBy` condition; create a new constant call `parts` and its value will be the result of the `split` of the options that we receive on the `sortBy` param
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+        const sort = {};
+
+        if (req.query.completed) {...}
+
+        if(req.query.sortBy) {
+             const parts = req.query.sortBy.split(':');
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {
+                        createdAt: -1
+                    }
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    The `split` method receives a `string` that represents the character where a `string` will be divided; in this case `:` and it will return an `array` where each position will have a part of the original `string` without the character that you send as a parameter to the `split` method
+
+- Now use the `square brackets` notation on the `sort` object to add the first position of the `parts` array(which will be `createdAt` in this case) and will have the following value
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+        const sort = {};
+
+        if (req.query.completed) {...}
+
+        if(req.query.sortBy) {
+             const parts = req.query.sortBy.split(':');
+             sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort: {
+                        createdAt: -1
+                    }
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    The new value of `sort` is a `ternary` operator. It is called the `ternary` operator because it counts by `3` parts: a condition; the first value and the second value. The `ternary` operator will return the first value when the condition y `true` and the second value otherwise. In this case, will check if the `parts string` match with `desc` and will return `-1` if it is the case
+
+- Remove the `sort` value in the `populate` method
+
+    ```js
+    router.get('/tasks', auth, async  (req, res) => {
+        const match = {};
+        const sort = {};
+
+        if (req.query.completed) {...}
+
+        if(req.query.sortBy) {
+             const parts = req.query.sortBy.split(':');
+             sort[parts[0]] = parts[1] === 'desc' ? -1 : 1;
+        }
+
+        try {
+            await req.user.populate({
+                path: 'tasks',
+                match,
+                options: {
+                    limit: parseInt(req.query.limit),
+                    skip: parseInt(req.query.skip),
+                    sort
+                }
+            });
+
+            res.send(req.user.tasks);
+        } catch (e) {...}
+    });
+    ```
+
+    This is because the `sort` objects have the same name as the `sort` property
+
+- Save the file
+- Get to `postman`
+- Go to the `read tasks` request tab
+- Send the request
+- You should see that you have the `tasks` return from the last one created to the first one
+
+Now we have multiple options that we can use separately or together on the `read tasks URL` so the `user` has some control over the data that it will receive.
