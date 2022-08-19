@@ -88,15 +88,26 @@ router.delete('/users/me', auth, async (req, res) => {
     }
 });
 
-// Goal: Setup endpoint for avatar upload
+// Goal: Add validation to avatar upload route
 //
-// 1. Add POST /users/me/avatar to user router
-// 2. Setup multer to store upload in an avatars directory
-// 3. Choose name "avatar" for the key when registering the middleware
-// 4. Send back a 200 response from the handler
-// 5. Test your work. Create a new Task App request and upload image
+// 1. Limit the upload size to 1MB
+// 2. Only allow jpg, jpeg, png
+// 3. Test your work
+//   - Upload large files (should fail)
+//   - Upload no-image (should fail)
+
 const upload = multer({
-    dest: 'avatars'
+    dest: 'avatars',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb) {
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error('The file should be an image'));
+        }
+
+        cb(undefined, true);
+    }
 });
 
 router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {

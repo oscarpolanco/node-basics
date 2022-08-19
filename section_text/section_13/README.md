@@ -406,3 +406,82 @@ Now we can take our `regular expression` to our app.
 - Now upload a `doc` or `docx` file
 - Send the request
 - You should see a `200` status
+
+Now we will do the same process with the `avatar upload` route.
+
+- On your editor; go to the `routes/user.js` file
+- On the `upload` constant, add the `limit` property and set the `fileSize` to be maximum of `1MB`
+
+    ```js
+    const upload = multer({
+        dest: 'avatars',
+        limits: {
+            fileSize: 1000000
+        }
+    });
+    ```
+
+- Now we are going to allow just `.jpg`, `.jpeg` and `.png` extensions so add the `fileFilter` function reciving `req`, `file` and `cb` arguments
+
+    ```js
+    const upload = multer({
+        dest: 'avatars',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {}
+    });
+    ```
+
+- Add a condition that tests the `originalname` of the file to see if one of the extensions matches (Use the not logical operator)
+
+    ```js
+    const upload = multer({
+        dest: 'avatars',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {}
+        }
+    });
+    ```
+
+- Inside of the condition; call `cb` sending an `error` message
+
+    ```js
+    const upload = multer({
+        dest: 'avatars',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+                return cb(new Error('The file should be an image'));
+            }
+        }
+    });
+    ```
+
+- Finally; below the condition call `cb` without an `error` and `true` as the second parameter
+
+    ```js
+    const upload = multer({
+        dest: 'avatars',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if(!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+                return cb(new Error('The file should be an image'));
+            }
+
+            cb(undefined, true);
+        }
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `upload avatar` request tab
+- Test with multiple files to check all the possibilities of upload
