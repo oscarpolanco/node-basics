@@ -155,3 +155,254 @@ Now that we can see the basics working; we can add this support for the `users` 
 - Add `.jpg` at the end of the name of the `file`
 - Open the `file`
 - You should see the same image that you `upload` from `postman`
+
+## Validating file upload
+
+In this section, we will add `validation` for the files that we will upload to the server. There are 2 main things that we want to `validate`:
+
+- The files sizes
+- The file type
+
+For the `file sizes` we want to restrict for some capacity because we don't want a large file uploaded to the server like a 2GB file for a simple thing like a `profile picture` that can be restricted to 1 or 2 MB. Then we will check the file type on the endpoints that we set in order to restrict what kind of file the `user` can upload like the `user profile` endpoint where we only one `image` file to be uploaded. Let's begin with the file size.
+
+- On your editor; go to the `task-manager/src/index.js` file
+- On the `multer` config object add the `limits` property and its value will be an object
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {},
+    })
+    ```
+
+    The `limits` property is an object because there are multiple `limits` that we can set for a file in our case we will set the `file sizes limit`
+
+- On the `limits` object add a `fileSize` property with the following value
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+    })
+    ```
+
+    The `fileSize` property allows us to set a maximum size of a file that we accept to upload and it receives a number in bytes so `1000000` bytes is the same as `1MB`. Set this is a good idea to prevent the `users` spam your server uploading huge files and they will cost us the store
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `upload` request tab that we create for testing
+- Choose a new file that is less than `1MB` for the `upload` value on the `form-data` section
+- Send the request
+- Go to your editor
+- You should see that the file was successfully uploaded to the `images` folder
+- Get back to `postman` on the `upload` request tab
+- Choose a new file bigger than `1MB` for the `upload` value on the `form-data` section
+- Send the request
+- You should see an `HTML` response with the `file to large error` in it(Later we will customize this error)
+
+Now we can continue with the `file type` restriction in this case we will test with `PDF` and `word` documents; can be any file with any content just need to have those extensions.
+
+- Get to the `index.js` file
+- Below the `limits` property; add a function called `fileFilter`(shorthand syntax)
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter() {}
+    })
+    ```
+
+    The `fileFilter` property receives a function that will help us to `filter` the files that we won't allow to upload. Here we use the `es6` shorthand syntax. This will be called internally by `multer`
+
+- As arguments of the function add the following
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {}
+    })
+    ```
+
+    - `req`: Contain the request been made
+    - `file`: Contains information about the `file` that is been uploaded
+    - `cb`: A callback function that we call when we did filtering the file
+
+Before continuing we will check the 3 ways to use the `cb` argument. For `errors` we can call `cd` sending the actual `error` with a message like this:
+
+`cb(new Error('File must be a PDF'));`
+
+The other way is when things go well where we don't send the first argument then as the second one we send `true` which means that an upload is expected.
+
+`cb(undefined, true);`
+
+Finally, we can call `cb` without providing an `error` and with a `false` value as the second argument which will mean we silently reject the upload.
+
+`cb(undefined, false);`
+
+Now we can get back to the example and at this moment we will need to see the `file name` in order to get the extension. As you may remember we mentioned that the `file` parameter has information about the `file` that is been uploaded so this will help us to do the `filter` that we need. In this case, we first allow `PDF` files.
+
+- On the `fileFilter` function; add a condition that uses the `file` object calling the `originalname` property then use on the `originalname` value the `endsWith` function to check if the string ends with `.pdf`(Since we allow `PDF` you will need to use the logical `not` operator on the condition)
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.endsWith('.pdf')) {}
+        }
+    })
+    ```
+
+- On the new condition return `cb` sending an `error` with a message
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.endsWith('.pdf')) {
+                return cb(new Error('Please upload a PDF document'));
+            }
+        }
+    })
+    ```
+
+- Below the condition; call `cb` providing `true` as the second argument and don't send an `error`
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.endsWith('.pdf')) {
+                return cb(new Error('Please upload a PDF document'));
+            }
+
+            cb(undefined, true);
+        }
+    })
+    ```
+
+- Save the file
+- Get to `postman`
+- Go to the `upload` request tab
+- Upload a `file` that is not a `PDF`
+- Send the request
+- You should see an `HTML` with the `error` message that you set
+- Now upload a `PDF` file
+- Send the request
+- You should see a `200` status
+
+Now we will change the endpoint to accept `word` files. For `word` files you will have some of them with `doc` and others with the `docx` extension so we will need to handle both of them for this, we will use a `regular expression` that is patterns used to match characters combinations in strings.
+
+- On your browser; go to https://regex101.com/
+
+This page will allow us to test our `regular expression` with their `UI`.
+
+- Set the following on the `Test String` input
+
+    `mydoc.doc`
+
+- Now on the `Regular Expression` input add `\.`
+
+    The `\` allow us to escape a character in other words we mean the character literally; in this case, the dot because on `regular expressions` the dot has a special meaning
+
+- You should see that the dot is highlighted on the `Test String` input which means that the dot is considered a `match`
+- On the `Regular Expression` input add the following to the `\.`:
+
+    `\.doc$`
+
+    Here we specify the word `doc` to be a `match` and can only be at the end of the string(The dollar sign with helping us with this)
+
+- You will see that `.doc` is highlighted
+
+
+In our case, we will need to `match` when there are `doc` or `docx` extensions so we will need to change a little bit the current `regular expression`
+
+- On the `Regular Expression` input; add parenthesis on the `doc` word
+
+    `\.(doc)$`
+
+- Then add a vertical bar after `doc`
+
+    `\.(doc|)$`
+
+- Finally, add the word `docx` after the vertical bar
+
+    `\.(doc|docx)$`
+
+    This will tell that `doc` or `docx` is considered a `match` if one of them is position at the end of the string
+
+- You should see that the `.doc` is highlighted
+- Add `x` at the end of the test string
+
+    `mydoc.docx`
+
+- You should see that `docx` is highlighted
+
+Now we can take our `regular expression` to our app.
+
+- Copy the `regular expression`
+- Get to the `index.js` file
+- On the `fileFilter` function; remove the `endsWith` method and use the `match` method
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.match()) {
+                return cb(new Error('Please upload a PDF document'));
+            }
+
+            cb(undefined, true);
+        }
+    })
+    ```
+
+-  Paste the `regular expression` on the `match` function and enclose it between `/`
+
+    ```js
+    const upload = multer({
+        dest: 'images',
+        limits: {
+            fileSize: 1000000
+        },
+        fileFilter(req, file, cb) {
+            if (!file.originalname.match(/\.(doc|docx)$/)) {
+                return cb(new Error('Please upload a PDF document'));
+            }
+
+            cb(undefined, true);
+        }
+    })
+    ```
+
+- Change the `error` message to one that makes sense for `word` files
+- Save the file
+- Go to `postman`
+- Get to the `upload` request tab
+- Upload a `pdf` file
+- Send the request
+- You should see an `HTML` with the `error` message that you set
+- Now upload a `doc` or `docx` file
+- Send the request
+- You should see a `200` status
