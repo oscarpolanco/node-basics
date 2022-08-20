@@ -485,3 +485,128 @@ Now we will do the same process with the `avatar upload` route.
 - Go to `postman`
 - Get to the `upload avatar` request tab
 - Test with multiple files to check all the possibilities of upload
+
+## Handling express errors
+
+Now we will customize the `error` that is shown when the upload fails. At this moment we send an `HTML` with the `error` message that we set; we will change this to send a `JSON` with the message that we need.
+
+- On your editor; go to the `task-manager/src/index.js` file
+- On the `upload` route; remove the middleware
+
+    `app.post('/upload', (req, res) => {...}`
+
+- Then before the `upload` route; create a function called `errorMiddleware` that receives `req`, `res`, and `next`
+
+    `const errorMiddleware = (req, res, next) => {}`
+
+- Inside of the newly created function; throw an `error` with a message that mentions that it came from our new middleware
+
+    ```js
+    const errorMiddleware = (req, res, next) => {
+        throw new Error('From my middleware');
+    }
+    ```
+
+- Use the middleware on the `upload` route
+
+    `app.post('/upload', errorMiddleware, (req, res) => {...}`
+
+- Save the file
+- On your terminal; run your local server using: `npm run dev`
+- Go to `postman`
+- Get to the `upload` request tab
+- Upload any file and send the request
+- You should see an `HTML` with the `error` message of the middleware
+
+Now we see the `error` that we set on the new middleware but we still see the `HTML` so we will need to make an update to the `upload` route on which we will register a code to run when the middleware throws the `error`
+
+- Go to the `index.js` file
+- On the `upload` route; provide a new argument that will be a function that receives `error`, `req`, `res`, and `next`
+
+    ```js
+    app.post('/upload', errorMiddleware, (req, res) => {
+        res.send();
+    }, (error, req, res, next) => {});
+    ```
+
+    You need to specify all 4 arguments in order to `express` know that this function is for handling un-catch `errors`
+
+- Now on the new function; response with a `400` value
+
+    ```js
+    app.post('/upload', errorMiddleware, (req, res) => {
+        res.send();
+    }, (error, req, res, next) => {
+        res.status(400).send();
+    });
+    ```
+
+- Save the file and go to `postman`
+- Get to the `upload` request tab
+- Send the request with the same file that you just send before
+- You will see that you get a `400` status as a response
+- Get back to the `index.js` file
+- On the `upload` route last function; send an object with an `error` property that it value will be the `message` property of `error`
+
+    ```js
+    app.post('/upload', errorMiddleware, (req, res) => {
+        res.send();
+    }, (error, req, res, next) => {
+        res.status(400).send({ error: error.message });
+    });
+    ```
+
+- Save the file and go to `postman`
+- Get to the `upload` request tab
+- With the same file that you upload before; send the request
+- You will see a status `400` and a `JSON` response with the `error` message of the middleware
+
+Now we can change back to `multer` middleware on the `upload` route since we control the `error` on the new function of the route handler.
+
+- Get to the `index.js` file
+- Remove the `errorMiddleware` from the `upload` route and add the `upload.single` middleware that we use before
+
+    ```js
+    app.post('/upload', upload.single('upload'), (req, res) => {
+        res.send();
+    }, (error, req, res, next) => {
+        res.status(400).send({ error: error.message });
+    });
+    ```
+
+- Remove the `errorMiddleware` code
+- Save the file
+- Get to `postman`
+- Go to the `upload` request tab
+- Upload a file that doesn't have the `doc` or `docx` extensions
+- Send the request
+- You should see the `400` status with a `JSON` that has the `error` message that we sent before
+
+Now we can do this with the `avatar` route.
+
+- On your editor; go to the `routes/user.js`
+- Get to the `avatar` route
+- Add a new argument to the route that will be a function that receives `error`, `req`, `res`, and `next`
+
+    ```js
+    router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    res.send();
+    }, (error, req, res, next) => {});
+    ```
+
+- Inside of the new function; response with a `400` and a `JSON` that have an `error` property with a value that will be the `error.message`
+
+    ```js
+    router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+    res.send();
+    }, (error, req, res, next) => {
+        res.status(400).send({ error: error.message });
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `avatar` request tab
+- Upload a file that is not an image( don't have `jpg`, `jpeg` or `png`)
+- Send the request
+- You should see the `JSON` with the `error` message and a `400` status
