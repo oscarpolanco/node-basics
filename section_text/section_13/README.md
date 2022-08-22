@@ -610,3 +610,191 @@ Now we can do this with the `avatar` route.
 - Upload a file that is not an image( don't have `jpg`, `jpeg` or `png`)
 - Send the request
 - You should see the `JSON` with the `error` message and a `400` status
+
+## Adding an image to the user profile
+
+Now we will create a link with the file uploaded and the `user` that upload the file. At this moment the file is placed on a `avatars` directory and there is no link between the file and the `user` that uploads the file and the route doesn't have `authentication` so we will fix that thing by adding `authentication` to the `avatars` route then create a place on the `user` model to store the `image` data and finally we will create a separate route so the `users` can delete `images` uploaded before.
+
+The first thing that we will do is to add `authentication` to the `avatars` route and this is a task that we did before on other routes using the `auth` middleware but as you may remember we already use a middleware on the `avatars` route to accept uploads using `multer` so we will have 2 middleware on this route handler and the first one should be the `auth` middleware because we won't accept any submissions.
+
+- On your editor; go to the `task-manager/src/routes/user.js`
+- Get to the `avatars` route
+- After the path call the `auth` middleware
+
+    `router.post('/users/me/avatar', auth, upload.single('avatar'), (req, res) => {...}`
+
+The next step is to see where we are going to store the file that we upload because we are not going to use the `file system` and the reason behind that is that almost all deployment platforms require to take your code and push it to their server as we do with `Heroku` so the `file system` will be deleted every time that we deploy so the `images` that are already on the server will be deleted every time that we deploy our code so we will actually add a `field` on the `user` model to store the binary data of a file.
+
+- Go to the `models/user.js` file
+- Get to the `userSchema` definition
+- Below the `tokens field`; add a new `field` called `avatar` that will have an object as its value
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{...}],
+        avatar: {}
+    }, {
+        timestamps: true
+    });
+    ```
+
+- On the `avatar` object; add a property called `type` and its value will be `Buffer`
+
+    ```js
+    const userSchema = new mongoose.Schema({
+        name: {...},
+        email: {...},
+        password: {...},
+        age: {...},
+        tokens: [{...}],
+        avatar: {
+            type: Buffer
+        }
+    }, {
+        timestamps: true
+    });
+    ```
+
+    This is going to allow us to store the `buffer` with our `binary image` along with the `user` data on the database. We don't need to make this `field` require because this will be optional for the `user` and we won't need to add validation because `multer` manage the validation for us
+
+Now we will need to access the `binary` data of the file on the `avatars` route and the current `user` data in order to store the file in the database. We already have an instance of the `user` on the request object provided by the `auth` middleware but we don't have the file data on the route because `multer` process the file first and save it to the `avatars` directory but `multer` give us a way to access the data on the route and we just need to delete the `dest` property on the `multer` configurations object.
+
+- On the `upload` object; remove the `dest` property
+
+    ```js
+    const upload = multer({
+        limits: {...},
+        fileFilter(req, file, cb) {...}
+    });
+    ```
+
+- Get to the `avatars` route
+- Before sending a `200` response; call the `avatar` property of a `user` and set its value as the following
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), (req, res) => {
+        req.user.avatar = req.file.buffer;
+        res.send();
+        }, (error, req, res, next) => {
+        res.status(400).send({ error: error.message });
+    });
+    ```
+
+    Here we set the `avatar` property of the current `user` provided by the `auth` middleware and use the `file` property which is an object that contains all the properties that we saw before on the `multer` configuration object that is provided by the `multer` middleware and use the `buffer` property that will have a `buffer` of all `binary` data for the uploaded file. At this moment we have the data that we need so we will need to save the new data of the `user`
+
+- Before the `200` response; call the `save` method of the `user`(Remember to use `async/await`)
+
+   ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        req.user.avatar = req.file.buffer;
+        await req.user.save();
+
+        res.send();
+        }, (error, req, res, next) => {
+        res.status(400).send({ error: error.message });
+    });
+    ```
+
+- Save the files
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `avatar` request tab(Make sure that you are logged in and at this phase of the example we only have one `user`)
+- Upload a valid `image` file(Make sure that is a `jpg` file to follow the example)
+- Send the request
+- You should receive a `200` status
+- Open `Robo 3T`
+- Get to the `user` collection
+- You should see that you have the `avatar field` with `binary` data
+
+Now we will take the actual `binary` data and render it to the browser to see how we will need to serve this later.
+
+- Right-click on the `avatar field`
+- Click on `edit document`
+
+You will see that the `avatar field` have an object with a `$binary` property and a large string value; we will copy this large value without the `quotes`.
+
+- Highlight part of the beginning of the data
+- Then use the scroll bar and get to the bottom
+- Now press shift and click the last character before the final `quote`
+- All the data should be selected
+- Copy to the clipboard
+
+We will go to one of the sites that allow us to write some markup and site at this case we will use https://jsbin.com/sisonajoho/edit?html,output
+
+- Ge to the `jsbin` site
+- Close the `js` tab
+- On the `HTML`; inside of the `body` tag add the following
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>JS Bin</title>
+    </head>
+    <body>
+        <img src="data:image/jpg;base64," />
+    </body>
+    </html>
+    ```
+
+    This will allow adding the `binary` data to render the `image` without an extra request. So the first thing that we set is what exactly we are providing it at this case is `data`(`data:`), not a `URL` then we specify the type of the data in this case a `jpg image`(`image/jpg;`, could any extension that you uploaded) after that we tell the `encoding` in this case `base64`.
+
+- After the `comma` paste the `binary` data that you copied before
+- You should see the `image` that you uploaded in the `output` section
+
+Now we can continue with the `delete avatar` route.
+
+- Get to the `routes/user.js` file
+- At the bottom of the file; add a new route that uses the `DELETE` method on the `/users/me/avatar` path; also use the `auth` middleware and have an `async` function
+
+    `router.delete('/users/me/avatar', auth, async (req, res) => {});`
+
+- On the `delete` route function; call the `avatar` property and set the value to `undefined`
+
+    ```js
+    router.delete('/users/me/avatar', auth, async (req, res) => {
+        req.user.avatar = undefined;
+    });
+    ```
+
+- Save the `user` data
+
+    ```js
+    router.delete('/users/me/avatar', auth, async (req, res) => {
+        req.user.avatar = undefined;
+        await req.user.save();
+    });
+    ```
+
+- Response with a `200` status
+
+    ```js
+    router.delete('/users/me/avatar', auth, async (req, res) => {
+        req.user.avatar = undefined;
+        await req.user.save();
+
+        res.send();
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Right-click on the `task manage` collection
+- Click on `Add request`
+- On the new request tab; add the `delete avatar` name
+- Choose the `DELETE` method
+- Add the `/users/me/avatar` path
+- Save the request
+- Send the request(Make sure that you are logged in on the `user` that you use before uploading the `binary` data)
+- You should receive a `200` response
+- Get to `Robo 3T`
+- Go to the `user` collection
+- Check the `user` data of the one that you use to upload the file
+- You should see that don't have the `avatar field`
