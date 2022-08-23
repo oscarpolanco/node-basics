@@ -704,7 +704,7 @@ Now we will need to access the `binary` data of the file on the `avatars` route 
 - On the other tab of your terminal; run your local server using `npm run dev`
 - Go to `postman`
 - Get to the `avatar` request tab(Make sure that you are logged in and at this phase of the example we only have one `user`)
-- Upload a valid `image` file(Make sure that is a `jpg` file to follow the example)
+- Upload a valid `image` file
 - Send the request
 - You should receive a `200` status
 - Open `Robo 3T`
@@ -744,7 +744,7 @@ We will go to one of the sites that allow us to write some markup and site at th
     </html>
     ```
 
-    This will allow adding the `binary` data to render the `image` without an extra request. So the first thing that we set is what exactly we are providing it at this case is `data`(`data:`), not a `URL` then we specify the type of the data in this case a `jpg image`(`image/jpg;`, could any extension that you uploaded) after that we tell the `encoding` in this case `base64`.
+    This will allow adding the `binary` data to render the `image` without an extra request. So the first thing that we set is what exactly we are providing it at this case is `data`(`data:`), not a `URL` then we specify the type of the data in this case a `jpg image`(`image/jpg;`) after that we tell the `encoding` in this case `base64`.
 
 - After the `comma` paste the `binary` data that you copied before
 - You should see the `image` that you uploaded in the `output` section
@@ -798,3 +798,143 @@ Now we can continue with the `delete avatar` route.
 - Go to the `user` collection
 - Check the `user` data of the one that you use to upload the file
 - You should see that don't have the `avatar field`
+
+## Serving up files
+
+Now we will serve the `user avatar`. As we see in the previous section we can use the `binary` data on an `image` tab to get the `profile image` of a `user` so we will just need to use the `read user` route to get the `avatar` information and place it on the tag but we will explore another way to serve the `image` that is constructing a `URL` that serve the `image`.
+
+- On your editor; go to the `task-manager/src/routes/user.js`
+- Get to the bottom of the file
+- Create a new route that uses the `GET` method on the `/users/:id/avatar` path with an `async` function
+
+    `router.get('/users/:id/avatar', async (req, res) => {}`
+
+- Set a `try/catch` block on the function
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+        } catch (e) {}
+    }
+    ```
+
+- On the `catch` block; return a `404` status
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+- On the `try` block we will use the `id` to get the `user` so create a new constant call `user` that its value will be the result of the `findById` method of the `User` model sending the `id` that we receive on the request
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+- Then we will need to check if we don't get a `user` or if the `user` that we get don't have an `avatar`
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user || !user.avatar) {}
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+- Inside of the condition throw an `error`
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user || !user.avatar) {
+                throw new Error();
+            }
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+    We don't need to add an `error` message here because we already return a `404` status on the `catch` block
+
+- Now we need to set a `header` on the response; for this, we will use the `set` method to set the `Content-Type` header to `image/jpg`
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user || !user.avatar) {
+                throw new Error();
+            }
+
+            res.set('Content-Type', 'image/jpg');
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+    We need to set this `header` to tell the requester what type of data they are getting back in this case a `jpg` image. The `header` should be always specified but you may ask that we don't specify before and this is because `express` set the `header` of the request for us for example for `JSON` responses it set the `Content-Type` to `application/json`
+
+- Now we finally respond with the `avatar`
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user || !user.avatar) {
+                throw new Error();
+            }
+
+            res.set('Content-Type', 'image/jpg');
+            res.send(user.avatar);
+        } catch (e) {
+            res.status(404).send();
+        }
+    }
+    ```
+
+- Save the file
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `Robo 3T`
+- Get to the `user` collection
+- Edit the `user`
+- Copied the `user _id`
+- Get to `postman`
+- Go to the `avatar` request tab
+- Upload an `image` to for the `user` that you copied the `id`(We do this because we are using the same `user` that we use to test the `delete` route)
+- Send the request
+- You should receive a `200` status
+- Go to your browser and go to the `get avatar` route using the `id` that you copied before
+
+    `http://localhost:3000/users/id_of_the_user/avatar`
+
+- You should see the `avatar` image on the browser
+
+Now we have a `URL` that gets the `avatar` image of a `user` so we can use it on an `img` tag. Let's test this.
+
+- Go to https://jsbin.com/sisonajoho/edit?html,output
+- On the `body` add an `img` tab and on the `src` use the `get avatar URL`
+
+    `<img src="http://localhost:3000/users/id_of_the_user/avatar" />`
+
+- You should see the `avatar` image on the output section
