@@ -13,3 +13,7 @@ notes.json
 
 # weather app
 keys.dev.js
+
+# task-manager app
+task-manager/images/*
+task-manager/avatars/*
