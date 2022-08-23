@@ -938,3 +938,145 @@ Now we have a `URL` that gets the `avatar` image of a `user` so we can use it on
     `<img src="http://localhost:3000/users/id_of_the_user/avatar" />`
 
 - You should see the `avatar` image on the output section
+
+## Auto-cropping and image formatting
+
+In this section, we will use an `npm module` call [sharp](https://www.npmjs.com/package/sharp) to process the `images` before we save them to the database which will allow us to `resize` the `images` to prevent someone uploads a large `image` to store it and we will convert the `image` type in this case to `png` regarding the type of the `image`.
+
+Before we continue let's do a little clean-up and add some things that we need.
+
+- Delete the `avatar` and `image` directory from the `task-manager` folder
+- Get to the `src/index.js` file
+- Remove the `multer` example that we set
+- Now go to the `models/user.js` file
+- On the `toJSON` method; `delete` the `avatar` property of the `userObject`
+
+    ```js
+    userSchema.methods.toJSON = function() {
+        const user = this;
+        const userObject = user.toObject();
+
+        delete userObject.password;
+        delete userObject.tokens;
+        delete userObject.avatar;
+
+        return userObject;
+    }
+    ```
+
+    This is because we don't want to return the `avatar` when we use the `read user profile` request
+
+- Save the files
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- Go to `postman`
+- Get to the `red profile` request tab
+- Send the request(Make sure that you are logged in)
+- You should see the `user` data without the `avatar field`
+
+Now we can begin to work with the processing of the `images` using `sharp`
+
+- On your terminal; stop your local server
+- Install `sharp` using: `npm install sharp`
+- Re-start your local server using `npm run dev`
+- Go to the `routes/user.js` file
+- Below of the `multer` require at the top of the file; require `sharp`
+
+    `const sharp = require('sharp');`
+
+- Get to the `upload avatar` route and remove the `req.avatar` line
+- Now create a new constant call `buffer` that its value will be the `sharp` object(use `await`) sending the `req.file.buffer` to its the constructor
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        const buffer = await sharp(req.file.buffer);
+
+        await req.user.save();
+
+        res.send();
+    }, (error, req, res, next) => {...});
+    ```
+
+- Now we will call the `resize` method sending an object with the `width` property set to `250` and `height` to `250`
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 });
+
+        await req.user.save();
+
+        res.send();
+    }, (error, req, res, next) => {...});
+    ```
+
+    This method will help us to `resize` the `images` to a specific size that we set
+
+- Then we will call the `png` method
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png();
+
+        await req.user.save();
+
+        res.send();
+    }, (error, req, res, next) => {...});
+    ```
+
+    This method will convert the file to a `png` regarding the type of file that you send
+
+- Finally, we call the `toBuffer` method
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
+
+        await req.user.save();
+
+        res.send();
+    }, (error, req, res, next) => {...});
+    ```
+
+    This method will convert back to a `buffer` that we can access
+
+- Save the `buffer` value to the `avatar field` of the `user`
+
+    ```js
+    router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+        const buffer = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer();
+
+        req.user.avatar = buffer;
+        await req.user.save();
+
+        res.send();
+    }, (error, req, res, next) => {...});
+    ```
+
+At this moment we are sure that we always going to have a `png` file so we can change the `header` that we set on the `get avatar` route to this type.
+
+- Get to the `get avatar` route
+- Update the `Content-Type` to `image/png`
+
+    ```js
+    router.get('/users/:id/avatar', async (req, res) => {
+        try {
+            const user = await User.findById(req.params.id);
+
+            if (!user || !user.avatar) {
+                throw new Error();
+            }
+
+            res.set('Content-Type', 'image/png');
+            res.send(user.avatar);
+        } catch (e) {...}
+    });
+    ```
+
+- Save the file
+- Go to `postman`
+- Get to the `upload avatar` request tab
+- Upload the same `image` that you use before(Remember that we use a `jpg` file)
+- Send the request
+- You should get a `200` response
+- Go to the `URL` that we get the `image` on the previews section and refresh the page
+- You should see that the `image` have the size that we set on the `upload` route and if you try to save it to your machine you will see is a `png`
