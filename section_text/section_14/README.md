@@ -14,7 +14,7 @@ One of the reasons that we use `SendGrid` is that it has a nice free tear so you
 
 - On the `SendGrid` page in your browser; click on the `Pricing` option on the top navigation bar
 - You will see a page will all `SendGrid` plans to choose
-- Choose the `Free` plan by clicking the `Start for free button on the `Free` plan section
+- Choose the `Free` plan by clicking the `Start for free` button on the `Free` plan section
 - Now fill out the form to `sign up` for an account(Use a valid `email` to create the account)
 - Submit the form
 - Then fill out the `Tell Us About Yourself` form(For the company-related info put `none` and for the `emails` per month choose `0 to 100,000`)
@@ -256,3 +256,130 @@ Now we will continue with the `cancelation email`.
 - The `user` should be `delete` it
 - Go to the `user email` account
 - You should see the `cancelation email` that you just set
+
+## Environment variables
+
+We are going to set `environment variables` for our `node` application. Our application is already using an `environment variable` on the `task-manager/src/index.js`; as you see we use `process.env` which is where the `environment variables` live and in this case we access `PORT` which is provided by `Heroku` when we deploy our application so on this section we will focus on providing `environment variables` to our `node` application when it runs locally on our machine. There are 2 reasons for using `environment variables`:
+
+- Security reason
+- Customizability
+
+First, we are going to talk about customizability; on the `task-manager/src/db/mongoose.js` file you will see that we send a connection string of our local database so that means when our application run locally it will connect to our local database but that also mean when you deploy the app to `Heroku` it will try to connect to our local database which is not going to exists. We actually need another service that provides to set up a professional `MongoDB` database to use its connection string to production so we will have 2 values that we need on this file depending on the `environment` and the solution is to set an `environment variable` that we change the value depending the current `environment` of the moment.
+
+When it comes to `security`, we have a lot of important information hardcoded on our application such as the `SendGrid` API key in the `task-manager/src/emails/account.js` file. If we leave the mentioned API key, we will push it up to `Github` and then to `Heroku` and this will increase the chances that someone gets access to this private information so we will add this private information to an `environment variable` and don't directly commit this kind of data so it never will be on the history of our application.
+
+We are going, to begin with, the `port` value on the `task-manager/src/index.js` file where we are going to provide the `environment variable` value locally so we can remove the `port` hardcoded on the code and the first thing we are going to do is define the place on which every `environment variable` will be set.
+
+- On your editor; go to the `task-manager` directory
+- Create a new folder called `config`
+- On this newly created directory; create a new file called `dev.env`
+- Inside a new file; add the following
+
+    `PORT=3000`
+
+    This file will consist of a `key-value` pair on each line; in this case, we are adding the `PORT` variable and the value `3000`. Its important to don't add any extra formatting such as spaces or quotes because those things will be taken into concideraton as the `environment variable` value
+
+- Go to the `src/index.js`
+- Remove the `3000` value of the `port` constant
+
+    `const port = process.env.PORT;`
+
+- Save the files
+- Get to your terminal; begin the `MongoDB` process using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On the other tab of your terminal; run your local server using `npm run dev`
+- You will see on the logs that the `port` is `undefined`
+
+At this moment we are not setting the `environment variable` yet. To actually use the `environment variables` we will use an `npm` module called [env-cmd](https://www.npmjs.com/package/env-cmd) that will help us with these because every operating system has its own way to add `environment variables` and this module allows us to get this done on a compatible way.
+
+- On your terminal; get to the one that is running your local server
+- Shut down the local server
+- Install the `env-cmd` module as a dev dependency using: `npm install --save-dev env-cmd`
+- On your editor; get to the `package.json` file
+- Go to the `dev` script
+
+Now we are going to tell our application that use the `dev.env` file to set our `environment variables`. We are don't going to use it on the `start` script because `Heroku` will be in charge of setting those values on the `production` version.
+
+- On the `dev` script; add the following
+
+    `"dev": "env-cmd -f ./config/dev.env nodemon src/index.js"`
+
+    We add the `env-cmd` then specify the `f` option that is us to set a `file` path and finally we send the actual path of the `environment variables` path. With this, our application will use this file to set the `environment variables`
+
+- Get to your terminal and run your local server using `npm run dev`
+- You should see that the `port` have the `3000` value
+
+Something that we need to take into consideration is that the value of the `environment variable` will be available always that you added to the `dev.env` file because `env-cmd` just runs once so you will need to restart the server in order to take the new `environment variable` that you added.
+
+Now we can continue with other values that we will add to the `dev.env` such as the `SendGrid` API key; the `JWT secret` and the `MongoDB` connection script.
+
+- Get to the `src/emails/account.js`
+- Copy the `SendGrid` API key(without the quotes)
+- Remove the `sendGridAPIKey` constant and value
+- Go to the `setApiKey` method and remove the `sendGridAPIKey`
+- On the `setApiKey`; use the `environment variable` call `SENDGRID_API_KEY` to set the API key(is not created yet; we will set it in a moment)
+
+    `sgMail.setApiKey(process.env.SENDGRID_API_KEY);`
+
+    By convention, we set the `environment variables` in uppercase and separate the space with `underscore`
+
+- Go to the `dev.env` file
+- Add the `SENDGRID_API_KEY` variable and its value will be the API key that you copied before
+
+    `SENDGRID_API_KEY=YOUR_API_KEY`
+
+- Save both files
+- On your terminal; restart your local server
+- Go to `postman`
+- Get to the `create user` request tab
+- Create a `user` with the same credentials as the one we deleted in the last section(This is for using the same mail)
+- Send the request
+- The new `user` should be created
+- Go to the `email` account of the `user`
+- You should see the welcome `email`
+- On your editor; go to the `src/db/mongoose.js`
+- On the `connect` method; cut the `connection` string
+- In the `connect` method; add the `connection` string using an `environment variable` called `MONGODB_URL`
+
+    `mongoose.connect(process.env.MONGODB_URL);`
+
+- Go to the `dev.env` file
+- Add the `MONGODB_URL` variable and add the `connection` string that you cut before as its value
+
+    `MONGODB_URL=mongodb://127.0.0.1:27017/task-manager-api`
+
+- Now go to the `middleware/auth.js` file
+- On the `decoded` constant; cut the `secret` value
+- Then use a `JWT_SECRET` variable to add the secret on the `decoded` constant
+
+    `const decoded = jwt.verify(token, process.env.JWT_SECRET);`
+
+- Go to the `model/user.js` file
+- Get to the `generateAuthToken` method
+- Remove the `secret` on the `token` constant
+- Use the `JWT_SECRET` variable to add the `secret` on the `token` constant
+
+    `const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);`
+
+- Get to the `dev.env` file
+- Create a `JWT_SECRET` variable with the `secret` that you just cut before as its value
+
+    `JWT_SECRET=thisisasecretformyapp`
+
+- Save all the files
+- Go to your terminal and restart your local server
+- Go to `postman`
+- Get to the `delete user` request tab
+- Send the request
+- The `user` should be deleted
+- Go to the `email` account of the `user`
+- You should see the `cancelation` mail
+- Get to `postman`
+- Go to the `create user` request tab
+- Create the `user` that you just delete again
+- Send the request
+- Go to the `email` account of the `user`
+- You should see the `welcome` mail
+- Get to `postman`
+- Go to the `read profile` request tab
+- Send the request
+- You should see the current `user` profile
