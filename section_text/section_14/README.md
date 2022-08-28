@@ -383,3 +383,409 @@ Now we can continue with other values that we will add to the `dev.env` such as 
 - Go to the `read profile` request tab
 - Send the request
 - You should see the current `user` profile
+
+## Creating a production MongoDB database
+
+Before we deploy our application to production; we will need a service that provides us with a `MongoDB` database that `Heroku` can have access so for this we will use [Mongo Atlas](https://www.mongodb.com/atlas/database). We are using this option because is created by the `MongoDB` organization and will allow us to create a `free` account that stays that way until you decide to upgrade to a payment plan. Here we will assume that you don't have an account created yet.
+
+- On your browser; go to the [Mongo Atlas](https://www.mongodb.com/atlas/database) page
+- Click on the `Try free` button
+- Fill out the form(Or log in with a `Gmail` account)
+- Submit the form
+
+By default, all the options will be `free`.
+
+- Choose an `Organization` name
+- Also choose a `project name` like `Task App`
+- Choose `Js` as the default language
+
+Or just `skip` and stay with the default options.
+
+- Now click on the `create` button on the `Free` section
+
+For the future, if you want to choose the other options; the `Serverless` option will only charge you for the operations that you run and scaling is automatic depending on your workload; the `Dedicated` option is for production applications with advanced configuration need and also have `multi-region` and `cloud` support but for us, we always are `free` for this example.
+
+We will see the `cluster` word in the next steps so let's defined it. A `cluster` is a `MongoDB` database with multiple servers that will allow us to have a nice low latency around the globe.
+
+- Now choose the region where the `cluster` should be deployed. We choose `Virginia`
+- Then click on the `create cluster` button
+- You should be redirected to your dashboard and the `cluster` is in the creation process(could take a couple of minutes)
+- When the `cluster` is created; click on the `connect` button in the `cluster`
+- A modal should pop up
+- On the `Whitelist your connection IP address` step; click on the `Add a Different IP Address` button
+- On the `IP Address` input add the following: `0.0.0.0/0`
+
+    This is going to whitelist all the `IP address` so we can connect from our local machine and from `Heroku` also is important to know that `Heroku` change the `IP address` over time and we want to make sure that always connect. In terms of security we will have a `username` and `password` so not everyone can connect even if all `IP address` are allowed
+
+- Click on `Add IP address`
+- On the `Create MongoDB User` step; add the `Username` like `taskapp`
+- On the `Password` input on the same step; add the `MongoDB password` that the `user` will use to connect(You can use the `Autogenerate Secure Password` button to generate a `password`)
+- Copy the new `password` and store it in a temp place(We are going to use it later)
+- Click on the `Create MongoDB User`
+- Now click on the `Choose a connection method` button at the bottom of the modal
+
+As you see we have some options; for the moment we will choose the `Connect with MongoDB Compass`. The `MongoDB Compass` is the official `MongoDB GUI` so is similar to `Robo 3T` but maintain by the `MongoDB` team unfortunately for the moment `Robo 3T` can connect to `Mongo Atlas` so we will begin to use `MongoDB Compass`
+
+- Click on the `Connect with MongoDB Compass` option(We will assume that you don't have `Mongo Compass` installed on your machine)
+- Click on the `I do not have MongoDB Compass` button
+- Choose your operating system
+- Click on the download button
+- Use the installer to install `MongoDB Compass` on your machine
+- Open `MongoDB Compass`
+- Accept the `license` agreement
+- Close the help modal
+- You should be on a `new connection`
+- Click on the `favorite` tag on the top
+- Choose a name like `Localhost MongoDB Database`
+- Then click the `save` button
+- Now click `connect`(Make sure that you have `MongoDB` running locally)
+- You should see the `task-manager-api` database
+- Now on the `MongoDB compass` menu at the top; click on `Connect`
+- Choose `Disconnect`
+- Now on `New Connection`
+- Click on the `Fill in connection fields individually` link
+- You should see a form
+
+Some of the information that we need is on the connection string that we have on the `Mongo Atlas` page that we use before on the connection string.
+
+- Get back to the `Mongo Atlas` page
+- You should still be on the modal
+- Click on the `I am using Compass 1.12 or later`
+- Now you will see the `connection string`
+- Copy the part of the string that is after the `@` to the `/`(Don't include those characters)
+- Get back to `Mongo Compass`
+- You should still be on the form
+- On the `Hostname`; paste the string that you just copied
+- Enable the `SRV Record`
+- Click on the `authentication` dropdown
+- You should see the `Username` and `Password` inputs
+- Add the `Username` that you added before when you create the `MongoDB` user on `Mongo Atlas`. In the case of the example, I use `taskapp`
+- Get the `password` that you store before on a temp place and use it on the `Password` input on `Mongo Compass`
+- Remove this temp place for the `password`
+- Click on the `connect` button
+- You should see that we are connected to the `Mongo Atlas` but we don't have any data yet
+- Click `disconnect` on the `Connect` menu at the top
+
+As you may remember we enable an `SRV record` on `Mongo Compass`; this option came from the `DNS` world and this is not specific to `MongoDB`. This is used to map the `host` to the correct `IP` and `port`.
+
+- Now came back to `Mongo Atlas` and close the modal(With the close button at the top)
+
+## Heroku deployment
+
+Now that we set our production database we can deploy to `Heroku` and connect the app with the mentioned database. In this case, we will see to cases to `deploy` our app:
+
+- Single project deployment
+- Multiple projects deployment
+
+### Single project deployment
+
+Here we will set the repository on the `task-manager` directory so on `Github` only this app file will live and we will get those files to a new app on `Heroku`. Let's begin with the process.
+
+- On your terminal; go to the `task-manager` directory
+- Initialize a `git` repository using: `git init`
+- Get to your editor; and check the `task-manager` directory
+- You will see that `vs code`(or the editor that you are using); mark the files with a color(green on `vs code`) meaning that the repository is set
+
+Now we will need to ignore the `node_modules` directory and the `config` directory because these are things that we don't want to commit and push to `Github`.
+
+- On the `task-manager` directory; create a new file called `.gitignore`
+- Inside of this newly created file; add `node_modules` and the `config` directory
+
+    ```bash
+    node_modules
+    config
+    ```
+
+- Save the file
+- You should see on your editor that the folders(`node_modules` and `config`) change color this means that we are not tracking those folders anymore
+- Get to your terminal
+- Add the files to the `staging` area using: `git add .`
+- Now lets `commit` the changes using: `git commit -m"My message"`
+
+    By convention the first `commit` on a repository we use `first commit`
+
+- On your browser; go to https://github.com/
+- Create a new `repository`(could be `private` or `public`) with the same name of the folder in this case `task-manager`
+- Grab the `git remote add origin ...` command that is shown on the new `repository` page
+- Get to your terminal and use the command that you just copied
+- Now push the code to the new `repository` using: `git push -u origin main`
+- Get to your browser and refresh the `repository` page
+- You should see all the files that you just uploaded
+
+Now we can deploy our app to `Heroku` and this will be a similar process that the one we did before but we have one change. Remember that the app use `environment variables` in order to work so we will need to add those `environment variables` to `Heroku` in order to work and luckily `Heroku` provide us a way to do this.
+
+- On your editor; create an app on `Heroku` using `heroku create name-of-the-new-app`
+
+    This name should be unique across all `Heroku` applications, not just your applications and for convention prefix with your name for personal projects and company name for a client
+
+- You will see the `URL` of our application and the remote `URL` of the `Heroku` repository
+
+    Remember that the `remote` is automatically added with the name `heroku`
+
+Now we have the `origin` remote to push our code to `Github` and the `heroku` remote to push our code to `Heroku` but we don't finish with the setup phase because we need to add the app `environment variables` to `Heroku` and we are going to do it from the terminal.
+
+- On your terminal; use the following command: `heroku config:set key:value`
+
+    We can use the `config` command to set `environment variables`; read our existing `environment variables` or delete values. The `config` command uses the `set` to create the `environment variables` and after the space receives a `key/value` pair so in this case, you will be creating an `environment variable` called `key` with `value` as it value
+
+- Use the `config` command without `set` and no `key/value` pair: `heroku config`
+- You should see that you have an `environment variable` called `key` with `value` as its content
+- Now use the `unset` option with the name of the `environment variable` that we just set before:
+
+    `heroku config:unset key:value`
+
+- The `environment variable` should be deleted
+- Now add the `JWT_SECRET` with its value and the `SENDGRID_API_KEY`
+
+    `heroku config:set JWT_SECRET:my_random_set_of_characters SENDGRID_API_KEY:my_secret_key_value`
+
+    Remember that when you write `JWT_SECRET` and `SENDGRID_API_KEY` it needs to match perfectly with the one that you have on the `dev.env` config also as you can see we can add multiple `environment variables` at the same time just need to add a space between each `key/value` pair
+
+The last `environment variable` is the `MONGODB_URL` but not the one that we set on the `dev.env` file; we actually need the `connection string` that `Mongo Atlas` provide us for our production database.
+
+- Get to the `Mongo Atlas` dashboard on your browser
+- Make sure you are on the `Database` option of the sidebar
+- Click the `Connect` button of the `cluster`
+- A modal should pop up
+- Click on the `Connect your application` option
+- Make sure that the `dropdown` options have `Node.js` and `4.1 or later`
+- Copy the `connection string` on the second step
+- Get to your editor
+- Go to `dev.env`
+- Paste the connection string at the end(We do this because we will edit the `connection string`)
+- Grab your `user password` that you set for the database on `Mongo Atlas`
+- On the `connection string` at the bottom of `dev.env`; remove the `<password>` placeholder and paste your `password` in his place
+- Before the `?`; add the database name like the one that we use locally; in our case `task-app-api`
+
+    `mongodb+srv://<username>:<password>.mongodb.net/task-app-api?retryWrites=true&w=majority`
+
+- Cut the `connection string`
+
+When we have special characters you will need to use `single quotes` for Linux and mac or `double quotes` for windows.
+
+- Use `set` to create `MONGODB_URL` and paste the `connection string` as it value
+
+    `heroku config:set MONGODB_URL:'my_connection_string'`
+
+- Now use `config` to check the `environment variables`
+- You should see all the `environment variables` that we added
+
+We don't need to add `PORT` to the `environment variables` because this is already added and managed by `Heroku`. At this moment we just need to push our code to `Heroku`
+
+- Push the code to `Heroku` using: `git push heroku master`
+- After using the previous command you will see `Heroku` logs; this means that your app is been deployed. In the end, you will see the `Heroku URL` of your app
+- Copy your `Heroku URL`
+
+As you may remember we create `environments` on `postman` to have `dev` and `prod` versions and on those `environments` we set a `URL` variable but we set its value just for `dev`; now we will add it value for the `prod` version
+
+- Go to `postman`
+- Search for the `dropdown` that has the `Task Manager API(dev)` chosen at the right
+- Click on it and choose the `Task Manager API(prod)`
+- Click the `eye` button at the right of the `dropdown`
+- A menu should popup
+- Click the `edit` link at the top right
+- Paste the `Heroku URL` that you copied before on the `current value` input
+
+    The `initial value` input is used when you are collaborating with teammates
+
+- Click on the save button
+- Now get to the `read profile` request tab
+- Send the request
+- You will see the `need authentication` error
+
+    We are not creating a `user` yet but this is a good indication that we deployed correctly our application
+
+- Get to the `create user` request tab
+- Create a `user` that has a valid `user`
+- Send the request
+- You should see the `user` data response
+- Get to the `user` email account
+- You should see the `welcome` message
+- Get to `postman`
+- Go to the `read profile` request tab
+- Send the request
+- You should see the `user` profile data
+- Get to `Mongo DB Compass`
+- Connect to the `prod` database
+- You should see the `task-manage-api` database
+- Click on it
+- You should see our `collections`
+- Click on the `user collection`
+- You should see the `user` that you just created
+- Get back to `postman`
+- Go to the `create task` request tab
+- Create a new `task`
+- Send the request
+- You should see the `task` data on the response
+- Get back to `Mongo Compass`
+- Click on the `refresh` icon on the left
+- Go to the `task collection`
+- You should see the `task` data that you just created
+
+Now we have the `task-manager` app live on production!!!
+
+### Multiple projects deployment
+
+Here we will have multiple projects on the same repository in other words we will set the repository in a root directory above the `task-manager` folder like the following:
+
+```bash
+main-directory/
+-| web-server/
+-| task-manager/
+```
+
+Then we will `deploy` only the `task-manager` files to a new app on `Heroku`. Here we are assuming that the `main-directory` has already initialized a `git` repository; a repository is created on `Github`; also the `web-server` files are committed and pushed to `Github` and finally, the `web-server` directory files are deployed to `Heroku` so you have an existing app.
+
+- On your terminal; go to the `main-directory`
+- Check the current untracked files using: `git status`
+- You should see only the `task-manager` files
+
+We will need to ignore a couple of folders on the `task-manager` directory that we don't want to be part of our `commit` history.
+
+- On the `main-directory` folder; create a `.gitignore` file(If there is an existing one you can use it)
+- Inside of the `gitignore` file; add `node_modules` and the `config` directory
+
+    ```bash
+    node_modules
+    task-manager/config
+    ```
+
+- Save the file
+- You should see that the `node_modules` and `config` folders on the `task-manager` directory change colors because they are not being tracked anymore
+- Now get to your terminal
+- Add the new files to the `staging` area using: `git add .`
+- Now `commit` your changes using: `git commit -m"My commit message"`
+
+    Since we are assuming that the `repository` was created before and has some files; this is not the `first commit` so you will need to add a message that represents that you are uploading the new app
+
+- Then push your changes to `Github` using: `git push origin main`
+- Get to the `repository` page on your browser
+- You should see the `task-manager` directory with all its files
+
+Now we will deploy the app to `Heroku` but the difference at this time is that we don't have the code at the root directory instead is on a subdirectory and we have already deployed another app to `Heroku` so we already have a remote defined for that app called `heroku` so we will need to specify the app that we want to configure each step of the way.
+
+- On your editor; create an app on `Heroku` using `heroku create name-of-the-new-app`
+
+    This name should be unique across all `Heroku` applications, not just your applications, and for convention prefix with your name for personal projects and company name for a client
+
+- You will see the `URL` of our application and the remote `URL` of the `Heroku` repository
+
+    Since you already have a `remote` called `heroku` the actual `remote` of your new app is not added so you will need to add it manually
+
+- Copy the new `remote URL`(the second one)
+- Add the new `remote` pasting the one that you just copied on this command:
+
+    `git remote add name-of-the-remote url-of-my-remote`
+
+    For this example, we added `task-manager` as a remote name
+
+Now we 3 have `remotes`; `origin` to push to `Github`; `heroku` to push to the first project that we push to `Heroku` and `task-manager` to push our `task-manager` app but we can't push `task-manager` yet to `Heroku` because this app needs `environment variables` so we need to set those on `Heroku` and we will do this from the terminal.
+
+- On your terminal; use the following command: `heroku config:set key:value -a your-app-name`
+
+    We can use the `config` command to set `environment variables` so it will help us to read our existing `environment variables` or delete values. The `config` command uses the `set` to create the `environment variables` and after the space receives a `key/value` pair so in this case, you will be creating an `environment variable` called `key` with `value` as it values and since we have multiple `remotes` for `Heroku` we will need to use the `-a`(app) option follow by your app name in order to create the `environment variable` on the correct place
+
+- Use the `config` command without `set` and no `key/value` pair(always remember to specify your app)
+
+    `heroku config -a your-app-name`
+
+- You should see that you have an `environment variable` called `key` with `value` as its content
+- Now use the `unset` option with the name of the `environment variable` that we just set before:
+
+    `heroku config:unset key:value -a your-app-name`
+
+- The `environment variable` should be deleted
+- Now add the `JWT_SECRET` with its value and the `SENDGRID_API_KEY`
+
+    `heroku config:set JWT_SECRET:my_random_set_of_characters SENDGRID_API_KEY:my_secret_key_value -a your-app-name`
+
+    Remember that when you write `JWT_SECRET` and `SENDGRID_API_KEY` it needs to match perfectly with the one that you have on the `dev.env` config also as you can see we can add multiple `environment variables` at the same time just need to add a space between each `key/value` pair
+
+The last `environment variable` is the `MONGODB_URL` but not the one that we set on the `dev.env` file; we actually need the `connection string` that `Mongo Atlas` provide us for our production database.
+
+- Get to the `Mongo Atlas` dashboard on your browser
+- Make sure you are on the `Database` option of the sidebar
+- Click the `Connect` button of the `cluster`
+- A modal should pop up
+- Click on the `Connect your application` option
+- Make sure that the `dropdown` options have `Node.js` and `4.1 or later`
+- Copy the `connection string` on the second step
+- Get to your editor
+- Go to `dev.env`
+- Paste the connection string at the end(We do this because we will edit the `connection string`)
+- Grab your `user password` that you set for the database on `Mongo Atlas`
+- On the `connection string` at the bottom of `dev.env`; remove the `<password>` placeholder and paste your `password` in his place
+- Before the `?`; add the database name like the one that we use locally; in our case `task-app-api`
+
+    `mongodb+srv://<username>:<password>.mongodb.net/task-app-api?retryWrites=true&w=majority`
+
+- Cut the `connection string`
+
+When we have special characters you will need to use `single quotes` for Linux and mac or `double quotes` for windows.
+
+- Use `set` to create `MONGODB_URL` and paste the `connection string` as it value
+
+    `heroku config:set MONGODB_URL:'my_connection_string' -a your-app-name`
+
+- Now use `config` to check the `environment variables`
+- You should see all the `environment variables` that we added
+
+We don't need to add `PORT` to the `environment variables` because this is already added and managed by `Heroku`. At this moment we just need to push our code to `Heroku` but at this time we will need to push just a subdirectory of the root, not the entire root directory so we will use the `git subtree` command with the `prefix` option
+
+- Get to your terminal
+- On the root directory; use the following command
+
+    `git subtree push --prefix path/of/my/subdirectory my-heroku-remote master`
+
+    The `subtree` command let you nest one repository inside of another, in other words, will tread as a complete repository in your subdirectory. After the `subtree` command you will need to specify the action that you will do like `push`; `add`; etc. Then you will need to use the `prefix` option to specify the path of the subdirectory and finally, you will use the `Heroku` remote that you need for a push in this case we set `task-manager`
+
+- After using the previous command you will see `Heroku` logs; this means that your app is been deployed. At the end, you will see the `Heroku URL` of your app
+- Copy your `Heroku URL`
+
+As you may remember we create `environments` on `postman` to have `dev` and `prod` versions and on those `environments` we set a `URL` variable but we set its value just for `dev`; now we will add it value for the `prod` version
+
+- Go to `postman`
+- Search for the `dropdown` that has the `Task Manager API(dev)` chosen at the right
+- Click on it and choose the `Task Manager API(prod)`
+- Click the `eye` button at the right of the `dropdown`
+- A menu should popup
+- Click the `edit` link at the top right
+- Paste the `Heroku URL` that you copied before on the `current value` input
+
+    The `initial value` input is used when you are collaborating with teammates
+
+- Click on the save button
+- Now get to the `read profile` request tab
+- Send the request
+- You will see the `need authentication` error
+
+    We are not creating a `user` yet but this is a good indication that we deployed correctly our application
+
+- Get to the `create user` request tab
+- Create a `user` that has a valid `user`
+- Send the request
+- You should see the `user` data response
+- Get to the `user` email account
+- You should see the `welcome` message
+- Get to `postman`
+- Go to the `read profile` request tab
+- Send the request
+- You should see the `user` profile data
+- Get to `Mongo DB Compass`
+- Connect to the `prod` database
+- You should see the `task-manage-api` database
+- Click on it
+- You should see our `collections`
+- Click on the `user collection`
+- You should see the `user` that you just created
+- Get back to `postman`
+- Go to the `create task` request tab
+- Create a new `task`
+- Send the request
+- You should see the `task` data on the response
+- Get back to `Mongo Compass`
+- Click on the `refresh` icon on the left
+- Go to the `task collection`
+- You should see the `task` data that you just created
+
+Now we have the `task-manager` app live on production!!!
