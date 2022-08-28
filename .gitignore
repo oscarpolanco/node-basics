@@ -15,5 +15,4 @@ notes.json
 keys.dev.js
 
 # task-manager app
-task-manager/images/*
-task-manager/avatars/*
+task-manager/config/*

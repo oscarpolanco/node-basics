@@ -880,7 +880,7 @@ Now we will set our first endpoint on our app!!! In this case, we will do the `u
 
     ```json
     "scripts": {
-        "stat": "",
+        "start": "",
         "dev": ""
     },
     ```
@@ -889,7 +889,7 @@ Now we will set our first endpoint on our app!!! In this case, we will do the `u
 
     ```json
     "scripts": {
-        "stat": "node src/index.js",
+        "start": "node src/index.js",
         "dev": ""
     },
     ```
@@ -898,7 +898,7 @@ Now we will set our first endpoint on our app!!! In this case, we will do the `u
 
     ```json
     "scripts": {
-        "stat": "node src/index.js",
+        "start": "node src/index.js",
         "dev": "nodemon src/index.js"
     },
     ```
