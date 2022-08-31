@@ -291,3 +291,190 @@ We will create a new `test` case adding a new feature to the `calculateTip` func
 - Save both files
 - Get to your terminal and run the `test` script
 - You should see that both `tests` pass
+
+## Testing asynchronous code
+
+We will continue checking how to `test asynchronous` code using `jest`. This is going to be a lot like the previous `tests` but a little different.
+
+Before we get into `asynchronous testing` we will change the `test` script in order to have a script always checks for the `test` that we are chaining like `dev` script that always expects code changes.
+
+- On your editor; go to the `package.json` file
+- In the `script` section; add the `--watch` option to the `jest` command
+
+    ```json
+     "scripts": {
+        "start": "node src/index.js",
+        "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
+        "test": "jest --watch"
+    }
+    ```
+
+- On your terminal; go to the `task-manager` directory
+- Run the `test` script
+- You should see that all `tests` run but you don't get back to the command line
+
+At this moment you should see that you have a couple of options that just typing a letter you can run like the `a` option that will run all `test`
+
+- Press the `a` keyword
+- You should see that all `test` run again
+- Now click `w` to see the `watch` options again
+
+Now we can focus on the `asynchronous testing` using `jest`. First; we will add a simple example using an incorrect `test`.
+
+- On your editor; go to the `math.test.js` file
+- At the bottom; call the `test` function sending the `test` name and function
+
+    `test('Async test demo', () => {});`
+
+- Now create an `assertion` for a number that is equal to another that produces an `error`
+
+    ```js
+    test('Async test demo', () => {
+        expect(1).toBe(2);
+    });
+    ```
+
+- Save the file
+- Go to your terminal
+- You should see that the `test` re-run and the `async` test are falling as expected
+- Get back to the `math.test.js` file
+
+Now we will add some `async` code using `setTimeout` with the current `assertion`.
+
+- On the `async test`; move the `assertion` into the `callback` function of a `setTimeout` that has a `2` seconds duration
+
+    ```js
+    test('Async test demo', () => {
+        setTimeout(() => {
+            expect(1).toBe(2);
+        }, 2000);
+    });
+    ```
+
+- Save the file
+- Go to your terminal
+- You should see that all `test` pass then an `error` shutdown the `watch` command
+
+The `test` pass at first because `jest` doesn't know that you are running `async` code it just runs the function so by the time `jest` run the function you don't have any `errors` so `test` is considered a success. Now, all we need to do this is to add a little thing.
+
+- Get to the `math.test.js` file
+- On the `async test`; send a new argument called `done`(Can be named whatever you want but by convention, this will is call `done`)
+
+    ```js
+    test('Async test demo', (done) => {
+        setTimeout(() => {
+            expect(1).toBe(2);
+        }, 2000);
+    });
+    ```
+
+    You will need to call `done` after all the `assertion` are completed in the `asynchronous` code so `jest` is going to see that `done` is present and won't consider the `test` as a failure or success until `done` is called
+
+- Below the `assertion`; call `done`
+
+    ```js
+    test('Async test demo', (done) => {
+        setTimeout(() => {
+            expect(1).toBe(2);
+            done();
+        }, 2000);
+    });
+    ```
+
+- Save the file
+- Get to your terminal and run the `test` script
+- You should see the `test` take a little more time than show the logs and one `test` is falling as expected
+
+There are other ways to do this; let's get into it. We will add a new function to create new `test` cases on the `math.js` file; in this case, a function that adds two numbers using a `setTimeout` to make it `asynchronous`.
+
+- Get to the `src/math.js` file
+- After the `calculateTip` function; add the following
+
+    ```js
+    const add = (a, b) => {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if(a < 0 || b < 0) {
+                    return reject('Numbers must be non-negative');
+                }
+                resolve(a + b);
+            }, 2000);
+        });
+    }
+    ```
+
+- Export the `add` function
+
+    ```js
+    module.exports = {
+        calculateTip,
+        add
+    }
+    ```
+
+- Get to the `math.test.js`
+- Add the new function to the required call at the top of the file
+
+    `const { calculateTip, add } = require('../src/math');`
+
+- At the bottom of the file; add a new `test` case with a function that receives `done`
+
+    `test('Should add two numbers', (done) => {});`
+
+- Now call the `add` function with `2` numbers
+
+    ```js
+    test('Should add two numbers', (done) => {
+        add(2, 3);
+    });
+    ```
+
+- Use the `then` method on `add` to get the result of the function
+
+    ```js
+    test('Should add two numbers', (done) => {
+        add(2, 3).then((sum) => {});
+    });
+    ```
+
+- Make an `assertion` that compares `sum` with the number `5`; then call `done`
+
+    ```js
+    test('Should add two numbers', (done) => {
+        add(2, 3).then((sum) => {
+            expect(sum).toBe(5);
+            done();
+        });
+    });
+    ```
+
+- Comment on the first `async test`
+- Save the file
+- Get to your terminal
+- You should see that take a couple of seconds then all `test` pass
+- Get back to the `math.test.js` file
+- At the bottom use the `test` function and the `test` name and an `async` function
+
+    `test('Should add two numbers async/await', async () => {});`
+
+As you may remember a function mark as `async` return a `promise` and when `jest` see that it will wait until the `promise` is a success or is rejected before it figures out if the `test` pass or not.
+
+- On the new `test`; create a new constant call `sum` that receives the value of the `add` function(Remember to use `await`)
+
+    ```js
+    test('Should add two numbers async/await', async () => {
+        const sum = await add(10, 22);
+    });
+    ```
+
+- Now add an `assertion` where the `sum` value is equal to `32`
+
+    ```js
+    test('Should add two numbers async/await', async () => {
+        const sum = await add(10, 22);
+        expect(sum).toBe(32);
+    });
+    ```
+
+- Save the file
+- You should see that take a couple of seconds then all `test` pass
