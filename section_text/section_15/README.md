@@ -565,7 +565,7 @@ Now when we are on `development` we still call the `index.js` file as we always 
 
     `const app = require('../src/app');`
 
-- At the bottom of the file; call the `test` function with a name for the `test` with an `async` function(We are going to `test` the `login` endpoint)
+- At the bottom of the file; call the `test` function with a name for the `test` with an `async` function(We are going to `test` the `sign up` endpoint)
 
     `test('Should signup a new user', async () => {});`
 
@@ -579,7 +579,7 @@ Now when we are on `development` we still call the `index.js` file as we always 
 
 Now we will need to pass what exactly we try to request and we do that using a function that helps us to specify what type of `HTTP` request we want and send to it the endpoint.
 
-- Call the `post` method of `request` and send as an argument the `login` path
+- Call the `post` method of `request` and send as an argument the `sign up` path
 
     ```js
     test('Should signup a new user', async () => {
@@ -631,4 +631,179 @@ We achieve all that we want but there is a problem that we need to address now. 
 - Press `a` to run all `test`
 - You should see that now your new `test` is failing
 
-This is because we already save a `user` with that `email` on the database so we will need to make sure that we begin with a clean database each time that we run the `test` for the app.
+This is because we already save a `user` with that `email` on the database so we will need to make sure that we begin with a clean database each time that we run the `test` for the app. To fix this we will need to use the `jest lifecycle methods` that will allow us to clean our database so our `test` cases run consistently and execute as expected.
+
+- Get to the `user.test.js` file
+- Below the `sign up test`; use the `beforeEach` function to send a function
+
+    `beforeEach(() => {});`
+
+    `Jest` provide us with this function so it will be available for all our `test` files like the `test` function that we use before. This function will run for each `test` case on the file at this moment we will run just once because we have just one `test`
+
+- Log a message on the newly created function
+
+    ```js
+    beforeEach(() => {
+        console.log('beforeEach');
+    });`
+    ```
+
+- Below the `beforeEach` function; call the `afterEach` function send a function and log a message like we did before
+
+    ```js
+    afterEach(() => {
+        console.log('afterEach');
+    });
+    ```
+
+    This will run after each `test` case that we have on the file
+
+- Save the file
+- On your terminal; you should see that the `test` still falling and you'll see that we have the logs that we just added
+
+As you see these functions will help us to set or unset things that our `tests` cases need but for this example we will only need the `beforeEach` function so let's get to add what we need to this function.
+
+- Get to the `user.test.js` file
+- Remove the `afterEach` function
+- Remove the log of the `beforeEach` function
+- Require the `User` model after the `app` require
+
+    `const User = require('../src/models/user');`
+
+- Mask as `async` the function that we send on the `beforeEach` function
+
+    `beforeEach(async () => {});`
+
+- Use the `deleteMany` method of `User`(Remember to use `await`)
+
+    ```js
+    beforeEach(async () => {
+        await User.deleteMany();
+    });
+    ```
+
+    Since we don't specify anything as a search criteria it will `delete` all `users` on the database
+
+With this, we solve the issue that we have before because we always begin our `test` cases with an empty database so from now on we will need to have consistent data for our `test`.
+
+- Save the file
+- On your terminal; you should see that all the `test` passed
+
+Now cleaning our database is a nice approach but there are other `test` like when we `test` the `logged in user` that we will nice to have some specific data that we can use for `testing` so we are going to `delete` all `users` and we will add a new `user` that we are going to use for all `test` that need an existing `user`.
+
+- Get to the `user.test.js`
+- After the `User` model require; create a new constant called `userOne` that its value will be an object with all the properties and values that a new `user` needs to be created(Need to be different than the data use on the `sign up test`)
+
+    ```js
+    const userOne = {
+        name: 'Testing',
+        email: 'testing@example.com',
+        password: 'TestingPass!!'
+    }
+    ```
+
+- On the `beforeEach` function; after the `deleteMany` call; save the `User` using the `userOne` data
+
+    ```js
+    beforeEach(async () => {
+        await User.deleteMany();
+        await new User(userOne).save();
+    });
+    ```
+
+- Below the `sign up test`; call the `test` function with the following arguments(We are going to `test` the `login`)
+
+    `test('Should signup a new user', async () => {}):`
+
+- Inside of the function; call `request` sending the `app`
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app)
+    }):
+    ```
+
+- Now call the `post` method of `request` sending the path of the `login`
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app)
+            .post('/users/login')
+    }):
+    ```
+
+- Then call the `send` method sending an object with an `email` and `password` using the `userOne` data
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app)
+            .post('/users/login')
+            .send({
+                email: userOne.email,
+                password: userOne.password
+            })
+    }):
+    ```
+
+- Finally; `expect` that we receive a `200` status
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app)
+            .post('/users/login')
+            .send({
+                email: userOne.email,
+                password: userOne.password
+            }).expect(200);
+    }):
+    ```
+
+- Save the file
+- Get to your terminal
+- You should see that all your `tests` are passing
+
+Now we can continue `testing` the `login` endpoint when a `user` send bad credentials.
+
+- Get to the `user.test.js` file
+- At the bottom of the file; call the `test` function like this
+
+    `test('Should not login nonexistent user', async () => {});`
+
+- Call the `request` method sending the `app`; then call the `send` method with the `login` path
+
+    ```js
+    test('Should not login nonexistent user', async () => {
+        await request(app)
+            .post('/users/login')
+    });
+    ```
+
+- Now call the `send` method; sending bad credentials(`user` that don't exist)
+
+    ```js
+    test('Should not login nonexistent user', async () => {
+        await request(app)
+            .post('/users/login')
+            .send({
+                email: 'test@testing.com',
+                password: 'testingPass'
+            })
+    });
+    ```
+
+- Expect a `400` status
+
+    ```js
+    test('Should not login nonexistent user', async () => {
+        await request(app)
+            .post('/users/login')
+            .send({
+                email: 'test@testing.com',
+                password: 'testingPass'
+            }).expect(400);
+    });
+    ```
+
+- Save the file
+- Get to your terminal
+- You should see that all `tests` are passing
