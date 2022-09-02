@@ -478,3 +478,46 @@ As you may remember a function mark as `async` return a `promise` and when `jest
 
 - Save the file
 - You should see that take a couple of seconds then all `test` pass
+
+## Testing an express application
+
+Now we are going to write `test` cases that interact with our `express` API on where we are going to make requests to the endpoints and write `assertions` in order to check that everything works as expected but before that, we can get to that you'll need to remember that when you run the `test` on our app it will run the files on our `src` directory and at this moment those files depend on `environment variables` and they will not exists because they only are added as part of the `dev` script on the `package.json` so we need to add those `environment variables to the `test` script but in a separate `config` file(You'll see why in a bit).
+
+- On your editor; go to the `task-manager/config` directory
+- Create a new file called `test.env`
+- Open the `dev.env` file
+- Copy it content
+- Get to the `test.env` file and paste the content of the `dev.env` file
+
+We create a new config file because we don't want to use the same database that we use for the `dev` environment. The `test` will be populating the database with `seed` dummy data that the `test` can use and we don't want this on our work database because we make it difficult when you work with data.
+
+- On the `test.env`; update the `MONGODB_URL` connection string to get a different database for the `tests`
+
+    `MONGODB_URL=mongodb://127.0.0.1:27017/task-manager-api-test`
+
+- Get to the `package.json` file
+- On the `scripts` section; add to the `test` script the `test.env` file using `env-cmd`
+
+    ```json
+    "scripts": {
+        "start": "node src/index.js",
+        "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
+        "test": "env-cmd -f ./config/test.env jest --watch"
+    }
+    ```
+
+Now we will need another `jest` configuration on the `package.json`.
+
+- Below the `scripts` section; add a new section called `jest`
+
+    `"jest": {},`
+
+- On the `jest` section; add a property call `testEnvironment` with a `node` value
+
+    ```json
+    "jest": {
+        "testEnvironment": "node"
+    },
+    ```
+
+By default, the `testEnvironment` will be set to a `jsdom` that is a `js` variable similar to what you see on the browser so by default `jest` assume that you are `testing` browser base `js` but as you see it also supports `node`.
