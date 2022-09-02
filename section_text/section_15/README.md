@@ -521,3 +521,114 @@ Now we will need another `jest` configuration on the `package.json`.
     ```
 
 By default, the `testEnvironment` will be set to a `jsdom` that is a `js` variable similar to what you see on the browser so by default `jest` assume that you are `testing` browser base `js` but as you see it also supports `node`.
+
+Now we are going to use `jest` to `test` one of the `task-manager` endpoints. You can do it 2 ways; one is to start the `express` server on the port `3000` then use an `HTTP` library like the one that we use on the `weather` application and send a request from our code then we can make `assertions` if the response is correct or not; the other way is to use a module that the `express` team that make this easy to do called [supertest](https://www.npmjs.com/package/supertest). This last approach is what we are going to use.
+
+- On your terminal go to the `task-manager` directory
+- Install the `supertest` module using: `npm install supertest --save-dev`
+
+The `supertest` module will take an existing `express` app and make requests to their endpoints but something important is that we don't need to `listen` to a `port` in order to make a functional `test` so `supertest` don't need that your server is up and running; it just need the `express` app that you define.
+
+- On your editor; go to the `tests` directory
+- Create a new file called `user.test.js`
+- In this newly created file; require `supertest`
+
+    `const request = require('supertest');`
+
+    As a library convention, we use the `request` name for the `supertest` variable but can be whatever you want
+
+Now we will need to get access to our `express` application but we want the app before `listen` is called and for the moment we can't do this because the app definition is in the same place as the `listen` call so we will need to do a little refactoring of the `index.js` file so we can get the `express` application without calling the `listen` method.
+
+- Get to the `src` directory
+- Create a new file called `app.js`
+- Get to the `index.js` file
+- Copy all the content of the file
+- Paste the content of the `index.js` file on the `app.js` file
+- Remove the `listen` method call and the `port` constant
+- Now export `app` at the bottom of the file
+
+    `module.exports = app;`
+
+- Get to the `index.js` file
+- Remove all require
+- Require `app` at the top of the file
+
+    `const app = require('./app');`
+
+- Remove all the content except the `port` variable and the `listen` call
+- Save the files
+
+Now when we are on `development` we still call the `index.js` file as we always do but now if we want to get our `express` app without running the server for `testing` purposes we can do it by calling the `app.js` file.
+
+- Get back to the `user.test.js` file
+- Below the `supertest` require; call `app`
+
+    `const app = require('../src/app');`
+
+- At the bottom of the file; call the `test` function with a name for the `test` with an `async` function(We are going to `test` the `login` endpoint)
+
+    `test('Should signup a new user', async () => {});`
+
+- Now using `await`; call the `request` function and send the `app`
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app)
+    });
+    ```
+
+Now we will need to pass what exactly we try to request and we do that using a function that helps us to specify what type of `HTTP` request we want and send to it the endpoint.
+
+- Call the `post` method of `request` and send as an argument the `login` path
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app).post('/users')
+    });
+    ```
+
+    The `supertest` module provides a function that represents each type of `HTTP` request
+
+
+- Noe call the `send` method providing an object as an argument with all the `user` data that we need in order to create it
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app).post('/users').send({
+            name: 'test',
+            email: 'test@example.com',
+            password: 'MyPass7771'
+        })
+    });
+    ```
+
+    The `send` method allows us to provide an object with the data that we need to send with the request
+
+- Finally, we make an `assertion` using the `expect` method and in this case, we will check that we get a `201` status
+
+    ```js
+    test('Should signup a new user', async () => {
+        await request(app).post('/users').send({
+            name: 'test',
+            email: 'test@example.com',
+            password: 'MyPass7771'
+        }).expect(201);
+    });
+    ```
+
+- Save the files
+- Go to your terminal and run the `test` script
+- You should see all the `tests` passed
+- Go to `Mongo Compass`
+- Connect to the `localhost`
+- You should see that you have 2 databases
+- Get to the `user` collection on the `test` database
+- You should see the data that you use on the `test`
+
+We achieve all that we want but there is a problem that we need to address now. Let's check it
+
+- On your terminal; use the `w` option
+- Press `a` to run all `test`
+- You should see that now your new `test` is failing
+
+This is because we already save a `user` with that `email` on the database so we will need to make sure that we begin with a clean database each time that we run the `test` for the app.
