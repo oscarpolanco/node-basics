@@ -617,7 +617,8 @@ Now we will need to pass what exactly we try to request and we do that using a f
     ```
 
 - Save the files
-- Go to your terminal and run the `test` script
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
 - You should see all the `tests` passed
 - Go to `Mongo Compass`
 - Connect to the `localhost`
@@ -806,4 +807,186 @@ Now we can continue `testing` the `login` endpoint when a `user` send bad creden
 
 - Save the file
 - Get to your terminal
+- You should see that all `tests` are passing
+
+## Testing with authentication
+
+At this moment we `test` the `create user` endpoint that doesn't need previous data in order to work and the `login endpoint` that needs `user` data before it works; now we will `test` some of the endpoints that need an extra piece that is `authentication` like the `read profile` endpoint so we will need a `token` that `supertest` can access in order to work with these type of requests.
+
+In order to achieve the goal of this section, we will update the `userOne` data by adding a `token` before we save it into the database this will allow having a valid `token` that we can use on the `tests` cases.
+
+- On your editor; go to the `task-manager/tests/user.test.js` file
+
+Now for the first step, we will need to create an `object id` for the `userOne` because we will need to know the `id` of the `user` ahead of time so we can create the `token`.
+
+- Below the `supertes` require statement; require `jsonwebtoken` and `mongoose`
+
+    ```js
+    const jwt = require('jsonwebtoken');
+    const mongoose = require('mongoose');
+    ```
+
+- Before the `userOne` contant; create a new constant call `userOneId` that it value will be a new instance of the `mogoose.Types.ObjectId` method
+
+    `const userOneId = new mongoose.Types.ObjectId();`
+
+    We create this new variable because we will need to use it in multiple places
+
+- Now on the `userOne` object; add the `_id` property using the `userOneId` value as it value
+
+    ```js
+    const userOne = {
+        _id: userOneId,
+        name: 'Testing',
+        email: 'testing@example.com',
+        password: 'TestingPass!!'
+    }
+    ```
+
+- Then add a new property called `tokens` that will have an `array` with a single object
+
+    ```js
+    const userOne = {
+        _id: userOneId,
+        name: 'Testing',
+        email: 'testing@example.com',
+        password: 'TestingPass!!',
+        tokens: [{}]
+    }
+    ```
+
+- Inside of the object that is on the `tokens` array; add a property call `token` that will have the value of the `jwt.sign` method and send an object with the `_id` of the `user` and the `JWT_SECRET` environment variable
+
+    ```js
+    const userOne = {
+        _id: userOneId,
+        name: 'Testing',
+        email: 'testing@example.com',
+        password: 'TestingPass!!',
+        tokens: [{
+            token: jwt.sign({ _id: userOneId }, process.env.JWT_SECRET)
+        }]
+    }
+    ```
+
+With this, we have a `token` associated with the `test user` that we can use on our `tests` cases. Let's begin with the first `test` case which will be the `read profile` endpoint.
+
+- At the bottom of the file; call the `test` function with the following `test` name and an `async` function
+
+    `test('Should get profile for user', async () => {});`
+
+- Now call the `request` method sending the `app`
+
+    ```js
+    test('Should get profile for user', async () => {
+        await request(app)
+    });
+    ```
+
+- Then `send` the `/users/me` request and `expect` a `200` response
+
+    ```js
+    test('Should get profile for user', async () => {
+        await request(app)
+            .get('/users/me')
+            .send()
+            .expect(200)
+    });
+    ```
+
+- Go to your terminal and run the `mongoDB` database using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal run the `test` script using `npm test`
+- You should see that the new `test` failed
+
+This is because we are not `authenticated` yet so we don't receive a `200` status on the response.
+
+- Get back to the `user.test.js` file
+- On the new `test` at the bottom of the file; before calling the `send` method; call the `set` method providing the following
+
+    ```js
+    test('Should get profile for user', async () => {
+        await request(app)
+            .get('/users/me')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200)
+    });
+    ```
+
+    The `set` method receives 2 parameters that are the `header` that you want to set in this case `Authorization` and the value that will be sent for that `header` in this case the `Bearer token` associate with the `user`. We use `template string` to add the `token` value
+
+- Save the file and get to the terminal
+- You should see that all `test` is passing
+- Get back to the `user.test.js`
+- At the bottom of the file called the `test` function with the following `test` name with an `async` function
+
+    `test('Should not get profile for unauthenticated user', async () => {});`
+
+- On the new `test` function; call the `request` method sending the `app`
+
+    ```js
+    test('Should not get profile for unauthenticated user', async () => {
+        await request(app)
+    });
+    ```
+
+- Now `send` the request and `expect` a `401` status
+
+    ```js
+    test('Should not get profile for unauthenticated user', async () => {
+        await request(app)
+            .get('/users/me')
+            .send()
+            .expect(401)
+    });
+    ```
+
+    Since we are not `authenticated` for this `test` case we will receive a `401` status on the response provided by the `auth` middleware
+
+- Save the file
+- Get to the terminal
+- You should see that all `tests` are passing
+
+Now we are going to work with the `delete user` endpoint `testing` the case that we successfully `delete` a `user` and one `unauthenticated user` that is trying to `delete` a `user`.
+
+- Go to the `user.test.js` file
+- At the bottom of the file called the `test` function with the following `test` name and with an `async` function
+
+    `test('Should delete account for user', async () => {});`
+
+- Call the `request` method send the `app`
+
+    ```js
+    test('Should delete account for user', async () => {
+        await request(app)
+    });
+    ```
+
+- Send a `delete` request to `/users/me` with the `Authorization` header and `expect` a `200` response
+
+    ```js
+    test('Should delete account for user', async () => {
+        await request(app)
+            .delete('/users/me')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200)
+    });
+    ```
+
+- Save the file and get to the terminal
+- You should see that all `test` is passing
+- Get back to the `user.test.js` file
+- At the bottom of the file create a new `test` for `unauthenticated users` that need want to use the `delete` endpoint
+
+    ```js
+    test('Should not delete account for unauthenticated user', async () => {
+        await request(app)
+            .delete('/users/me')
+            .send()
+            .expect(401)
+    });
+    ```
+
+- Save the file and get to the terminal
 - You should see that all `tests` are passing
