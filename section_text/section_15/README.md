@@ -990,3 +990,305 @@ Now we are going to work with the `delete user` endpoint `testing` the case that
 
 - Save the file and get to the terminal
 - You should see that all `tests` are passing
+
+## Advance assertions
+
+Currently, we make `assertions` that check the `HTTP` status on the request in each `test` case but we can make some more `assertions` when the request is completed like `assert` some part of the response body or check that database to see is everything is ok their base of the operation that we are doing on a specific moment.
+
+- On your editor; go to the `task-manage/tests/user.test.js` file
+- On the `signup test`; store the value of the `request` method on a new constant call `response`
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({
+                name: 'test',
+                email: 'test@example.com',
+                password: 'MyPass7771'
+            })
+            .expect(201);
+    });
+    ```
+
+With this we store the `response` information like the `user profile` and `token` so we can `assert` things about it. Here we will explore some ideas in order to give tools that you can use when you are `testing` not need to be exactly these `assertions` for your `tests` cases. First, we will check if the database is changed correctly; checking the `_id` store on the database.
+
+- Below the `201 assertion`; create a new constant call `user` that it value will be the result of the `findById` method of the `User` model sending the `_id` of the `user` that we receive on the `response body`
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+    });
+    ```
+
+Now we will check that the `user` variable has a value in other words that is not `null` and for this `expect` will give us a method that we can use called `toBeNull` but this will actually check if the value is `null` so we will need to negate its effect using a `not` property provided by `expect`.
+
+- Use the `expect` function sending the `user` variable; chain the `not` property then chain the `toBeNull` function
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+    });
+    ```
+
+- Save the file
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
+- You should see that all `tests` are passing
+
+Now we are going to `assert` things about the `response body`.
+
+- Get to the `user.test.js`
+- Go to the `signup test`
+
+We will check that the `body` has the correct `user` information
+
+- Below the last `assertion`; call the `expect` function sending the `name` on the `response body` of the `user`
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body.user.name)
+    });
+    ```
+
+- Use the `toBe` function; sending the `user` name that you use on the `send` method before
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body.user.name).toBe('test');
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `test` is passing
+
+This last `assertion` will work if you need to check just one property but `expect` have another function that we can use when we are working with objects that will help us to check more than one property at the same time.
+
+- Get back to the `user.test.js`
+- On the `signup test`; remove the `toBe` method and just send the `body` of the `response` on the last `assertion`
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body);
+    });
+    ```
+
+- Now call the `toMatchObject` function sending an object
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body).toMatchObject({});
+    });
+    ```
+
+    The `toMatchObject` function will allow us to provide an object that will check if the object that we send of the `expect` function has the properties that we highlight
+
+- On the `toMatchObject` object add a `user` property that will have an object with the `name` and the `email` of the `user` that we use on the `send` method before
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body).toMatchObject({
+                user: {
+                    name: 'test',
+                    email: 'test@example.com',
+                }
+            });
+    });
+    ```
+
+- Then add the `token` property with the `token` value that we have on the `user` variable
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body).toMatchObject({
+                user: {
+                    name: 'test',
+                    email: 'test@example.com',
+                },
+                token: user.tokens[0].token
+            });
+    });
+    ```
+
+- Save the file and go to the terminal
+- You should see that all `test` is passing
+
+Finally, we will check that we are not storing the `plane text password` on the database
+
+- Go to the `user.test.js`
+- Get to the `signup test`
+- Below the last `assertion`; call the `expect` function sending the `user` variable `password`
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body).toMatchObject({...});
+            expect(user.password)
+    });
+    ```
+
+- Then call chain the `not` property and the `toBe` function sending the `password` that you use on the `send` method before
+
+    ```js
+    test('Should signup a new user', async () => {
+        const response = await request(app)
+            .post('/users')
+            .send({...})
+            .expect(201);
+
+            const user = await User.findById(response.body.user._id);
+            expect(user).not.toBeNull();
+            expect(response.body).toMatchObject({...});
+            expect(user.password).not.toBe('MyPass7771');
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `test` is passing
+
+When it comes to writing `test` can be confusing at first because you can overboard really quickly, for example, I might concern that when I create a `user` the others are not deleted but this is so unlikely but we can write some code to `assert` this case now this gonna make all my `test` cases to big and more useless than helpful so we always need to make sure that our `assertions` are grounded and check what really can go wrong.
+
+Now we will continue with other `test` cases on the `user.test.js` file. First with the `login test`; check that the `user` has a new `token` when the `test` run.
+
+- Go back to the `user.test.js` file
+- Get to the `login test`
+- Store the value of the `request` method in a constant call `response`
+
+    ```js
+    test('Should login existing user', async () => {
+        const response = await request(app)
+            .post('/users/login')
+            .send({
+                email: userOne.email,
+                password: userOne.password
+            })
+            .expect(200);
+    });
+    ```
+
+- Now below the last `assertion`; create a `user` constant that will store the result of the `findById` method sending the `_id` of the `userOne`
+
+    ```js
+    test('Should login existing user', async () => {
+        const response = await request(app)
+            .post('/users/login')
+            .send({...})
+            .expect(200);
+
+            const user = await User.findById(userOneId);
+    });
+    ```
+
+- Then call the `expect` function sending the `token` of the response `body` and chain the `toBe` method sending the second `token` of the `tokens` array of the `user` variable
+
+    ```js
+    test('Should login existing user', async () => {
+        const response = await request(app)
+            .post('/users/login')
+            .send({...})
+            .expect(200);
+
+            const user = await User.findById(userOneId);
+            expect(response.body.token).toBe(user.tokens[1].token);
+    });
+    ```
+
+    We `assert` with the second `token` of the `user` because when we create the `userOne` we created with a `token` so when the `login test` run it will add a new `token` to that `user`
+
+- Save the file and get to the terminal
+- You should see that all `tests` is passing
+
+The last `test` we will change will be the `delete user test` checking if we actually `delete` the `user` from the database.
+
+- Get back to the `user.test.js`
+- Go to the `delete user test`
+- Below of the last `assertion`; create a `user` constant that will have the value of the `findById` method sending the `userOneId`
+
+    ```js
+    test('Should delete account for user', async () => {
+        await request(app)
+            .delete('/users/me')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200)
+
+        const user = await User.findById(userOneId);
+    });
+    ```
+
+- Then call the `expect` method sending the `user` and chain the `toBeNull` method
+
+    ```js
+    test('Should delete account for user', async () => {
+        await request(app)
+            .delete('/users/me')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200)
+
+        const user = await User.findById(userOneId);
+        expect(user).toBeNull();
+    });
+    ```
+
+- Save the file and check the terminal
+- You will see that all `test` is passing

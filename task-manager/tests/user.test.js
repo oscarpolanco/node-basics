@@ -21,7 +21,7 @@ beforeEach(async () => {
 });
 
 test('Should signup a new user', async () => {
-    await request(app)
+    const response = await request(app)
         .post('/users')
         .send({
             name: 'test',
@@ -29,23 +29,42 @@ test('Should signup a new user', async () => {
             password: 'MyPass7771'
         })
         .expect(201);
+
+    // Assert that the database was changed correctly
+    const user = await User.findById(response.body.user._id);
+    expect(user).not.toBeNull();
+
+    // Assertions about the response
+    expect(response.body).toMatchObject({
+        user: {
+            name: 'test',
+            email: 'test@example.com',
+        },
+        token: user.tokens[0].token
+    });
+
+    expect(user.password).not.toBe('MyPass7771');
 });
 
+// Goal: Validate new token is saved
+//
+// 1. fetch the user from the database
+// 2. Assert that token in response matches the users sencond token
+// 3. Test your work
+
 test('Should login existing user', async () => {
-    await request(app)
+    const response = await request(app)
         .post('/users/login')
         .send({
             email: userOne.email,
             password: userOne.password
-        }).expect(200);
-});
+        })
+        .expect(200);
 
-// Goal: Test login failure
-//
-// 1. Create "Should not login nonexistent user"
-// 2. Send off the request with bad credentials
-// 3. Expect the correct status response
-// 4. Test your work!
+    const user = await User.findById(userOneId);
+    expect(user).not.toBeNull();
+    expect(response.body.token).toBe(user.tokens[1].token);
+});
 
 test('Should not login nonexistent user', async () => {
     await request(app)
@@ -53,7 +72,8 @@ test('Should not login nonexistent user', async () => {
         .send({
             email: 'test@testing.com',
             password: 'testingPass'
-        }).expect(400);
+        })
+        .expect(400);
 });
 
 test('Should get profile for user', async () => {
@@ -71,12 +91,10 @@ test('Should not get profile for unauthenticated user', async () => {
         .expect(401)
 });
 
-// Goal: Test delete account
+// Goal: Validate user is removed
 //
-// 1. Create "Should delete account for user"
-//  - Setup auth header and expect correct status code
-// 2. Create "Should not delete account for uaunthenticated user"
-//  - Expect the correct status code
+// 1. fetch the user from the database
+// 2. Assert null response (use assertion from signup test)
 // 3. Test your work
 
 test('Should delete account for user', async () => {
@@ -85,6 +103,9 @@ test('Should delete account for user', async () => {
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send()
         .expect(200)
+
+    const user = await User.findById(userOneId);
+    expect(user).toBeNull();
 });
 
 test('Should not delete account for unauthenticated user', async () => {
