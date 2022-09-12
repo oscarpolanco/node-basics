@@ -1292,3 +1292,40 @@ The last `test` we will change will be the `delete user test` checking if we act
 
 - Save the file and check the terminal
 - You will see that all `test` is passing
+
+## Mocking libraries
+
+At this moment we are going to check how to `mock` our `npm` modules so the process of `mocking` is the process of replacing the function that we run with functions that we will create and run in our `test` cases. We will do this because there are some modules that will do things that only will be needed in an environment that we actually the clients use like the `create user` endpoint and the `delete user` endpoint that sends `emails` as part of their process and we don't need this functionality for the `test` environment and worst for use we have limited `emails` to send on the free version of the `Sendgrid` account and we don't want to waste it on the `test` environment. Let's get started with creating the directory where we are going to place our `mocks`.
+
+- On your editor; go to the `task-manager/tests` directory
+- Create a new folder called `__mocks__`(With 2 `underscore` at the beginning and end of the name also need to be called `mocks` in order to `jest` search for this directory)
+
+So on the `__mocks__` directory we will place all the functions that we need to `mock` for example, we are going to `mock` the `jsonwebtoken` module; inside of the `__mocks__` directory we will create a new folder called `jsonwebtoken` but in this case, we will `mock` the `SendGrid` module.
+
+As you can see on the `account.js` file in the `src` directory the `SendGrid` require to have `@sendgrid/mail` which means the `@sendgrid` is scope so we will create a directory with this name and inside of it will be a file called `mail.js`.
+
+- Inside of the `__mocks__` directory; create a new folder called `@sendgrid`
+- On the newly created directory; create a new file called `mail.js`
+
+Is important that when we `mock` a module we export everything that we will need in order for the code to work like the `setApiKey` and `send` methods that we use on the `account.js` file.
+
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
+- You should see that the `test` begin to fail
+
+The `tests` are falling because we still don't set the functions that we need in order for the code to work in other words `jest` is already taking our `SendGrid` module instead of the one that is on `node_modules` but we don't define the functions that we need yet.
+
+- Go to the `mail.js` file
+- Exports 2 functions: `setApiKey` and `send`
+
+    ```js
+    module.exports = {
+        setApiKey() {},
+        send() {}
+    }
+    ```
+
+    Since we don't actually do anything with the return values of those functions we don't need to do anything on these functions in order for our `test` to begin to work
+
+- Save the file and go to the terminal
+- You should see that our `test` is now passing
