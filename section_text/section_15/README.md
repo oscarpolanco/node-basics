@@ -1734,3 +1734,221 @@ You see this error because when we have multiple `test` suites running at the sa
 
 - Save the file and check the terminal
 - You will see that all `tests` passed
+
+## Testing with task data
+
+Now we are going to create more data that we can use for the `test` suite of the `tasks`.
+
+- Get to the `task-manager/tests/db.js`
+- Require the `Task` model
+
+    `const Task = require('../../src/models/task');`
+
+We will create a new `user` and some `task` with diverse data that we can use on the new `test` cases.
+
+- Copy the `userOne` and `userOneId`
+- Below the `userOne`; paste the content that you just copied
+- Change the name of the new constants to `userTwo` and `userTwoId`
+- Then change the `token` property of the `userTwo` array of `tokens` to use the `userTwoId` and change the `name`, `email`, and `password`
+
+    ```js
+    const userTwo = {
+        _id: userTwoId,
+        name: 'Test',
+        email: 'test@testing.com',
+        password: 'TestingPass2!!',
+        tokens: [{
+            token: jwt.sign({ _id: userTwoId }, process.env.JWT_SECRET)
+        }]
+    }
+    ```
+
+- Below the `userTwo`; create a new constant called `taskOne` that it value will be an object
+
+    `const taskOne = {}`
+
+- On the `taskOne` object; add all the properties that we need to create a `task`(Use these values to follow the example)
+
+    ```js
+    const taskOne = {
+        _id: new mongoose.Types.ObjectId(),
+        description: 'First task',
+        completed: false,
+        owner: userOneId
+    }
+    ```
+
+- Now create 2 more `tasks` with the following information below the `taskOne`
+
+    ```js
+    const taskTwo = {
+        _id: new mongoose.Types.ObjectId(),
+        description: 'Second task',
+        completed: true,
+        owner: userOneId
+    }
+
+    const taskThree = {
+        _id: new mongoose.Types.ObjectId(),
+        description: 'Third task',
+        completed: true,
+        owner: userTwoId
+    }
+    ```
+
+- On the `setupDatabase` function; remove all `tasks` at the beginning of the function; create the new `user` and all the `tasks`
+
+    ```js
+    const setupDatabase = async () => {
+        await User.deleteMany();
+        await Task.deleteMany();
+        await new User(userOne).save();
+        await new User(userTwo).save();
+        await new Task(taskOne).save();
+        await new Task(taskTwo).save();
+        await new Task(taskThree).save();
+    }
+    ```
+
+- Export the new `user` and all `tasks`
+
+    ```js
+    module.exports = {
+        userOneId,
+        userOne,
+        userTwo,
+        userTwoId,
+        taskOne,
+        taskTwo,
+        taskThree,
+        setupDatabase
+    }
+    ```
+
+- Save the file
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
+- You should see that all `test` passed
+- Now get to the `task.test.js`
+
+At this moment we are going to use the new data to make new `test` cases; first will `test` that we can `fetch` all `tasks` related to a `user`.
+
+- At the bottom of the file; create a `test` with the following name and function
+
+    `test('Should fetch user tasks', async () => {});`
+
+- On the `fetch test`; create a constant call `response` that its value will be the result of the `request` function sending the `app`
+
+    ```js
+    test('Should fetch user tasks', async () => {
+        const response = await request(app)
+    });
+    ```
+
+- Now use the `get` method to call the `/tasks` path; set the `authentication`; `send` the request and `expect` a `200` status
+
+    ```js
+    test('Should fetch user tasks', async () => {
+        const response = await request(app)
+            .get('/tasks')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200);
+    });
+    ```
+
+- Then use the `response body` to `expect` that you don't have more or less than `2` items on the array that you receive(Remember that this will be if you use the same data that we set before)
+
+    ```js
+    test('Should fetch user tasks', async () => {
+        const response = await request(app)
+            .get('/tasks')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send()
+            .expect(200);
+
+        expect(response.body.length).toEqual(2);
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `test` passed
+
+Now we will check that a `user` can't `delete` the `tasks` of another `user`.
+
+- Get back to the `task.test.js`
+- Import `userTwo` and `taskOne`(Remember that this is using the data defined above)
+
+    ```js
+    const {
+        userOne,
+        setupDatabase,
+        userTwo,
+        taskOne
+    } = require('./fixtures/db');
+    ```
+
+- At the bottom of the file; create a new `test` with the following name
+
+    `test('Should not delete a task other users tasks', async () => {});`
+
+- Call the `request` method send the `app`
+
+    ```js
+    test('Should not delete a task other users tasks', async () => {
+        await request(app)
+    });
+    ```
+
+- Call the `delete` method sending the `/tasks/` path and the `id` of the `taskOne`(Use template string)
+
+    ```js
+    test('Should not delete a task other users tasks', async () => {
+        await request(app)
+            .delete(`/tasks/${taskOne._id}`)
+    });
+    ```
+
+- Now set the `authorization` with the `userTwo`; `send` the request and `expect` a `404` status
+
+    ```js
+    test('Should not delete a task other users tasks', async () => {
+        await request(app)
+            .delete(`/tasks/${taskOne._id}`)
+            .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+            .send()
+            .expect(404)
+    });
+    ```
+
+- Then `fetch` the `taskOne` from the database
+
+    ```js
+    test('Should not delete a task other users tasks', async () => {
+        await request(app)
+            .delete(`/tasks/${taskOne._id}`)
+            .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+            .send()
+            .expect(404);
+
+        const task = await Task.findById(taskOne._id);
+    });
+    ```
+
+- Expect that the `task` constant has data
+
+    ```js
+    test('Should not delete a task other users tasks', async () => {
+        await request(app)
+            .delete(`/tasks/${taskOne._id}`)
+            .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+            .send()
+            .expect(404);
+
+        const task = await Task.findById(taskOne._id);
+        expect(task).not.toBeNull();
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `test` passed
