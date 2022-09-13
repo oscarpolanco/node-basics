@@ -1565,3 +1565,172 @@ Now we are going to finish `testing` the `update user` endpoint were you going t
 
 - Save the file and check the terminal
 - You should see that all `tests` passed
+
+## Setup task test suite
+
+Now we are going to concentrate on creating the `test` suite for the `task` part of the application. We are going to create a new file that will store all the `task tests` so the different parts of the application have their own file related also we are going to do a little of refactor in order to reuse some of the code that is on the `user.test.js` file that we are going to need for the other `tests` files, in this case, will be the code related to the `user` creation and database cleanup that we have at the top of the file because to create a `task` we will need an `authenticated user` that we can associate with it and like we did before we will need to clean the database in the order that the `tests` don't interfere one with the other. Before all of this, we will delete some example files.
+
+- On your editor; go to the `task-manager/src` directory
+- Delete the `math.js` file
+- Go to the `tests` directory
+- Delete the `math.test.js` file
+- Now on this directory; create a new file called `task.test.js`
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
+- You should see that one `test` is falling because we did not add any `test` to the `task.test.js` file
+- Get back to the `task.test.js` file
+- Require `supertest` and the `Task` model
+    ```js
+    const request = require('supertest');
+    const Task = require('../src/models/task');
+    ```
+
+- Then create a `test` with the following name and function
+
+    `test('Should create task for user', async () => {});`
+
+We are going to create a `test` for the `task` creation but we actually have an issue here because we don't have access to the current `user` thing that we do on the `user.test.js` so we will need to do a little refactor so we reuse the same code of that file.
+
+- On the `fixture` directory; create a new file called `db.js`
+
+    This file will have all the things related to setting up and cleaning the database for our `tests` cases
+
+- Now get to the `user.test.js`
+- Cut the `userOneId` and `userOne` code
+- Get to the `db.js` file
+- Paste the code that you copied before at the bottom of the file
+- Now you will need to require `mongoose` and `jsonwebtoken` at the top of the file
+
+    ```js
+    const mongoose = require('mongoose');
+    const jwt = require('jsonwebtoken');
+    ```
+
+- Get back to the `user.test.js`
+- Remove the `mongoose` and `jsonwebtoken` require
+
+Now we don't have the `userOne` and `userOneId` on the `user.test.js` file so we can do the `beforeEach` operation so we will need to create a function that has all the current code that we got on the `user.test.js` file to `db.js`.
+
+- Cut the function that we send as a parameter on the `beforeEach` function
+- Get to `db.js`
+- Create a new constant call `setupDatabase` and paste the function that you just copy as its value
+- After the `jsonwebtoken` require line; require the `User` model
+
+    `const User = require('../../src/models/user');`
+
+- Now export the `userOne`, `userOneId` and `setupDatabase`
+
+    ```js
+    module.exports = {
+        userOneId,
+        userOne,
+        setupDatabase
+    }
+    ```
+
+- Go to the `user.test.js` file
+- Below the `User` model require; import `userOne`, `userOneId` and `setupDatabase`
+
+    `const { userOneId, userOne, setupDatabase } = require('./fixtures/db');`
+
+- Then pass the `setupDatabase` as an argument of `beforeEach`
+
+    `beforeEach(setupDatabase);`
+
+- Save all the files
+- Get to the terminal and you will see that all of the `tests` passed
+- Now get to the `task.test.js` file
+- Now require `app`, `userOne`, `userOneId` and `setupDatabase`
+
+    ```js
+    const request = require('supertest');
+    const app = require('../src/app');
+    const Task = require('../src/models/task');
+    const { userOneId, userOne, setupDatabase } = require('./fixtures/db');
+    ```
+
+- Before the `test`; add a `beforeEach` call sending `setupDatabase` as argument
+
+    `beforeEach(setupDatabase);`
+
+Now we have almost everything that we need in order to get the `test` working just missing one thing that we are going to check why do we need to add checking the `error` first.
+
+- Save the file and get to the terminal
+- You will see a duplicate entry error
+
+You see this error because when we have multiple `test` suites running at the same time each interacting with the database there is a change that we have conflicts for example one function tries to create a `user` that is created before or one `test` run that mess with the data that another `test` use on another file. For this situation, we will need to add some more configuration to the `test` script.
+
+- Get to the `package.json` file
+- On the `test script` add the following option:
+
+    `"test": "env-cmd -f ./config/test.env jest --watch --runInBand"`
+
+    The `runInBand` option allows us to run the `tests` on series to make sure that you don't have any overlap or chance of conflict
+
+- Save the file
+- Get to the `test script` terminal
+- End the process and rerun the `test script`
+- You should see that all `test` is passing
+- Get back to the `task.test.js` file
+- Go to the `create task` test
+- Create a new constant call `response` that its value will be the result of the `request` function sending the `app` as an argument
+
+    ```js
+    test('Should create task for user', async () => {
+        const response = await request(app)
+    });
+    ```
+
+- Now call the `post` method for the `/tasks` path, `send` a `body` with a `description` and `expect` a `201` status code
+
+    ```js
+    test('Should create task for user', async () => {
+        const response = await request(app)
+            .post('/tasks')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                description: 'From my test'
+            })
+            .expect(201);
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `tests` passed
+- Get back to the `create task test`
+- Create a new constant call `task` that its value will be the result of the `findById` method of the `Task` model sending the `_id` of the `response body`
+
+    ```js
+    test('Should create task for user', async () => {
+        const response = await request(app)
+            .post('/tasks')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                description: 'From my test'
+            })
+            .expect(201);
+
+        const task = await Task.findById(response.body._id);
+    });
+    ```
+
+- Now `expect` that the `task` has a value and has a `completed` property equal to `false`
+
+    ```js
+    test('Should create task for user', async () => {
+        const response = await request(app)
+            .post('/tasks')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                description: 'From my test'
+            })
+            .expect(201);
+
+        const task = await Task.findById(response.body._id);
+        expect(task).not.toBeNull();
+        expect(task.completed).toBe(false);
+    });
+    ```
+
+- Save the file and check the terminal
+- You will see that all `tests` passed
