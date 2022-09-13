@@ -1329,3 +1329,239 @@ The `tests` are falling because we still don't set the functions that we need in
 
 - Save the file and go to the terminal
 - You should see that our `test` is now passing
+
+## Wrapping up user tests
+
+We are going to write some more `user` related `tests` in order to check some more techniques that we can use for `testing` before we make `test` related to the `tasks` part of the application.
+
+Now we are going to `test` the `avatar` endpoint where we are going to need to send a file using `supertest` so we will send an `image` to the `avatar` endpoint and make sure that get a `buffer` field in the database.
+
+- On your editor; go to the `task-manager/tests/user.test.js` file
+- At the bottom of the file; call the `test` method with the following name and send an `async` function
+
+    `test('Should upload avatar image', async () => {});`
+
+- Now on the `tests` directory; create a new folder called `fixtures`
+
+    The `fixture` or `fixtures` are things that allow you to set up the test environment in this case we will put an `image` that can be used on the `avatar test`.
+
+- Add an `image` file to the `fixtures` directory(To follow the example choose a `.jpg` image and that pass all the validation of the `avatar` endpoint)
+- Get back to the `user.test.js` file
+- On the `avatar test`; call the `request` method sending the `app`
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+    });
+    ```
+
+- Call the `post` method using the `/users/me/avatar` path; then use the `set` method to add `authentication` with the `userOne` token
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    });
+    ```
+
+- Call the `attach` method sending the following
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+    });
+    ```
+
+    `Supertest` provide you with the `attach` method that will allow you to `attach` files. The first argument of the `attach` method is the `form field` that we are trying to set; on the app, case is `avatar` like you can see on the `routes/user.js` file, and the other is the `path` of the file
+
+- Then `expect` a `200` status response
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200)
+    });
+    ```
+
+- Save the file
+- Go to your terminal and run the `MongoDB` instance using: `sudo mongod --dbpath /path_on_your_machine/mongodb/data/db`
+- On another tab of your terminal and run the `test` script
+- You should see that all `tests` are passing
+
+Now we can't compare the binary data that we get from `multer` directly with what is stored in the database because we use `sharp` module to manipulate the `image` so we are going to check that the `binary` data exits on the database.
+
+- Go back to the `user.test.js` file
+- On the `avatar test`; create a constant call `user` that has the result of the `findById` method of the `User` model sending the `userOneId`
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200);
+
+        const user = await User.findById(userOneId);
+    });
+    ```
+
+- Now `expect` that an empty object `toBe` an empty object
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200);
+
+        const user = await User.findById(userOneId);
+        expect({}).toBe({});
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that the `test` is failing
+
+This is because the `toBe` method internally uses the `triple equality`(`===`) and as you remember when you use it we are checking the type and value but with the object even having the same properties never going to be equal because will check that is the same object on memory but they are 2 distinct objects so we can't use the `toBe` method but luckily `jest` give you another method called `toEqual` that will use an algorithm to check the properties of the object.
+
+- Go to the `avatar test` and change `toBe` method to `toEqual`
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200);
+
+        const user = await User.findById(userOneId);
+        expect({}).toEqual({});
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `tests` passed
+- Get back to the `avatar test`
+- Send the `avatar` field of the `user` in the `expect`
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200);
+
+        const user = await User.findById(userOneId);
+        expect(user.avatar).toEqual({});
+    });
+    ```
+
+Now we don't have something to compare so we are going to see if the data is a `buffer` we will use the `any` function of `expect` that will receive the type that we can use to compare.
+
+- On the `toEqual` method; remove the empty object and call the `expect` function chaining the `any` function and sending as an argument the `Buffer` type
+
+    ```js
+    test('Should upload avatar image', async () => {
+        await request(app)
+            .post('/users/me/avatar')
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+            .expect(200);
+
+        const user = await User.findById(userOneId);
+        expect(user.avatar).toEqual(expect.any(Buffer));
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `tests` passed
+
+Now we are going to finish `testing` the `update user` endpoint were you going to have a `test` that checks that an `update` is performed correctly and another `test` that will check that you can't `update` the `user` with an invalid field.
+
+- Get to the `user.test.js`
+- At the bottom of the file; add a new `test` with the following name and an `async function`
+
+    `test('Should update valid user fields', async () => {});`
+
+- Now call the `request` method sending the `app`
+
+    ```js
+    test('Should update valid user fields', async () => {
+        await request(app)
+    });
+    ```
+
+- Use the `patch` method with the `/users/me` path; set `authorization`; send a field that you can `update` from the `user` and `expect` a `200` status
+
+    ```js
+    test('Should update valid user fields', async () => {
+        await request(app)
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                name: 'Test'
+            })
+            .expect(200)
+    });
+    ```
+
+- Fetch the `user` and store it in a new constant call `user`
+
+    ```js
+    test('Should update valid user fields', async () => {
+        await request(app)
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                name: 'Test'
+            })
+            .expect(200);
+
+            const user = await User.findById(userOneId);
+    });
+    ```
+
+- Expect that the `user` field is equal to the data that you use to update
+
+    ```js
+    test('Should update valid user fields', async () => {
+        await request(app)
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                name: 'Test'
+            })
+            .expect(200);
+
+            const user = await User.findById(userOneId);
+            expect(user.name).toEqual('Test');
+    });
+    ```
+
+- Now copy the `update test` and paste it at the bottom of the file
+- Update the name of the new `test` to this one
+
+    `test('Should not update a invalid user field', async () => {...}`
+
+- Remove the `user` constant and the last `expect`
+- Update the property that you are on the `send` method object to a property that doesn't exist on the `user` and change the `expect` status to a 
+
+    ```js
+    test('Should update valid user fields', async () => {
+        await request(app)
+            .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+            .send({
+                location: 'Test'
+            })
+            .expect(400);
+    });
+    ```
+
+- Save the file and check the terminal
+- You should see that all `tests` passed
