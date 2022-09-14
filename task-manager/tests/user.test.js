@@ -31,6 +31,39 @@ test('Should signup a new user', async () => {
     expect(user.password).not.toBe('MyPass7771');
 });
 
+test('Should not signup user with invalid name', async () => {
+    await request(app)
+        .post('/users')
+        .send({
+            name: '',
+            email: 'test@otherexample.com',
+            password: 'MyPass7771'
+        })
+        .expect(400);
+});
+
+test('Should not signup user with invalid email', async () => {
+    await request(app)
+        .post('/users')
+        .send({
+            name: 'test',
+            email: 'test.com',
+            password: 'MyPass7771'
+        })
+        .expect(400);
+});
+
+test('Should not signup user with invalid password', async () => {
+    const response = await request(app)
+        .post('/users')
+        .send({
+            name: 'test',
+            email: 'test@otherexample.com',
+            password: 'Pass'
+        })
+        .expect(400);
+});
+
 test('Should login existing user', async () => {
     const response = await request(app)
         .post('/users/login')
@@ -99,15 +132,6 @@ test('Should upload avatar image', async () => {
     expect(user.avatar).toEqual(expect.any(Buffer));
 });
 
-// Goal: Test user updates
-//
-// 1. Create "Should update valid user fields"
-//  - Update the name of the test user
-//  - Check the data to confirm it's changed
-// 2. Create "Should not update a invalid user field"
-//  - Update a "location" field and expect error status code
-// 3. Test your work
-
 test('Should update valid user fields', async () => {
     await request(app)
         .patch('/users/me')
@@ -119,6 +143,55 @@ test('Should update valid user fields', async () => {
 
         const user = await User.findById(userOneId);
         expect(user.name).toEqual('Test');
+});
+
+test('Should not update unauthenticated user', async () => {
+    await request(app)
+        .patch('/users/me')
+        .send({
+            name: 'NotAuthenticated'
+        })
+        .expect(401);
+
+    const user = await User.findById(userOneId);
+    expect(user.name).not.toEqual('NotAuthenticated');
+});
+
+test('Should not update user with a invalid name', async () => {
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            name: ''
+        })
+        .expect(400);
+
+    const user = await User.findById(userOneId);
+    expect(user.name).toEqual('Testing');
+});
+
+test('Should not update user with a invalid email', async () => {
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            email: 'test'
+        })
+        .expect(400);
+
+    const user = await User.findById(userOneId);
+    expect(user.email).toEqual('testing@example.com');
+});
+
+// Note: Check how to safely add a comparison process
+test('Should not update user with a invalid password', async () => {
+    await request(app)
+        .patch('/users/me')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            password: 'PASS'
+        })
+        .expect(400);
 });
 
 test('Should not update a invalid user field', async () => {
