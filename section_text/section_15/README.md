@@ -6,7 +6,7 @@ When we talk about the testing we are not talking about manually testing them in
 
 We will begin the `testing` process by writing our first `test` so we will see what tools we will need in order to get this done and we also are going to check the reason why `testing` is so important for all applications.
 
-Now we will set the tool that we are going to use to make our first `test`; in our case, we will use [jest](https://jestjs.io/); this is the `testing` framework that we are going to use on this section; later we will use another `testing` framework called [mocha](https://mochajs.org/).
+Now we will set the tool that we are going to use to make our first `test`; in our case, we will use [jest](https://jestjs.io/); this is the `testing` framework that we are going to use on this section.
 
 To begin our `testing` journey we will use `jest` that have some nice to have features that make it a little easy to write and manage your `test` cases. Let's begin with the process.
 

@@ -188,18 +188,18 @@ test('Should sort task by completed field', async () => {
 
 test('Should sort task by createdAt field', async () => {
     const response = await request(app)
-        .get('/tasks?sortBy=sortBy=createdAt:desc')
+        .get('/tasks?sortBy=createdAt:desc')
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send()
         .expect(200);
 
     expect(response.body.length).toEqual(2);
-    expect(response.body[0].description).toEqual('First task');
+    expect(response.body[0].description).toEqual('Second task');
 });
 
 test('Should sort task by updateAt field', async () => {
     const response = await request(app)
-        .get('/tasks?sortBy=sortBy=updateAt:desc')
+        .get('/tasks?sortBy=updateAt:desc')
         .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
         .send()
         .expect(200);
