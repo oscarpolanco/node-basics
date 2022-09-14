@@ -15,4 +15,4 @@ notes.json
 keys.dev.js
 
 # task-manager app
-task-manager/config/*
+task-manager/config/*.env
