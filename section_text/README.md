@@ -27,3 +27,4 @@ On this repository, you will see some examples related to using `NodeJs` to get 
 - [Section 13: File Uploads(Task App)](https://github.com/oscarpolanco/node-basics/tree/master/section_text/section_13)
 - [Section 14: Sending Emails(Task App)](https://github.com/oscarpolanco/node-basics/tree/master/section_text/section_14)
 - [Section 15: Testing Node.js(Task App)](https://github.com/oscarpolanco/node-basics/tree/master/section_text/section_15)
+- [Section 16: Real-Time web application with socket.io(Chat App)](https://github.com/oscarpolanco/node-basics/tree/master/section_text/section_16)
