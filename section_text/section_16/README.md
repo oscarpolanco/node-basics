@@ -79,7 +79,7 @@ Now we are going to create the `scripts` that we are going to use to run our app
 - Add a new script call `start` that uses `node` to run the `src/index.js` file
 
     ```json
-      "scripts": {
+    "scripts": {
         "start": "node src/index.js"
     },
     ```
@@ -87,7 +87,7 @@ Now we are going to create the `scripts` that we are going to use to run our app
 - Then add a `dev` script that uses `nodemon` to run the `src/index.js` file
 
     ```json
-      "scripts": {
+    "scripts": {
         "start": "node src/index.js",
         "dev": "nodemon src/index.js"
     },
@@ -102,3 +102,174 @@ Now we are going to create the `scripts` that we are going to use to run our app
 - Now use the `dev` script using: `npm run dev`
 - Go to your browser and refresh the page
 - You should see the `Chat App` message
+
+## WebSockets
+
+We are going to be checking the `WebSocket` protocol which is the one that will help us to do real-time applications with `node.js`. The `WebSocket` protocol is not specific to `node.js` so you can use other programming languages. Before we begin to work on the application we will talk a little about `WebSockets`.
+
+Like the `HTTP` protocol the `WebSocket` protocol will help us to set communication. Let's do an example in order to catch the idea of the `WebSockets`. In this example we are going to have a server that will be a `node.js` application and from there, clients can connect to that server for this example, we will have 4 clients but first, let's check some things about `WebSockets`:
+
+- `WebSockets` allow for a `full-duplex` communication(Bidirectional communication) this means that the client can initiate communication with the server and vice versa thing that we don't have with the `HTTP` protocol on which the client needs to initiate the request asking for data and the server responds with the data but at any point of time the server can't initiate the communication to send data to the client. With `WebSocket` we have a persisting connection which means that the client connects to the server and stays connected as long as it needs to
+- `WebSocket` is a separate protocol from the `HTTP` protocol which is why we see a different behavior
+- Persistent connection between client and server
+
+Let's see all of this in the example. First, we are going to ignore 3 clients and just work with 1 client and the server
+
+```
+*----------*
+| Client 1 |
+*----------*
+
+             *--------*
+             | Server |
+             *--------*
+```
+
+The client will communicate with the server
+
+```
+*----------*
+| Client 1 | ===> |Client -> Server|
+*----------*      |My new message  |
+            \
+             *--------*
+             | Server |
+             *--------*
+```
+
+Remember that the communication can be bidirectional but in this case, is going from client to server. Using the `chat app` on the example; a `user` will type a message on input and submit this message that will send it to the server. At the moment that the server receives the message it can do nothing or a task that we set it to do when a message is received in our case we will bring the other 3 clients into the mix.
+
+```
+    |Client -> Server|
+    |My new message  |
+    /\
+*----------*            *----------*
+| Client 1 |            | Client 3 |
+*----------*            *----------*
+            \
+             *--------*
+             | Server |
+             *--------*
+
+*----------*            *----------*
+| Client 2 |            | Client 4 |
+*----------*            *----------*
+```
+
+So client 1 sends the message and the server receives the message; the next thing is to make sure that everyone connected to that `chat` room receives the message. After receiving the message the server will send the message to each client.
+
+```
+    |Client 1 -> Server|
+    |My new message    |
+    /\
+*----------*            *----------*
+| Client 1 |            | Client 3 |
+*----------*            *----------*
+            \           /
+             *--------* =====> |Server -> Client 3|
+             | Server |        |Other user message|
+             *--------*
+            /           \ =============> |Server -> Client 4|
+*----------*           *----------*      |Other user message|
+| Client 2 |           | Client 4 |
+*----------*           *----------*
+            \\
+             |Server -> Client 2|
+             |Other user message|
+```
+
+So each client will receive the message and render it on the browser this means that the server initiates communication with clients 2, 3,4 so here we have an application that all clients are connected to the server and can communicate in a bidirectional way.
+
+## Getting started with Socket.io
+
+In this section, we will begin to set the `chat` app and for this, we will begin setting the [socket.io](https://socket.io/) library on our `express` server. This library provides everything that we need to set up our server in our `node.js` scripts and it also provides client site code that we can use on the browser to communicate with the server.
+
+- On your terminal; get to the `chat-app` directory
+- Install the `socket.io` library using: `npm install socket.io`
+- Start your local server using: `npm run dev`
+- On your editor; go to the `chat-app/src/index.js` file
+
+Before we can begin to use the `socket.io` library we will need to do a little refactor with the code that we already have so we can get a server that works with `express` and `socket.io`. This refactor is not going to change the behavior of our server is just a different way to configure `express`.
+
+- Below the `path` module; import the `HTTP` module(Remember that this is a core `node` module so is already installed)
+
+    `const http = require('http');`
+
+- Below the `app` constant; create a new constant call `server` that is value will be the result of calling the `createServer` method of `HTTP` and sending `app` as its argument
+
+    `const server = http.createServer(app);`
+
+    The `createServer` method will allow us to create a web server. If we don't do this `express` will do this behind the scenes so we don't change the behavior of our current `express` server
+
+- Now change `app` for `server` on the line that is calling the `listen` method
+
+    ```js
+    server.listen(port, () => {
+        console.log(`Server is up on port ${port}!`);
+    });
+    ```
+
+\- Save the file and go to the browser
+- Get to http://localhost:3000/
+- You should see the `Chat App` message
+
+We don't change the behavior of our `express` server but we make it a lot easier to work with `socket.io`.
+
+- Get to the `index.js` file
+- Below the `express` definition; require `socket.io`
+
+    `const socketIO = require('socket.io');`
+
+- Now below the `server` constant; create a new constant call `io` that its value will be the result of the `socketIO` function sending the `server` as a parameter
+
+    `const io = socketIO(server);`
+
+    This function will help us to configure `socket.io` to work with a given `server` so this is why we need to do the refactor first because it expects the raw `HTTP` server and if `express` create it behind the scene we don't have access to it
+
+At this point, we can configure the server to work with the client and the first thing that we are going to do is print a message when a given client connects to the server.
+
+- Below the `app.use` line; call the `on` function of `io`
+
+    `io.on();`
+
+    The `on` function will help us to subscribe to an event and run a function every time this event occurs. In our case, we will run a function every time a `connection` event happens
+
+- Add a `string` with the word `connection` as the first parameter of the `on` function and a function that logs a message as the second parameter
+
+    ```js
+    io.on('connection', () => {
+        console.log('New WebSocket connection');
+    });
+    ```
+
+- Save the file and go to your browser
+- Refresh the page
+- Get to your terminal and you should not see anything
+
+This is because we are not connected to the server and in order to connect to our server we will need to load the client side of the `socket.io` library.
+
+When we set the `socket.io` server(On the `io` constant creation) it will serve up that your client can access so we will need to make it accessible on the `index.html` file
+
+- Get to the `public/index.html` file
+- Below the `Chat App` message on the `body`; add a new `script` tag with the following `src`
+
+    `<script src="/socket.io/socket.io.js"></script>`
+
+    This `script` that we are loading is not a `script` of our creation so it doesn't exist anywhere on our public directory this is something that is served up because we configure our server to work with `socket.io`
+
+- Now below the `socket.io.js` script tag; add another script tag with the following `src`
+
+    `<script src="/js/chat.js"></script>`
+
+    This will be a file of our creation(Which doesn't exist yet) that we are going to use the function that `socket.io` make available to us in the client
+
+
+- On the `public` directory; create a `js` folder
+- In this newly created folder; create a new file called `chat.js`
+- On the `chat.js` file; call the `io` function
+
+    `io();`
+
+- Save the file and go to your browser
+- Refresh the page
+- Go to your terminal and you will see the message that you added to the `on` function
