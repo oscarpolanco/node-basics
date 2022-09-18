@@ -273,3 +273,222 @@ When we set the `socket.io` server(On the `io` constant creation) it will serve 
 - Save the file and go to your browser
 - Refresh the page
 - Go to your terminal and you will see the message that you added to the `on` function
+
+## Socket.io events
+
+Now we are going to use `socket.io` to transfer data between the client and server in real-time. Here we will do a little side project in order to learn how to use the `socket.io`; this example will be a counter that store a number on the server and send it to all connected client then the client renders the number into the browser also the client will have an increment button that will increment the number that we receive from the server then send it to the server that will proceed to send the updated number to all other connected clients.
+
+- On your editor; go to the `chat-app/src/index.js` file
+- Below the `connection` event listener; create a new constant call `count` with a value of `0`
+- In the function of the `connection` listener; add a parameter called `socket`
+
+    `io.on('connection', (socket) => {...});`
+
+    The `socket` parameter is an object and contains information about the new connection so with `socket` we can use functions to communicate with that specific client. Remember this function will run for each client that establish a connection
+
+- Now on the function; call the `emit` function of `socket`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit();
+    });
+    ```
+
+    When we are working with `socket.io` and want to transfer data; we are sending and receiving events. An event is made at least of one thing that is the name in this case we will create our custom one for the counter
+
+- Send to the `emit` function a string for the event name and the name will be `countUpdated`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated');
+    });
+    ```
+
+    This will be enough to send the event to the client but the client needs to receive the event
+
+- Go to the `js/chat.js` file
+- Store the return value of the `io` function on a constant call `socket`
+
+    `const socket = io();`
+
+- Now at the bottom of the file; call the `on` method of socket
+
+    `socket.on();`
+
+As we see before; the `on` function receives arguments; the `name` of the event and the function that will run when we event is triggered.
+
+- Send the name of the event that we set on `index.js` as a first argument of the on function and as a second argument send a function
+
+    `socket.on('countUpdated', () => {});`
+
+    In order to get the event that we will send from the server, we will need to add the same name of the event that we set on the server
+
+- On the function; render a message
+
+    ```js
+    socket.on('countUpdated', () => {
+        console.log('The count has been updated!');
+    });
+    ```
+
+- Save all the files
+- Get to your terminal
+- Go to the `chat-app` directory
+- Run the `dev` script using: `npm run dev`
+- On your browser go to http://localhost:3000/
+- You should see the `Chat App` message
+- Open the inspector
+- Go to the `console` tab
+- You should see that the `count updated` message renders
+
+Now that we have to listen the event on the client we can send data from the server using this event.
+
+- Go to the `index.js` file
+- On the `emit` function, add `count` as a second argument
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated', count);
+    });
+    ```
+
+    Everything that we pass after the event name will be available on the callback function on the client
+
+- Go to the `chat.js` file
+- Add `count` to the `on` callback function and add `count` to the message
+
+    ```js
+    socket.on('countUpdated', (count) => {
+        console.log('The count has been updated!', count);
+    });
+    ```
+
+    You can name the parameter as you like the only thing that matter is the order of the arguments that you have in the case you send more than one value from the `emit` function
+
+- Save the files
+- Go to the browser and refresh the page
+- You should see on the console that the message renders and have the `count` value
+
+Now we will need to send data from the client to the server and for this, we will have a button that will increment the value of the `count`.
+
+- Go to the `index.html` file
+- Below the `Chat App` message; add a number with the following
+
+    ```html
+    <body>
+        Chat App
+        <button id="increment">+1</button>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Go to the `chat.js` file
+- At the bottom of the file; use the `querySelector` function of `document` and grad the button
+
+    `document.querySelector('#increment')`
+
+- Now chain the `addEventListener`; sending the `click` name and a function also console a message on the function
+
+    ```js
+    document.querySelector('#increment').addEventListener('click', () => {
+        console.log('click');
+    });
+    ```
+
+- Save the files
+- Go to your browser and refresh the page
+- You should see a button
+- Click the button
+- You should see the `click` message on the console
+
+Now we are going to send data back to the server each time that we click the button that we just created.
+
+- Go to the `chat.js` file
+- On the `click` function; call the `emit` function of `socket` and send a new name for an event in this case we will use `increment`
+
+    ```js
+    document.querySelector('#increment').addEventListener('click', () => {
+        console.log('click');
+        socket.emit('increment');
+    });
+    ```
+
+    Since the server knows the current `count` we don't need to send the actual `count` value from the client we just let the server know that we are going to increment the value that it already has
+
+- Go to the `index.js`
+- On the `connection` function; call the `on` function of `socket` and send the `increment` name and a function
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated');
+
+        socket.on('increment', () => {}
+    });
+    ```
+
+- Now on the `increment` function; increment the value of `count` by one
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated');
+
+        socket.on('increment', () => {
+            count++;
+        }
+    });
+    ```
+
+Now we will need to make sure that the client has the updated `count`
+
+- Below the `count++` line; call the `emit` function of `socket` sending the `countUpdated` name and the `count` value
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated');
+
+        socket.on('increment', () => {
+            count++;
+            socket.emit('countUpdated', count);
+        }
+    });
+    ```
+
+- Save all the files
+- Get to your browser and refresh the page
+- Click on the `increment` button
+- You should see that you receive a message with the incremented `count` value
+- Now open another browser(not tab; another window)
+- Go to http://localhost:3000/
+- Open the inspector and go to the console tab
+- You should see a message with the updated `count` value
+- Click on the `increment` button of the first browser
+- You should see that you receive the updated `count` value just on the first browser
+
+This is because when we use `socket.emit` on `index.js` for the `countUpdated` event; we are emitting the event to a particular connection but in this case, we want to emit it to all the available connections.
+
+- Go to the `index.js` file
+- Replace `socket` with `io` on the `increment` function
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('countUpdated');
+
+        socket.on('increment', () => {
+            count++;
+            io.emit('countUpdated', count);
+        }
+    });
+    ```
+
+- Save the file
+- Go and refresh both browsers
+- Click the `increment` button on one of your browsers
+- You should see that both browsers receive a message with the incremented `count` value
