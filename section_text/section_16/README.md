@@ -492,3 +492,134 @@ This is because when we use `socket.emit` on `index.js` for the `countUpdated` e
 - Go and refresh both browsers
 - Click the `increment` button on one of your browsers
 - You should see that both browsers receive a message with the incremented `count` value
+
+After we practice a little bit of `socket.io` we can begin to work with the `chat app`.
+
+- Get to the `public/js/chat.js`
+- Remove all the code; except the `socket` constant definition at the top of the file
+- On your editor get to the `index.js` file
+- Remove all de code related to the `count app` example inside of the `connection` callback
+
+At this moment we will send a `welcome` message to a new `user` so we will set an event that is triggered when a new `connection` appear. For the moment we just print the message on the browser console.
+
+- Inside of the `connection` callback; call the `emit` function of `socket` sending the event name; in this case, will be called `message`, and the message that we want to send as a welcome message
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+    });
+    ```
+
+- Now get to the `chat.js` file
+- Below the `socket` constant definition; call the `on` method of `socket` listening to the `message` event and printing the `message` that you receive
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+    });
+    ```
+
+- Save both files
+- Get to your browser and refresh the page
+- Open dev tools
+- You should see the `welcome` message
+
+Now that we have a `welcome` message for all new connections we will set a `user` interface that will allow us to send a message to all the active `users` so we will need to set a `form` that the `user` can use to submit a message then create an event that the server can use to forward that message to all the current `users`.
+
+- Get to the `index.html` file
+- Remove the `count` button
+- Now below the `Chat App` text; add a `form` tag with the following `id`
+
+    ```html
+    <body>
+        Chat App
+        <form id="message-form"></form>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Then inside of the `form`; add a `text input` with the `name` property set as a `name` and a `placeholder` with a message
+
+    ```html
+    <body>
+        Chat App
+        <form id="message-form">
+            <input name="message" placeholder="Message" type="text" />
+        </form>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Below the `input`; add a button
+
+    ```html
+    <body>
+        Chat App
+        <form id="message-form">
+            <input name="message" placeholder="Message" type="text" />
+            <button>Send</button>
+        </form>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Get to the `chat.js` file
+- Below the `message` event call; select the `form`
+
+    `document.querySelector('#message-form');`
+
+- Then add an `event listener` for the `submit` event of the `form` and add a callback function that receives the actual `event`
+
+    `document.querySelector('#message-form').addEventListener('submit', (e) => {}):`
+
+- Inside of the callback function calls the `preventDefault` function of the event in order to prevent the refresh of the page when you submit the `form`
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+    });
+    ```
+
+- Now we will `emit` an event called `sendMessage` that will grab the message on the `input`
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value);
+    });
+    ```
+
+- Go to the `index.js` file
+- Below the `message emit`; call the `on` function sending the `sendMessage` name and a callback that receives the actual message
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.on('sendMessage', (message) => {});
+    });
+    ```
+
+- On the callback function; use `io` to `emit` the `message` event to all the other `users` sending the `message` that we receive
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+    });
+    ```
+
+- Save all files
+- Go to your browser and refresh the page
+- Now open another browser(Not tab; another window)
+- Open the dev tools on both
+- Type a message on one of the browsers
+- Submit the `form`
+- You should see that the `message` that you send using the `form` is on the console of the other browser

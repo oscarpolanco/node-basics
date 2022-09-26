@@ -1,11 +1,3 @@
-// Goal: Create an Express web server
-//
-// 1. Initialize npm and install express
-// 2. Setup a new Express server
-//  - Server up the public directory
-//  - Listen on port 3000
-// 3. Create index.html and render "Chat App" to the screen
-// 4. Test your work! Start the server and view the page in the browser
 const path = require('path');
 const http = require('http');
 const express = require('express');
@@ -19,25 +11,33 @@ const port = process.env.PORT || 3000;
 const publicDirectoryPath = path.join(__dirname, '../public');
 
 app.use(express.static(publicDirectoryPath));
-let count = 0;
+
+// Goal: Send a welcome message to new users
+//
+// 1. Have server emit "message" when client connects
+//  - Send "Welcome!" as the event data
+// 2. Have client listen for "message" event and print the message to console
+// 3. Test your work!
+
+// Goal: Allow Clients to send messages
+//
+// 1. Create a form with an input and button
+//  - Similar to the weather form
+// 2. Setup event listener for from submissions
+//  - Emit "sendMessage" with input string as message data
+// 3. Have server listen for "SendMessage"
+//  - Send message to all connected clients
+// 4. Test your work!
 
 io.on('connection', (socket) => {
     console.log('New WebSocket connection');
-    socket.emit('countUpdated', count);
+    socket.emit('message', 'Welcome!');
 
-    socket.on('increment', () => {
-        count++;
-        io.emit('countUpdated', count);
+    socket.on('sendMessage', (message) => {
+        io.emit('message', message);
     });
 });
 
 server.listen(port, () => {
     console.log(`Server is up on port ${port}!`);
 });
-
-// Goal: Setup scripts in package.json
-//
-// 1. Create a "start" script to start the app using node
-// 2. Install nodemon as a development dependency
-// 3. Create a "dev" script to start the app using nodemon
-// 4. Run both scripts to test your work!
