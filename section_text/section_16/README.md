@@ -623,3 +623,103 @@ Now that we have a `welcome` message for all new connections we will set a `user
 - Type a message on one of the browsers
 - Submit the `form`
 - You should see that the `message` that you send using the `form` is on the console of the other browser
+
+## Broadcasting events
+
+We are going to check how to `broadcast` the events that will lead us to 2 practical features of our application will be a `message` sent to all `users` telling them that a new `user` connect to the application and a `message` to all active `user` that another `user` close its connection.
+
+- Go to the `chat-app/src/index.js`
+
+When we `emit` an event we can do it 2 ways until this moment is called the `emit` function of the `socket` that we receive on the `connection` callback that will `emit` the event to the current `socket` and the other is using the `io` object that we define that will send the event to all active connections. Now we will have a new way that is `broadcast` that will send the event to all active connection except the current `socket` so in our case when a `user` connect to the application we will send a message to all other `users` that a new `user` connect and the `user` that connect at that moment that triggers the event will not receive the message.
+
+- On the `connection` callback; call the `broadcast.emit` function of `socket`; before the `sendMessage` event
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit();
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+    });
+    ```
+
+- Now send to the `emit` function the `massage` name and a `message` that will represent that the application has a new connection
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+    });
+    ```
+
+- Get to your terminal
+- Go to the `chat-app` directory and run the server using: `npm run dev`
+- Open 2 browser windows
+- Open the dev tools on both browsers
+- Get to http://localhost:3000/ in one of the browsers
+- You should see the welcome message
+- Go to http://localhost:3000/ on the second browser
+- You should see the `new user` message on the console of the first browser
+
+Now we will send a message when a `user` disconnects. To do this we will use another of the `socket.io` build events called `disconnect` this means that we don't need to `emit` this event because `socket.io` will take care of that for us.
+
+- Go to `index.js`
+- At the bottom of the `connection` callback; call the `on` function of `socket`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+        socket.on();
+    });
+    ```
+
+- Send the `disconnect` event name(Need to match exactly with this string) and the callback function
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+        socket.on('disconnect', () => {});
+    });
+    ```
+
+- Now use the `message` event to send a `user` disconnect message
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+        socket.on('sendMessage', (message) => {
+            io.emit('message', message);
+        });
+        socket.on('disconnect', () => {
+            io.emit('message', 'A user has left!');
+        });
+    });
+    ```
+
+- Save the file
+- Go to one of the browsers and open a new tab
+- On that browser close the tab with the app
+- Get to the other browser and refresh the page
+- You should see the welcome message
+- Go to the new tab of the other browser and go to http://localhost:3000/
+- You should see the `user connect` message on the other browser
+- Close the browser tab that you just opened
+- You should see the `user left` message on the other browser
