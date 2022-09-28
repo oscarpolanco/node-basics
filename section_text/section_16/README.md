@@ -723,3 +723,193 @@ Now we will send a message when a `user` disconnects. To do this we will use ano
 - You should see the `user connect` message on the other browser
 - Close the browser tab that you just opened
 - You should see the `user left` message on the other browser
+
+## Sharing your location
+
+Now we will add a new feature to the `chat app` which is going to allow us to share our `location` with other `users`. To do this we will use a `client-side` script that will get the `location` using the browser's [Geolocation](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation) which gives us a way to fetch the `location` assuming that the `user` they consent to share their `location`, so `Geolocation` will give us the `latitude` and `longitude` that we can send to the server then sharing with the other connected `users`.
+
+- On your editor; get to the `chat-app/public/index.html` file
+
+We will add another button that the `user` can click in order to share the `location`
+
+- Below the `form`; add a `button` with the following `id`
+
+    ```html
+    <body>
+        Chat App
+        <form id="message-form">
+            <input name="message" placeholder="Message" type="text" />
+            <button>Send</button>
+        </form>
+        <button id="send-location">Send location</button>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Now get to the `js/chat.js` file
+- Below the `#message-form` logic; select the newly created button and add a listener of the `click` event
+
+    `document.querySelector('#send-location').addEventListener('click', () => {});`
+
+The first thing we will need to do is to check if the current browser support `Geolocation` in order to avoid errors with old version browsers.
+
+- On the `send-location` callback; add a condition that check if the `geolocation` object of `navigator` exists
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {}
+    });
+    ```
+
+- Use `alert` with a message when `geolocation` is not supported(Remember to `return` in order to prevent the function continue it execution)
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            return alert('Geolocation is not supported by your browser');
+        }
+    });
+    ```
+
+- Now below the condition; call the `getCurrentPosition` function of `navigator.geolocation`
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            return alert('Geolocation is not supported by your browser');
+        }
+
+        navigator.geolocation.getCurrentPosition();
+    });
+    ```
+
+    The `getCurrentPosition` function will give us our current `location`. This function is `asynchronous` and takes some time to return the `location` and sadly it doesn't support the `promises` API so we can't use `async/await` so we will need to send a callback function that will have an object called `position` as is an argument
+
+- Send a function that receive a `position` argument as parameter of the `getCurrentPosition` function
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            return alert('Geolocation is not supported by your browser');
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {});
+    });
+    ```
+
+- Log the `position` object
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            return alert('Geolocation is not supported by your browser');
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            console.log(position);
+        });
+    });
+    ```
+
+- Save both files
+- Get to your terminal
+- Run your local server using: `npm run dev`
+- Go to http://localhost:3000/ on your browser
+- You should see the `send location` button
+- Open dev tools
+- Click on the `send location` button
+- The browser will ask you that http://localhost:3000/ wants to know your location
+- Click on allow(In some operating systems like macOS you will need to give some extras permissions)
+- On the browser console; you will see the `position` after a couple of seconds
+
+You will see that the `position` object has a `coords` property that has an object with a `latitude` and `longitude` properties that we will use.
+
+- Get back to the `chat.js` file
+- On the `getCurrentPosition` callback; remove the log
+- Now `emit` an event called `sendLocation` sending an object with the `longitude` and `latitude`
+
+    ```js
+    document.querySelector('#send-location').addEventListener('click', () => {
+        if (!navigator.geolocation) {
+            return alert('Geolocation is not supported by your browser');
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            socket.emit('sendLocation', {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+            });
+        });
+    });
+    ```
+
+- Get to the `src/index.js` file
+- Below the `sendMessage` event; call the `on` function of `socket` for the `sendLocation` event(Remember that the callback function will receive an object with the `latitude` and `longitude`)
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message) => {...});
+
+        socket.on('sendLocation', ({latitude, longitude}) => {});
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+- Now use the `emit` function of `io` in order to `emit` the `message` event to all `users` sending the `longitude` and `latitude`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message) => {...});
+
+        socket.on('sendLocation', ({latitude, longitude}) => {
+            io.emit('message', `Location: ${latitude},${longitude}`);
+        });
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+- Save all the files
+- Open a new browser window and refresh the one that you already have open
+- Click on the `send location` button on one of the browsers
+- You should see on both consoles that you receive the `latitude` and `longitude`
+
+Now we will change the `message` that we send when the `send location` button is clicked; we instead will send a `google map` URL with the `location`.
+
+- Get to the `index.js` file
+- On the `sendLocation` callback; update the `message` event string to the following
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message) => {...});
+
+        socket.on('sendLocation', ({latitude, longitude}) => {
+            io.emit('message', `https://google.com/maps?q=${latitude},${longitude}`);
+        });
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+    This `https://google.com/maps?q=` is the URL that will allow us to use `google map` and we just need to send the coordinates as query params
+
+- Save the file
+- Refresh both browsers
+- Click the `send location` button on one of the browsers
+- You should see a URL on both consoles
+- Click on the URL
+- Google maps should open with your location mark
