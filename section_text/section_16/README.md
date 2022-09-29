@@ -913,3 +913,255 @@ Now we will change the `message` that we send when the `send location` button is
 - You should see a URL on both consoles
 - Click on the URL
 - Google maps should open with your location mark
+
+## Event acknowledgment
+
+We are going to check `event acknowledgment` on `socket.io`. As its name suggests an `event acknowledgment` allow the receiver of the event that it receives and process that event; an example in the application will be when we send a `message`; the client sends the `message` to the server but the client is not sure that the server receives the event but with the `event acknowledgment` the client will be notified that the `message` was delivered successfully. Here is a little resume of what is mentioned:
+
+```
+server (emit) -> client (receive) --acknowledgement--> server
+client (emit) -> server (receive) --acknowledgement--> client
+```
+
+First; we will work with the `sendMessage` event emitted from the client. To set an `event acknowledgment` we will need to send a function as the last parameter of the `emit` function(Remember that you could have multiple arguments as data).
+
+- On your editor; get to the `chat-app/public/js/chat.js`
+- On the `sendMessage` emit; add a function as the last parameter of the `emit` function and on this function log a message
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value, () => {
+            console.log('The message was delivered!');
+        });
+    });
+    ```
+
+- Go to the `src/index.js` file
+- On the `sendMessage` callback; add a new argument called `callback`(Which can be named as you want)
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message, callback) => {...});
+
+        socket.on('sendLocation', ({latitude, longitude}) => {...});
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+    The `callback` parameter will be called to `acknowledged` the event
+
+- Use `callback` after the `message` event is emitted
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message, callback) => {
+            io.emit('message', message);
+            callback();
+        });
+
+        socket.on('sendLocation', ({latitude, longitude}) => {...});
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+- Save both files
+- Get to your terminal and go to the `chat-app` directory
+- Run your local server using `npm run dev`
+- Open 2 browser windows and on both open the dev tools console
+- Get to http://localhost:3000/ on both browsers
+- Type a message on the input on one of the browsers
+- Submit the message
+- You should see that the other browser receives the message and the one that sends it to have the `delivered` message to `acknowledge` that the `message` event was received
+
+When the server sends an `acknowledgment` to the client it can also choose to send some data and you can provide as many arguments as you like.
+
+- Get to the `index.js` file
+- On the `callback` call; send a message to the client
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', 'Welcome!');
+        socket.broadcast.emit('message', 'A new user has joined!');
+
+        socket.on('sendMessage', (message, callback) => {
+            io.emit('message', message);
+            callback('Delivered');
+        });
+
+        socket.on('sendLocation', ({latitude, longitude}) => {...});
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+- Go to the `chat.js` file
+- On the `callback` function send on the `sendMessage emit` function; add the new parameter in this case we will call `message`(Can be named as you want) and log that `message`
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value, (message) => {
+            console.log('The message was delivered!', message);
+        });
+    });
+    ```
+
+- Save both files
+- Refresh both browsers
+- On one of the browsers; type a message and submit
+- You should see on the browser that you send the message; the `acknowledge` message from the server
+
+Another great example that we can use `event acknowledgment` is to `validate` something like the `message` that we are sending; in our case, we will avoid `messages` that contain some `profane language`. To do this we will use an `npm` module that will `filter` our `messages` called [bad-words](https://www.npmjs.com/package/bad-words).
+
+- Get to your terminal and stop your local server
+- Now install the `bad-words` module using: `npm install bad-words`
+- Run your local server again
+- Get to the `index.js` file
+- Require the `bad-words` module below `socketIO`
+
+    `const Filter = require('bad-words');`
+
+    On the documentation, we see that `Filter` is the that we use on the required
+
+- On the `sendMessage` callback; create a new constant called `filter` that will be a new instance of `Filter`
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const filter = new Filter();
+        io.emit('message', message);
+        callback('Delivered');
+    });
+    ```
+
+In order to check for profane language `bad-words` give us a method called `isProfane` and that function will return `true` or `false` depending if what you send is on a pre-build list of the module(You can add your own bad word).
+
+- Below the `filter` constant; add a condition that checks if `message` is a `bad word`
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {}
+
+        io.emit('message', message);
+        callback('Delivered');
+    });
+    ```
+
+- Now if `message` is a `bad word` return the `callback` function sending an `error` message
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {
+            return callback('Profanity is not allowed!');
+        }
+
+        io.emit('message', message);
+        callback('Delivered');
+    });
+    ```
+
+- Then remove the `string` on the second `callback` call
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {
+            return callback('Profanity is not allowed!');
+        }
+
+        io.emit('message', message);
+        callback();
+    });
+    ```
+
+- Get the `chat.js` file
+- Change the name of the argument on the function send on the `sendMessage emit` to `error` and remove the console
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value, (error) => {});
+    });
+    ```
+
+- Then make a condition that checks if `error` exists and if it does return a console that prints `error`
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value, (error) => {
+            if (error) {
+                return console.log(error);
+            }
+        });
+    });
+    ```
+
+- If there is no `error`; console a `delivered` message
+
+    ```js
+    document.querySelector('#message-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+        socket.emit('sendMessage', e.target.elements.message.value, (error) => {
+            if (error) {
+                return console.log(error);
+            }
+
+            console.log('Message delivered!');
+        });
+    });
+    ```
+
+- Save both files
+- Refresh both browsers
+- On one of the browsers; type a message and submit
+- You should see the `message` on both console and `message delivered` on the one that submits the `message`
+- Now type `hell` on the input and submit
+- You should see on the console of the browser that you submit the `message` that `profanity is not allowed` message
+
+Now we can `acknowledge` the `send location` event.
+
+- Get to the `chat.js` file
+- On the `sendLocation` emit function; send a new function that logs that the `location` is received
+
+    ```js
+    navigator.geolocation.getCurrentPosition((position) => {
+        socket.emit('sendLocation', {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+        }, () => {
+            console.log('Location shared!');
+        });
+    });
+    ```
+
+- Get to `index.js`
+- On the `sendLocation` callback; add a new parameter called `callback` and call it below the `emit`
+
+    ```js
+    socket.on('sendLocation', ({latitude, longitude}, callback) => {
+        io.emit('message', `https://google.com/maps?q=${latitude},${longitude}`);
+        callback();
+    });
+    ```
+
+- Save both files
+- Refresh all browsers
+- Click the `send location` button on one of the browsers
+- You should see the `location` link on both consoles and the `location shared` message on the browser that you clicked the button
