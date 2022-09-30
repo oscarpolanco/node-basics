@@ -1165,3 +1165,176 @@ Now we can `acknowledge` the `send location` event.
 - Refresh all browsers
 - Click the `send location` button on one of the browsers
 - You should see the `location` link on both consoles and the `location shared` message on the browser that you clicked the button
+
+## Form and button states
+
+Now we are going to work a little bit on the `form` to be more helpful to the `user`. Here we will remove the `message` from the `input` when the `form` is submitted also we are going to disable the `send` and `send location` buttons until we receive the `acknowledgment` of the events and we will `focus` the `input` when the `form` is submitted.
+
+- On your editor; go to the `chat-app/public/js/chat.js` file
+
+First; we will create variables that contain the elements that we need to select from the `DOM`.
+
+- Below the `socket` definition; add a new constant called `$messageForm`(We use `$` as a convention that means that this is an element of the `DOM`) that its value will be the `form` element
+
+    `const $messageForm = document.querySelector('#message-form');`
+
+- Now create new constants called `$messageFormInput` and `$messageFormButton` that it values will be the `input` and `button` of the `form`
+
+    ```js
+    const $messageFormInput = $messageForm.querySelector('input');
+    const $messageFormButton = $messageForm.querySelector('button');
+    ```
+
+Now we will `disable` the `button` of the `form` when is submitted.
+
+- Change the `#message-form` selection on the line that we add the `event listener` and use the `$messageForm` variable
+
+    `$messageForm.addEventListener('submit', (e) => {...});`
+
+- Now on the callback function; below the `preventDefault` call; use the `setAttribute` method of `messageFormButton`
+
+    ```js
+    $messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    $messageFormButton.setAttribute();
+
+    socket.emit('sendMessage', e.target.elements.message.value, (error) => {...});
+    });
+    ```
+
+    The `setAttribute` method will allow you to add an `attribute` to an element sending the name on the `attribute` and its value; in this case `disabled`
+
+- Send `disabled` as the `attribute` that we are going to add and the same string as its value
+
+    ```js
+    $messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    $messageFormButton.setAttribute('disabled', 'disabled');
+
+    socket.emit('sendMessage', e.target.elements.message.value, (error) => {...});
+    });
+    ```
+
+At this moment the `button` is `disable` when we submit the `form` but still in this state until you refresh the page so we will need to `re-enable` the `button` and the perfect moment to do that is when the `sendMessage` event is `acknowledge`.
+
+- On the top of the `sendMessage` callback; use the `removeAttribute` method of `$messageFormButton` sending `disabled` as parameter
+
+    ```js
+    $messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    $messageFormButton.setAttribute('disabled', 'disabled');
+
+    socket.emit('sendMessage', e.target.elements.message.value, (error) => {
+            $messageFormButton.removeAttribute('disabled');
+
+            if (error) {...}
+
+            console.log('Message delivered!');
+        });
+    });
+    ```
+
+    The `removeAttribute` method will remove the `attribute` that you specify on the parameter that you send
+
+- Save the file
+- Get to your terminal and go to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- On your browser; go to http://localhost:3000/
+- Open dev tools
+- Type a `message`
+- Click the `send` button
+- You should see a quick `disable` effect and it will be `enable` when you get the event `acknowledge` on the browser
+
+Now we will need to clean the `input` when the `message` is sent.
+
+- Below the `removeAttribute` line; use the `value` property of `$messageFormInput` and add a empty string value
+
+    ```js
+    $messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    $messageFormButton.setAttribute('disabled', 'disabled');
+
+    socket.emit('sendMessage', e.target.elements.message.value, (error) => {
+            $messageFormButton.removeAttribute('disabled');
+            $messageFormInput.value = '';
+
+            if (error) {...}
+
+            console.log('Message delivered!');
+        });
+    });
+    ```
+
+Then we will `focus` the `input` when we submit the `form`
+
+- Below the `$messageFormInput.value` line; call the `focus` method of `$messageFormInput`
+
+    ```js
+    $messageForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    $messageFormButton.setAttribute('disabled', 'disabled');
+
+    socket.emit('sendMessage', e.target.elements.message.value, (error) => {
+            $messageFormButton.removeAttribute('disabled');
+            $messageFormInput.value = '';
+            $messageFormInput.focus();
+
+            if (error) {...}
+
+            console.log('Message delivered!');
+        });
+    });
+    ```
+
+- Save the file
+- Go to your browser and refresh the page
+- Type a message and submit
+- You should see that the input is clean
+- Now type another message
+- Click on another part of the page
+- Then click the `send` button
+- You should see that the `focus` get to the input
+
+Finally, we will `disable/enable` the `send location` button as we did with the `send` button
+
+- Create a constant called `$sendLocationButton` with the other variables that select the `send location` button
+
+    `const $sendLocationButton = document.querySelector('#send-location');`
+
+- Now get to the `#send-location` listener and use the variable instead of selecting the button with `document`
+
+    `$sendLocationButton.addEventListener('click', () => {...});`
+
+- Below the `navigation` condition; call the `setAttribute` method of `$sendLocationButton` and `disable` the button
+
+    ```js
+    $sendLocationButton.addEventListener('click', () => {
+        if (!navigator.geolocation) {...}
+
+        $sendLocationButton.setAttribute('disabled', 'disabled');
+
+        navigator.geolocation.getCurrentPosition((position) => {...});
+    });
+    ```
+
+- Now `enable` the button on the `sendLocation` callback
+
+    ```js
+    $sendLocationButton.addEventListener('click', () => {
+        if (!navigator.geolocation) {...}
+
+        $sendLocationButton.setAttribute('disabled', 'disabled');
+
+        navigator.geolocation.getCurrentPosition((position) => {
+                socket.emit('sendLocation', {...}, () => {
+                $sendLocationButton.removeAttribute('disabled');
+                console.log('Location shared!');
+            });
+        });
+    });
+    ```
+
+- Save the file and get to the browser
+- Refresh the page
+- Click on the `send location` button
+- You should see that the button `disable` then `enable` when you get the `location`
