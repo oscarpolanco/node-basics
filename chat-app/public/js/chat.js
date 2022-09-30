@@ -9,11 +9,30 @@ const $messages = document.querySelector('#messages');
 
 // Templates
 const $messageTemplate = document.querySelector('#message-template').innerHTML;
+const $locationMessageTemplate = document.querySelector('#location-message-template').innerHTML;
 
 socket.on('message', (message) => {
     console.log(message);
     const html = Mustache.render($messageTemplate, {
         message
+    });
+    $messages.insertAdjacentHTML('beforeend', html);
+});
+
+// Goal: Render a new template for location messages
+//
+// 1. Duplicate the message template
+//  - Change the id to something else
+// 2. Add a link inside the paragraph with the link text "My current location"
+//  - URL fo the link should be the maps URL (dynamic)
+// 3. Select the template from Js
+// 4. Render the template with the URL and append to messages list
+// 5. Test your work!
+
+socket.on('locationMessage', (url) => {
+    console.log(url);
+    const html = Mustache.render($locationMessageTemplate, {
+        url
     });
     $messages.insertAdjacentHTML('beforeend', html);
 });
@@ -35,12 +54,6 @@ $messageForm.addEventListener('submit', (e) => {
     });
 });
 
-// Goal: Disabled the send location button while location being sent
-//
-// 1. Set up a selector at the top of the file
-// 2. Disable the button just before getting the current position
-// 3. Enable the button in the acknowledgment callback
-// 4. Test your work
 $sendLocationButton.addEventListener('click', () => {
     if (!navigator.geolocation) {
         return alert('Geolocation is not supported by your browser');

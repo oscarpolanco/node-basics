@@ -1548,3 +1548,77 @@ Now we will change the `message` on the `template` on which we will add the data
 - You will see the `welcome` message
 - Type a `message` and submit
 - You should see that the `message` will appear before the input
+
+## Rendering location messages
+
+Now we will render the `location` of the `user` on the page like the `message` when we submit the `form` but we will need to actually render an `a` tag element with a `message` and dynamically add the `URL` that we receive. Instead of using the same `message` event, we will create a separate event exclusive to the `location`.
+
+- On your editor; go to the `chat-app/src/index.js`
+- Get to the `sendLocation` callback and replace the `message` event that is emitted for a new event called `locationMessage`
+- Go to the `public/js/chat.js` file
+- Below the `message` event; receive the `locationMessage` event that receives a `url` and log that `url`
+
+    ```js
+    socket.on('locationMessage', (url) => {
+        console.log(url);
+    });
+    ```
+
+- Save both files
+- On your terminal; get to the `chat-app` directory and run your local server using: `npm run dev`
+- In your browser go to http://localhost:3000/
+- Open dev tools
+- Click the `send location` button
+- You should see after a little time the `location` URL
+
+Now that we have a separate event for the `location` we can render a different `template` for the `location` so we will create a new `template` with the `a` tag and add it as the last element of the `messages` div each time you click the button.
+
+- Go to the `index.html` file
+- Below the `message-template` template; add the following `template` that uses the `url` variable on an `a` tag
+
+    ```html
+    <script id="location-message-template" type="text/html">
+        <div>
+            <p>
+                <a href="{{url}}" target="_blank">My current location</a>
+            </p>
+        </div>
+    </script>
+    ```
+
+    We use the `target` property to open a new tab when you click the link
+
+- Get to the `chat.js` file
+- Below `$messageTemplate`; add a new constant call `$locationMessageTemplate` that select the `html` of the `location-message-template`
+
+    `const $locationMessageTemplate = document.querySelector('#location-message-template').innerHTML;`
+
+- On the `locationMessage` callback; create a constant call `html` that its value will be the result of calling the `render` function of `Mustache` sending the `$locationMessageTemplate` value and the object with a `url` property
+
+    ```js
+    socket.on('locationMessage', (url) => {
+        console.log(url);
+        const html = Mustache.render($locationMessageTemplate, {
+            url
+        });
+    });
+    ```
+
+- Then add the `html` content at the bottom of the `messages` div
+
+    ```js
+    socket.on('locationMessage', (url) => {
+        console.log(url);
+        const html = Mustache.render($locationMessageTemplate, {
+            url
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Save both files
+- Go to the browser and refresh the page
+- Click the `send location` button
+- After a little time you should see the `current location` link before the `form input`
+- Click on the link
+- A new tap should open with `google maps` and your `location`
