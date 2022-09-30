@@ -1338,3 +1338,213 @@ Finally, we will `disable/enable` the `send location` button as we did with the 
 - Refresh the page
 - Click on the `send location` button
 - You should see that the button `disable` then `enable` when you get the `location`
+
+## Rendering messages
+
+At this moment we can render the `messages` on the browser's page instead of the console of dev tools. For this, we will use [mustache](https://github.com/janl/mustache.js) which allows us to define `HTML` templates and render them with our data using `js`.
+
+- On your editor; go to the `chat-app/public/index.html`
+- In the `body` tag; add the following `script` tag
+
+    ```html
+        <body>
+        Chat App
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+    This is a `cdn` for `mustache` but you can download the script and put it in the `public` directory instead of this
+
+When you define a `template` you can render it as many times as you need to. Now let's create our first `template`.
+
+- Below the `send location` button; add a `script` tag with the following `id` and `type`
+
+    ```html
+        <body>
+        Chat App
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Inside of the `script` tag add a `div` that has a `p` tag with a message inside of it
+
+     ```html
+        <body>
+        Chat App
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html">
+            <div>
+                <p>This is a message</p>
+            </div>
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+With this `script` tag we can use `mustache` to render the `HTML` on the page but we still don't have a place to put the data so we will create an element that will store all the `messages` that we are going to render
+
+- Now below the `Chat App` title on the `body`; add a `div` with the following `id`
+
+     ```html
+        <body>
+        Chat App
+
+        <div id="messages"></div>
+
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html">
+            <div>
+                <p>This is a message</p>
+            </div>
+        </script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+We still don't have any visible change on the page but we can begin to change this on `chat.js` so we can add the `template` dynamically. The place on `chat.js` makes sense for us to work with the `template` logic on the `message` event callback because every time a `message` get to the `user` we will add it to the `messages` div.
+
+- Get to the `js/chat.js` file
+
+In order to render the `template`, we will need 2 things; the `template` itself and the place where I will put the `template`
+
+- Create a new variable call `$messages` and select the `messages` div; below the `$sendLocationButton` constant
+
+    `const $messages = document.querySelector('#messages');`
+
+- Below of the `$messages` variable; create a new constant call `$messageTemplate` that select the `script` tag
+
+    `const $messageTemplate = document.querySelector('#message-template')`
+
+We actually need the `HTML` inside of the `script` tag so we will need to use the `innerHTML` property on the `$messageTemplate` constant
+
+- Use the `innerHTML` when you select the `script` on the `$messageTemplate` constant
+
+    `const $messageTemplate = document.querySelector('#message-template').innerHTML;`
+
+- On the `message` callback; create a new constant call `html` that its value will be the result of the `render` function of the `Mustache` instance
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render();
+    });
+    ```
+
+    Since we added a `mustache` cdn we have available an instance of `mustache` on our script file and when we use the `render` function we actually compile the `HTML` that we send to it
+
+- Send `$messageTemplate` as argument of the `render` function
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate);
+    });
+    ```
+
+Now we will need to add the `html` on the `messages` div and we can use the `insertAdjacentHTML` function
+
+- Below of the `html` constant; use the `insertAdjacentHTML` function on the `$messages` variable
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate);
+        $messages.insertAdjacentHTML();
+    });
+    ```
+
+    The `insertAdjacentHTML` function receives two arguments; the position that the data will be added and can be one of these options:
+
+    - afterbegin: Will add the new element at the top of the current element. In our case just after the open `div` tag
+    - afterend: Will add the new element after the current element closes it. In our case will be after the close `</div>` tag
+    - beforebegin: Will add the element before the open tag of the current element. In our case before the open `div` tag 
+    - beforeend: Will add the element before the closing tag of the current element. In our case before the closing `</div>` tag
+
+    The other argument is the actual `HTML` that you will add
+
+- Send `beforeend` as first argument of the `insertAdjacentHTML` function and the `html` value as the second
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate);
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+    This will add the `message` to the `messages` div and each time that a `message` is added will be at the bottom of the div
+
+- Save the file
+- On your terminal; go to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- On your browser go to http://localhost:3000/
+- You should see the `template` message on the page
+- Type a `message` on the input and submit
+- You should see the `template` message twice(Each time you submit a `message` will add again)
+
+Now we will change the `message` on the `template` on which we will add the data that we receive on the `message` event callback. On `mustache` there is a way of placing dynamic data on the `template` and that is adding a variable(That you will send the value from your `js`) and adding it on double curly braces.
+
+- Get to the `index.html`
+- On the `script` template; remove the content of the `p` tag
+- Add the following as content of the `p` tag
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div>
+            <p>{{message}}</p>
+        </div>
+    </script>
+    ```
+
+- Now get to the `chat.js` file
+- Get to the `message` event callback; and add an object as the second parameter of the `render` function
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {});
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+    On this object, we can set all the `key/value` pairs that we want and the `key` is the thing that we are going to be accessing from the template in this case `message`
+
+- On the `render` object; add the `message` that we receive as an argument of the `message` event callback
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            message
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Save both files
+- Get to the browser and refresh the page
+- You will see the `welcome` message
+- Type a `message` and submit
+- You should see that the `message` will appear before the input
