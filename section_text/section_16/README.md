@@ -1622,3 +1622,219 @@ Now that we have a separate event for the `location` we can render a different `
 - After a little time you should see the `current location` link before the `form input`
 - Click on the link
 - A new tap should open with `google maps` and your `location`
+
+## Working with time
+
+We will continue integrating `time` into the application. Each time we see get a `message` on our application we also receive the `time` which it was sent so we will see how to generate a `timestamp`; how to transfer between client and server and how to format the `timestamp` on a useful way that we can show on the client.
+
+We first; focus on how to build a `timestamp` and for this, we can use built-in `js` functionality. Let's test some of this functionality 
+
+- Go to the browser and open the dev tools
+- On the console; create a constant that its value will be the following
+
+    `const now = new Date()`
+
+    Calling the `Date` constructor will generate a new `Date` object that represents a point in time when we generate the code
+
+- Click enter to create the `now` constant
+
+Now we have access to all the functions that `Date` provide and store the moment of time that the `Date` constant was created. [Here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) is a resume of the `Date` functions that you have available 
+
+- Now call the `toString` function and click enter
+
+    `now.toString()`
+
+- A string representation of the current time and when are we in the world(We are not going to share all this information with the client we will format it)
+- Use the `getDate` method and click enter
+
+    `now.getDate()`
+
+    The `getDate` method allows you to extract the day of the month. They are other functions that will allow extracting other parts of the `date`
+
+- You should see the `day` of the current `date`
+- Now use the `getTime` method and click enter
+
+    `now.getTime()`
+
+- You should see a big number
+
+This number is a `timestamp` that is the representation of a point of time of the current `date` and actually is the number of milliseconds since `January 1st midnight of 1970`(This point of time is known as `Unix epoch`) so the number `0` represents that point of time; a negative number represents some point at the past of that date and a positive number represent the future of that point of time. The `timestamps` are great for transferring it between systems and are universally understood across all programming languages.
+
+We will generate the `timestamp` of each `message` on the server then send it with the `message` to the client then when the client receives the `message` and `timestamp`(We will format it to be understandable for the `user`) it will render on the page.
+
+At first; we will concentrate on the `message` event on the `src/index.js` file. As you see we use the `message` event multiple times and as mentioned we will send the `timestamp` with each `message` this means that we will have some duplicate code so we will build a new function that helps us to generate the `timestamp` and associate with the current `message` on an object. Why an object? Because will have all data related to a `message` on a single object instead of having multiple parameters on the `emit` functions.
+
+- On your editor; create a new folder called `utils` inside of the `src` directory
+- In this newly created directory; create a new file called `messages.js`
+- On this new file; create a new function called `generateMessage` that receives a variable called `text`
+
+    `const generateMessage = (text) => {}`
+
+- Return an object with the `text` and a property called `createdAt` that its value will be the result of the `getTime` function of a new `Date` instance
+
+    ```js
+    const generateMessage = (text) => {
+        return {
+            text,
+            createdAt: new Date().getTime()
+        }
+    }
+    ```
+
+- Export the `generateMessage` function
+
+    ```js
+    module.exports = {
+        generateMessage
+    }
+    ```
+
+- Get to the `index.js` file
+- Import the `generateMessage` function below `Filter`
+
+    `const { generateMessage } = require('./utils/messages');`
+
+- Update each `message` event call to use the `generateMessage` function always sending the `message`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.emit('message', generateMessage('A new user has joined!'));
+
+        socket.on('sendMessage', (message, callback) => {
+            const filter = new Filter();
+
+            if (filter.isProfane(message)) {...}
+
+            io.emit('message', generateMessage(message));
+            callback();
+        });
+
+        socket.on('sendLocation', ({latitude, longitude}, callback) => {...});
+
+        socket.on('disconnect', () => {
+            io.emit('message', generateMessage('A user has left!'));
+        });
+    });
+    ```
+
+- Get to `public/js/chat.js` file
+- Update the object of the `render` function of the `message` event to use the new property
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            message: message.text
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Save all files
+- On your terminal; get to the `chat-app` directory
+- Run your local server using: `nom run dev`
+- On your browser go to http://localhost:3000/
+- You should see the `welcome` message
+
+Now that we prove that the application works as before we can continue adding the `timestamp` of the `message`.
+
+- Get to the `public/index.html`
+- On the `message-template` template update the content of the `p` tag like this
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div>
+            <p>{{createdAt}} - {{message}}</p>
+        </div>
+    </script>
+    ```
+
+    We don't send the `createdAt` value yet
+
+- Go to the `chat.js` file
+- On the `render` function of the `message` event; add a new property to the object called `created` that takes its value of the property of the same name of `message`
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            message: message.text,
+            createdAt: message.createdAt
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Save the files
+- Refresh the page
+- You should see the `welcome` message with the `timestamp` value
+
+The `timestamp` value is not useful for humans so we will need to format it and this is when the [moment.js](https://momentjs.com/) library will enter into action. `Js` does provide infrastructure for working with `dates` but is not very good on the format which is why we will use `moment.jS`. Like `mustache` we will use a `cdn` for `moment.js`
+
+- Get to the `index.html` file
+- On the `body` tag; add the following `script`
+
+    ```html
+    <body>
+        Chat App
+
+        <div id="messages"></div>
+
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html">...</script>
+
+        <script id="location-message-template" type="text/html">...</script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+In our case, we will use a very small part of the `moment.js` features in our case `display`.
+
+- On your browser go to https://momentjs.com/docs/#/displaying/
+
+You will see that `moment` provide a `format` function that can we use to send a `string` or not. This `string` will be a pattern of `tokens` that allows us to set how the `date` will show up. As you see on the table of `token` we have different ways that we can present each part of the `date`.
+
+- Go to the `chat.js` file
+- Remove the `createAt` value on the `message` event `render` function
+- Add the `moment` function as it value sending the `message.createdAt` as it parameter
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            message: message.text,
+            createdAt: moment(message.createdAt)
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Then call the `format` function sending the following string
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            message: message.text,
+            createdAt: moment(message.createdAt).format('h:mm a')
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+    - `h`: This means that we will show the `hour` without padding on the front. This `hh` will add padding so we always have 2 characters
+    - `:`: Is not a special `token` so it will show as it is
+    - `mm`: Will show the `minute` with padding so we always have 2 characters
+    - `a`: Will show `am/pm` on the lowercase version
+
+- Save the file
+- Go to http://localhost:3000/
+- You should see the `welcome` message with the current hour
