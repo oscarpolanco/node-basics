@@ -1838,3 +1838,77 @@ You will see that `moment` provide a `format` function that can we use to send a
 - Save the file
 - Go to http://localhost:3000/
 - You should see the `welcome` message with the current hour
+
+Now we are going to do the same with the `location` message.
+
+- Go to the `src/utils/messages.js` file
+- Below the `generateMessage` function; add a new function called `generateLocationMessage` that receive a `URL` and return an object with the `URL` and a `timestamp`
+
+    ```js
+    const generateLocationMessage = (url) => {
+        return {
+            url,
+            createdAt: new Date().getTime()
+        }
+    }
+    ```
+
+- Export `generateLocationMessage`
+
+    ```js
+    module.exports = {
+        generateMessage,
+        generateLocationMessage
+    }
+    ```
+
+- Go to `index.js`
+- Import the `generateLocationMessage` function
+
+    `const { generateMessage, generateLocationMessage } = require('./utils/messages');`
+
+- Get to the `sendLocation` callback and use the `generateLocationMessage` sending the `url` on the `locationMessage` emit function
+
+    ```js
+    socket.on('sendLocation', ({latitude, longitude}, callback) => {
+        io.emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+        callback();
+    });
+    ```
+
+- Go to the `chat.js` file
+- On the `locationMessage` callback; add the new properties as arguments of the function
+
+    `socket.on('locationMessage', ({ url, createdAt }) => {...});`
+
+- Change the log message to print the `url`
+- On the `render` function; send an object with the `url` and a new property call `createdAt` that is value will be the format version of the `createdAt` argument using `moment`
+
+    ```js
+    socket.on('locationMessage', ({ url, createdAt }) => {
+        console.log(url);
+        const html = Mustache.render($locationMessageTemplate, {
+            url,
+            createdAt: moment(createdAt).format('h:mm a')
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Go to the `index.html` file
+- Add the `createdAt` variable on the `location-message-template` on the `p` tag before the `anchor`
+
+    ```html
+    <script id="location-message-template" type="text/html">
+        <div>
+            <p>
+                {{createdAt}} - <a href="{{url}}" target="_blank">My current location</a>
+            </p>
+        </div>
+    </script>
+    ```
+
+- Save all the files
+- On your browser refresh the page
+- Click on the `send location` button
+- After a few seconds you should see the `location` link with the `timestamp`

@@ -20,20 +20,19 @@ socket.on('message', (message) => {
     $messages.insertAdjacentHTML('beforeend', html);
 });
 
-// Goal: Render a new template for location messages
-//
-// 1. Duplicate the message template
-//  - Change the id to something else
-// 2. Add a link inside the paragraph with the link text "My current location"
-//  - URL fo the link should be the maps URL (dynamic)
-// 3. Select the template from Js
-// 4. Render the template with the URL and append to messages list
-// 5. Test your work!
+// Goal: Add timestamps for location messages
+// 1. Create generateLocationMessage and export
+//  - { url: '', createdAt: 0 }
+// 2. Use generateLocationMessage when the server emits locationMessage
+// 3. Update template to render time before the url
+// 4. Compile the template with the URL and the formatted time
+// 5. Test your work
 
-socket.on('locationMessage', (url) => {
-    console.log(url);
+socket.on('locationMessage', ({ url, createdAt }) => {
+    console.log(url, createdAt);
     const html = Mustache.render($locationMessageTemplate, {
-        url
+        url,
+        createdAt: moment(createdAt).format('h:mm a')
     });
     $messages.insertAdjacentHTML('beforeend', html);
 });
