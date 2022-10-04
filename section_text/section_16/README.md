@@ -1912,3 +1912,282 @@ Now we are going to do the same with the `location` message.
 - On your browser refresh the page
 - Click on the `send location` button
 - After a few seconds you should see the `location` link with the `timestamp`
+
+## Styling the Chap App
+
+We will integrate some `styles` to the `chat-app` but will create all `styling` from zero; you will download the file on this repo then we change the `HTML` structure.
+
+- Go to https://github.com/oscarpolanco/node-basics/tree/master/chat-app/public/css/style.css
+- Copy all content
+- On your editor; go to the `chat-app/public` directory
+- Create a new folder called `CSS`
+- On the newly created folder; create a new file called `style.css` and paste the content that you get before
+- Now go to https://github.com/oscarpolanco/node-basics/tree/master/chat-app/public/image/
+- Download the file
+- On the `public` directory; create the new folder called `img`
+- Put the `image` that you just download on the `img` folder
+- Now get to the `index.html` file
+- On the `head` tag; add a `title` tag with the page `title`
+
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>Chat App</title>
+        </head>
+        <body>...</body>
+    </html>
+    ```
+
+- Now `link` the `favicon` and `stylesheet`
+
+    ```html
+    <head>
+        <title>Chat App</title>
+        <link rel="icon" href="/img/favicon.png">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    ```
+
+- Save the file
+- On your terminal; go to the `chat-app`
+- Run your local server using `npm run dev`
+- Go to http://localhost:3000/
+- You should see some `styling` on the page and the `title` with the `favicon`
+
+We still need to change the structure of the page in order to have all the `styling` apply to all the elements and we will add some new elements that will need some re-ordering of the page.
+
+- On the `body` tag; remove the `chat app` title
+
+Now we will add some elements to create the `layout` that we want on which we will have a `sidebar` on one side of the page and the `messages` with the `form` on the other side.
+
+- At the top of the `body` tag; add a new `div` with a `chat` class
+
+    ```html
+    <body>
+        <div class="chat"></div>
+        <div id="messages"></div>
+
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html">...</script>
+
+        <script id="location-message-template" type="text/html">...</script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+    This will be the container of the `app`(we don't need to include the `templates`)
+
+- Inside of the `chat` div; add 2 new `div` one with a class called `chat__sidebar` and the other with a class called `chat__main`
+
+    ```html
+    <body>
+        <div class="chat">
+            <div class="chat__sidebar"></div>
+            <div class="chat__main"></div>
+        </div>
+        <div id="messages"></div>
+
+        <form id="message-form">...</form>
+        <button id="send-location">Send location</button>
+
+        <script id="message-template" type="text/html">...</script>
+
+        <script id="location-message-template" type="text/html">...</script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+    These 2 `div` will contain the `sidebar` and all the `main` content of the page; for the moment the `sidebar` will be empty the moment
+
+- Now cut all other elements except the `scripts` tags and paste them on the `main` div
+
+    ```html
+    <body>
+        <div class="chat">
+            <div class="chat__sidebar"></div>
+            <div class="chat__main">
+                <div id="messages"></div>
+
+                <form id="message-form">...</form>
+                <button id="send-location">Send location</button>
+            </div>
+        </div>
+
+        <script id="message-template" type="text/html">...</script>
+
+        <script id="location-message-template" type="text/html">...</script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/chat.js"></script>
+    </body>
+    ```
+
+- Save the file
+- Refresh the page
+- You should see the `sidebar` and the other content a side
+
+Now we will change the structure of the elements on the `main` div on which we will add the `form` to the bottom of the page and the `messages` take all the space left on the page.
+
+- On the `messages` div; add a class called `chat__messages`
+
+    ```html
+    <div class="chat">
+        <div class="chat__sidebar"></div>
+        <div class="chat__main">
+            <div id="messages" class="chat__messages"></div>
+
+            <form id="message-form">...</form>
+            <button id="send-location">Send location</button>
+        </div>
+    </div>
+    ```
+
+- Below the `messages` div; create a new `div` with a class called `compose`
+
+    ```html
+    <div class="chat">
+        <div class="chat__sidebar"></div>
+        <div class="chat__main">
+            <div id="messages" class="chat__messages"></div>
+
+            <div class="compose"></div>
+
+            <form id="message-form">...</form>
+            <button id="send-location">Send location</button>
+        </div>
+    </div>
+    ```
+
+    Is `compose` because we will have the `form` that `compose` new `messages`
+
+- Cut the `form` and `send location` button and paste it on the `compose` div
+
+    ```html
+    <div class="chat">
+        <div class="chat__sidebar"></div>
+        <div class="chat__main">
+            <div id="messages" class="chat__messages"></div>
+
+            <div class="compose">
+                <form id="message-form">...</form>
+                <button id="send-location">Send location</button>
+            </div>
+        </div>
+    </div>
+    ```
+
+- Save the file
+- Refresh the page
+- You should see that the `welcome message` is at the top of the page and the `form` at the bottom
+- Type a `message` and submit
+- You should see that the new `message` is below the `welcome message` at the top of the page
+
+This will be all setup that we need for the page structure but we need to do more `styling` for the `messages` in the `templates`.
+
+- On the `message-template`; add a class called `message` on the container div
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div class="message">
+            <p>{{createdAt}} - {{message}}</p>
+        </div>
+    </script>
+    ```
+
+Now we will need to change a little bit the `p` tag content because now we will have the name of the `user` that sends the `message`(a placeholder for the moment) with the `timestamp` and below the actual `message`.
+
+- Add a new `p` tag with 2 `span` tags at its content
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div class="message">
+            <p>
+                <span></span>
+                <span></span>
+            </p>
+            <p>{{createdAt}} - {{message}}</p>
+        </div>
+    </script>
+    ```
+
+- On the first `span`; add the `message__name` class with a placeholder for the name of the `user`
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div class="message">
+            <p>
+                <span class="message__name">Some user name</span>
+                <span></span>
+            </p>
+            <p>{{createdAt}} - {{message}}</p>
+        </div>
+    </script>
+    ```
+
+- On the second `span`; add a class called `message__meta` with the `createdAt` variable as the content of the `span`
+
+    ```html
+    <script id="message-template" type="text/html">
+        <div class="message">
+            <p>
+                <span class="message__name">Some user name</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p>{{createdAt}} - {{message}}</p>
+        </div>
+    </script>
+    ```
+
+- Remove the `createdAt` on the `p` tag of the `message`
+
+   ```html
+    <script id="message-template" type="text/html">
+        <div class="message">
+            <p>
+                <span class="message__name">Some user name</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p>{{message}}</p>
+        </div>
+    </script>
+    ```
+
+- Now copy the `message` div with all its content
+- Paste the `message` div at the top of the `location-message-template`
+- Remove the `createdAt` on the `p` tag of the `anchor`
+
+    ```html
+    <script id="location-message-template" type="text/html">
+        <div class="message">
+            <p>
+                <span class="message__name">Some user name</span>
+                <span class="message__meta">{{createdAt}}</span>
+            </p>
+            <p>
+                <a href="{{url}}" target="_blank">My current location</a>
+            </p>
+        </div>
+    </script>
+    ```
+
+- Save the file
+- Refresh the page
+- You should see the `welcome message` with the new `style`
+- Click on the `send location` button
+- You should see the `location message` with the new `style`
