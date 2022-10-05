@@ -2191,3 +2191,148 @@ Now we will need to change a little bit the `p` tag content because now we will 
 - You should see the `welcome message` with the new `style`
 - Click on the `send location` button
 - You should see the `location message` with the new `style`
+
+## Join page
+
+Now we are going to set the `join page` on the `chat` application. On this page, the `user` will need to provide their `username` and the `room` that they like to join then submit the information that will redirect it to the `room`. We will need to create a new `HTML` file in order to have the `chat` that the `user` will be redirected to because the `index.html` file will be the `join` page because it will be the first page that the `user` see.
+
+- On your editor; go to the `chat-app/public`
+- Create a new file called `chat.html`
+- Get to the `index.html` page
+- Copy all the content
+- Go to the `chat.html` file and paste the content that you just copied
+- Get to the `index.html` file
+- Remove all content of the `body` tag
+
+Now we can concentrate on creating all the `markup` of the `join` page.
+
+- On the `body`; create a new `div` with a `centered-form` class
+
+    ```html
+    <body>
+        <div class="centered-form"></div>
+    </body>
+    ```
+
+- Inside of the newly created `div`; create another with a `centered-form__box` class
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box"></div>
+        </div>
+    </body>
+    ```
+
+- Inside of the `centered-form__box` div; add a `h1` with a title for the `join` page
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+            </div>
+        </div>
+    </body>
+    ```
+
+- Save all the files
+- On your terminal; go to the `chat-app` directory
+- Run your local server using `npm run dev`
+- On your browser go to http://localhost:3000/
+- You should see a square on the middle of the page with the `Join` title
+- Get back to the `index.html` file
+- Add a `form` tag below the `h1`
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+                <form></form>
+            </div>
+        </div>
+    </body>
+    ```
+
+- Inside of the `form` tag; add a `label` with a `display name` message and an `input text` that will have `username` as `name`; the same message of the `label` on the `placeholder` and the `required` property
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+                <form>
+                    <label>Display name</label>
+                    <input type="text" name="username" placeholder="Display name" required />
+                </form>
+            </div>
+        </div>
+    </body>
+    ```
+
+    The `required` property will use some `HTML 5` form validation to make sure that a value is typed in
+
+- Below the `username` input; add a `label` with a `room` message and an `input text` that will have `room` as `name`; the same message of the `label` on the `placeholder` and the `required` property
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+                <form>
+                    <label>Display name</label>
+                    <input type="text" name="username" placeholder="Display name" required />
+                    <label>Room</label>
+                    <input type="text" name="room" placeholder="Room" required />
+                </form>
+            </div>
+        </div>
+    </body>
+    ```
+
+- Then at the bottom of the `form` tag; add a button to `join` the `chat`
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+                <form>
+                    <label>Display name</label>
+                    <input type="text" name="username" placeholder="Display name" required />
+                    <label>Room</label>
+                    <input type="text" name="room" placeholder="Room" required />
+                    <button>Join</button>
+                </form>
+            </div>
+        </div>
+    </body>
+    ```
+
+This `form` will help us to get all the information that we need from the `user` but we need to be redirected to the `chat` page when the `user` submit the `form` and to make this we will use the `action` property
+
+- On the `form` tag; add the `action` property with the `chat.html` path
+
+    ```html
+    <body>
+        <div class="centered-form">
+            <div class="centered-form__box">
+                <h1>Join</h1>
+                <form action="/chat.html">
+                    <label>Display name</label>
+                    <input type="text" name="username" placeholder="Display name" required />
+                    <label>Room</label>
+                    <input type="text" name="room" placeholder="Room" required />
+                    <button>Join</button>
+                </form>
+            </div>
+        </div>
+    </body>
+    ```
+
+- Save the file
+- Refresh the page
+- You should see the `form` with all the styling
+- Fill out the `form` and submit
+- You should be redirected to the `chat` page and the `form` data is place a `query param` on the `URL`
