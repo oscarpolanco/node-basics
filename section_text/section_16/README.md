@@ -2336,3 +2336,148 @@ This `form` will help us to get all the information that we need from the `user`
 - You should see the `form` with all the styling
 - Fill out the `form` and submit
 - You should be redirected to the `chat` page and the `form` data is place a `query param` on the `URL`
+
+## Socket.io rooms
+
+We have a `join` page that will provide us with the `username` and the `room` then of the current `user` but currently, that data is not been used at the moment. In this section, we will gain access to the data provided by the `join` page from our client-side `js` and will learn about `rooms` on `socket.io` that will allow us to send messages to emit events to a specific set of connections in order words just the `users` on the same run.
+
+First; we will need to get the `query` string from the `URL` and we can access that information using the `location` object on the client.
+
+- Go to your terminal and get to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- On your browser go to http://localhost:3000/
+- Add a `username` and a `room` name
+- Submit the form
+- You should be redirected to the `chat` page and the `URL` should have the `query` string
+- Open the console of the dev tools
+- Type `location.search`
+- Click enter
+- You should see a string with the current `query` string
+
+From the client site `js` we will parse the `query` string to get every piece of data and then send it to the server. For this, we will use the [qs](https://github.com/ljharb/qs?utm_source=cdnjs&utm_medium=cdnjs_link&utm_campaign=cdnjs_library) library that will help us to parse the `query` string.
+
+- On your editor; go to the `chat-app/public/chat.html` file
+- Add the following `script` below the `moment script`
+
+    `<script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.6.0/qs.min.js"></script>`
+
+- Get to the `js/chat.js` file
+- Below of the `$locationMessageTemplate` constant; destructure the `username` and `room` from the `parse` function of `Qs`
+
+    `const { username, room } = Qs.parse();`
+
+    Since we add the `qs` cdn on the `chat.html` file we will have available the `Qs` object on our script. The `parse` function will take the `query` string and returns an object
+
+- Send the `query` string as an argument on the `parse` function
+
+    `const { username, room } = Qs.parse(location.search);`
+
+Now, this alone won't remove the `?` of the `query` string so we will need to add an option in order to eliminate it.
+
+- Add the following object as the second argument of the `parse` function
+
+    `const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true });`
+
+Now we will send the `username` and `room` to the server emitting a new event.
+
+- At the bottom of the `chat.js` file; call the `emit` function of `socket` sending an event called `join` and the `username` and `room` in an object as a second parameter
+
+    `socket.emit('join', { username, room });`
+
+- Go to the `index.js` file
+- Below the `message` broadcast; call the `on` function of `socket` for the `join` event that will have a function that receives the `username` and `room`
+
+    ```js
+    io.on('connection', (socket) => {
+        console.log('New WebSocket connection');
+        socket.emit('message', generateMessage('Welcome!'));
+            socket.broadcast.emit('message', generateMessage(`A new user has joined!`));
+
+        socket.on('join', ({ username, room }) => {});
+
+        socket.on('sendMessage', (message, callback) => {...});
+
+        socket.on('sendLocation', ({latitude, longitude}, callback) => {...});
+
+        socket.on('disconnect', () => {...});
+    });
+    ```
+
+Now we will use the `socket.io` features that will allow us to `join` a determined `room`.
+
+- On the function of the `join` event; call the `join` function of `socket` and send the `room` name as an argument
+
+    ```js
+    socket.on('join', ({ username, room }) => {
+        socket.join(room);
+    });
+    ```
+
+    The `join` function will allow us to `join` in a determined `room` that we specify; this will allow us to `emit` events in a different way where we specific `emit` events to a specific `room`.
+
+To this moment we see 3 ways to `emit` events:
+
+- `socket.emit`: Send an event on a specific client
+- `io.emit`: Send an event to all connected clients
+- `socket.broadcast.emit`: Send an event to all connected clients except the current one
+
+With `rooms` we will have 2 new ways to `emit` events:
+
+- `io.to.emit`: Will `emit` an event to all clients in a specific `room`
+- `socket.broadcast.to.emit`: Will `emit` an event to all clients except for the current one on a specific `room`
+
+A quick note is that `to` is actually a function; we will check how we will use it next.
+
+Now we will implement the first 2 events that we `emit` on the `connection` callback
+
+- Cut the `emit message` and `broadcast message` event at the top of the `connect` callback
+- Paste the line that you just cut below the `join` function call
+
+    ```js
+    socket.on('join', ({ username, room }) => {
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.emit('message', generateMessage(`A new user has joined!`));
+    });
+    ```
+
+    We will fire those events when a `user` join a `room`
+
+The first event that we are emitting here is ready to use because we send the `welcome message` to the individual `user` but the second will emit the event to all `users` in all the `rooms` except the one that just joins the `room` and we just want to `broadcast` the event to all `users` in the same `room` that the current `user` join; for this, we will use the `to` function
+
+- After the `broadcast` call; call the `to` function sending the `room` as an argument
+
+    ```js
+    socket.on('join', ({ username, room }) => {
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`A new user has joined!`));
+    });
+    ```
+
+- Remove the `broadcast` message and add another one that uses the `username`
+
+    ```js
+    socket.on('join', ({ username, room }) => {
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+    });
+    ```
+
+- Save all the files
+- On the open browser go to http://localhost:3000/
+- Open a second browser and go to http://localhost:3000/
+- On the first browser; fill the `form` and submit(Remember the `room` that you put)
+- You should be redirected to the `chat` page
+- On the second browser; type another `username`(different than the one you just before) and the same `room` that you use before and submit
+- You should see the `username` of the second `user` on the first browser
+- Now on the second browser open a new tab and close the first one and go to http://localhost:3000/
+- Fill the `form` using the `name` of the second `user` that you use before and a different `room` that the one that you use before
+- Submit the `form`
+- You should not see the `join` message on the first browser
+
+All other events still are sent to all `rooms` so we will need to specify the `room` on all of them but we don't have access to the necessary data outside of the `join` callback so we will need to do some changes to get the correct behavior.
