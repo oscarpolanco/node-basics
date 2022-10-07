@@ -2481,3 +2481,260 @@ The first event that we are emitting here is ready to use because we send the `w
 - You should not see the `join` message on the first browser
 
 All other events still are sent to all `rooms` so we will need to specify the `room` on all of them but we don't have access to the necessary data outside of the `join` callback so we will need to do some changes to get the correct behavior.
+
+## Storing Users
+
+In order to take advantage of the new `room` feature that we just use; we will need to keep track of which `users` are on each `room` with which `username`. We will add some functions that will help us to track them and access that data later. We will create a new file to store all the functions that we are going to use for tracking then import those functions on the `index.js` file.
+
+- On your editor; go to the `chat-app/src/utils` directory
+- Create a new file called `users.js`
+
+We will store all the active `users` on an `array` and then perform operations using the data of this `array`.
+
+- At the top of the newly created file; create a constant call `user` that its value will be an empty `array`
+
+    `const users = [];`
+
+- Below the `users` array; create a new function called `addUser` that receives an object that has an `id`, `username`, and `room`
+
+    `const addUser = ({ id, username, room }) => {}`
+
+    The `username` and `room` come from the client but the `id` will be something associated with the individual `socket` so every single connection to the server has a unique `id` generated for it. At first, we will test this with numbers until we implement the functions on the `index.js` file
+
+Now we will `clean` the data that we receive on the function; in this case, the `username` and `room` are provided by the client and we are going to `clean` all the extra spaces and make it `lowercase`.
+
+- At the top of the `addUser` function; update `username` and `room` values using the `trim` and `toLowerCase` functions
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+    }
+    ```
+
+Now we will make sure that the `username` and `room` exists.
+
+- Below the `room` update; create a new condition that checks if `username` and `room` have a value. If there is no `username` or `room`; return an object with an `error` message
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {
+            return {
+                error: 'Username and room are required!'
+            }
+        }
+    }
+    ```
+
+At this moment we make sure that we have the `username` and `room` to continue with the function execution so now we will make sure that the `username` is not taken on for the `room` that the `user` is joining.
+
+- Below the condition; create a new constant called `existingUser` that value will be the result of the `find` function used on the `users` array and as an argument of `find`; add a function that receives `user`
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {
+            return {
+                error: 'Username and room are required!'
+            }
+        }
+
+        const existingUser = users.find((user) => {});
+    }
+    ```
+
+- Now inside of the `find` callback; return the result of the following condition
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {
+            return {
+                error: 'Username and room are required!'
+            }
+        }
+
+        const existingUser = users.find((user) => {
+            return user.room === room && user.username === username;
+        });
+    }
+    ```
+
+    We will return `true` when the current `user` is in same `room` as the one that is currently evaluated the `find` function and the `username` of the current `user` is equal to the one that is evaluated
+
+- Below the `existingUser` definition; create a condition that returns an object with an `error` message that represents that the `username` is in use
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {...}
+
+        const existingUser = users.find((user) => {
+            return user.room === room && user.username === username;
+        });
+
+        if (existingUser) {
+            return {
+                error: 'Username is in use!'
+            }
+        }
+    }
+    ```
+
+At this moment we check everything we need from the `username` and `room` so we can `store` those values on the `users` array.
+
+- Below the `existingUser` condition; create a new constant called `user` that will be an object that has the `id`, `username`, and `room`
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {...}
+
+        const existingUser = users.find((user) => {...});
+
+        if (existingUser) {...}
+
+        const user = { id, username, room }
+    }
+    ```
+
+- Now push the `user` constant to the `users` array
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {...}
+
+        const existingUser = users.find((user) => {...});
+
+        if (existingUser) {...}
+
+        const user = { id, username, room }
+        users.push(user);
+    }
+    ```
+
+- Finally; return an object with the `user`
+
+    ```js
+    const addUser = ({ id, username, room }) => {
+        username = username.trim().toLowerCase();
+        room = room.trim().toLowerCase();
+
+        if (!username || !room) {...}
+
+        const existingUser = users.find((user) => {...});
+
+        if (existingUser) {...}
+
+        const user = { id, username, room }
+        users.push(user);
+
+        return { user }
+    }
+    ```
+
+Let's test this function.
+
+- At the bottom of the file; call the `addUser` function with the following values and log the `users`
+
+    ```js
+    addUser({
+        id: 22,
+        username: '   Test',
+        room: 'Testing   '
+    });
+
+    console.log(users);
+    ```
+
+- Save the file
+- On your terminal; go to the `chat-app` directory
+- Run the `users.js` file using: `node /src/utils/users.js`
+- You will see that the `users` array save the values `lowercase` and without spaces
+
+Now we will test the `validation` on the function
+
+- Below the `users` log; create a new constant called `res` that it value will be the following
+
+    ```js
+    const res = addUser({
+        id: 33,
+        username: '',
+        room: ''
+    });
+    ```
+
+- Log the `res` constant
+
+    `console.log(res);`
+
+- Save the file
+- Run the `users.js` file
+- You should see the `username and room require` error
+- Add the same `username` on both `addUser` calls and the same `room`
+- Save the file and run the `user.js` file
+- You should see the `username in use` error
+
+Now that we test the `addUser` we can continue with another function; in this case, will be the `remove user` function that will `remove` a `user` by its `id`.
+
+- Below the `addUser` function; create another function call `removeUser` that receive an `id`
+
+    `const removeUser = (id) => {}`
+
+- On the newly created function; create a constant call `index` that its value will be the result of the `findIndex` function on the `users` array
+
+    ```js
+    const removeUser = (id) => {
+        const index = users.findIndex();
+    }
+    ```
+
+    The `findIndex` function will return the `index` of the array of values if there is a match and `-1` if we don't have a match
+
+- Send a callback function that receives `user` as an argument of the `findIndex` function with the following condition
+
+    ```js
+    const removeUser = (id) => {
+        const index = users.findIndex((user) => user.id === id);
+    }
+    ```
+
+    This condition will check the current `user id` with each item on the `users` array and if is `true` will return the `index` on the `users` array that match the current `user` or will return `-1`
+
+- Below the `index` definition; create a condition that checks if the `index` is not equal to `-1` and if is not return the following
+
+    ```js
+    const removeUser = (id) => {
+        const index = users.findIndex((user) => user.id === id);
+
+        if (index !== -1) {
+            return users.splice(index, 1)[0];
+        }
+    }
+    ```
+
+    We use the `splice` function on the `users` array that will allow us to remove items from the `users` array by their `index`. The first argument is the `starting index`; in this case, we want to remove the item on the position that we found and the second argument will be the `number of items` that we like to remove. The `splice` function will return an array of the removed items and since we only are going to remove one `user` at the time we return the first position of the array that will have our removed `user`
+
+- Now remove the second `addUser` call
+- Below the `user` log at the bottom of the file; create a constant called `removeUser` that value will be the result of the `removeUser` function sending the same `id` that you use on the `addUser` example
+
+    `const removedUser = removeUser(22);`
+
+- Now at the bottom of the file; log the `removedUser` constant and the `users` array
+- Save the file
+- Run the `users.js` script
+- You should see that we have the data of the `user` that we `add` it then it data when we `remove` it and finally the empty `users` array because we eliminate the only `user` that we create
