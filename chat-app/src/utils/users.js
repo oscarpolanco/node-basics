@@ -39,15 +39,25 @@ const removeUser = (id) => {
     }
 }
 
-addUser({
-    id: 22,
-    username: 'Test   ',
-    room: '  Testing'
-});
+// Goal: Create two new functions for users
+//
+// 1. Create getUser
+//  - Accept id and return user object (or undefined)
+// 2. Create getUsersInRoom
+//  - Accept room name and return array of users (or empty array)
+// 3. Test your work by calling the functions!
 
-console.log(users);
+const getUser = (id) => (
+    users.find((user) => user.id === id)
+);
 
-const removedUser = removeUser(22);
+const getUsersInRoom = (room) => (
+    users.filter((user) => user.room === room)
+);
 
-console.log(removedUser);
-console.log(users);
+module.exports = {
+    addUser,
+    removeUser,
+    getUser,
+    getUsersInRoom
+}

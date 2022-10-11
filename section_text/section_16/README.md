@@ -2738,3 +2738,73 @@ Now that we test the `addUser` we can continue with another function; in this ca
 - Save the file
 - Run the `users.js` script
 - You should see that we have the data of the `user` that we `add` it then it data when we `remove` it and finally the empty `users` array because we eliminate the only `user` that we create
+
+Now we are going to continue with the other functions that will help us to handle the `user` data in this case we will create a `getUser` and `getUserInRoom` functions where the first one will return a single `user` information by `id` and the other will return all `users` on a single `room`.
+
+- Get to the `user.js` file
+- At the bottom; create some other `addUser` calls to have multiple `users`(Add the call like this)
+
+    ```js
+    addUser({
+    id: 22,
+    username: 'Test   ',
+    room: '  Testing'
+    });
+
+    addUser({
+        id: 42,
+        username: 'Test 2',
+        room: 'Testing'
+    });
+
+    addUser({
+        id: 32,
+        username: 'TestTest',
+        room: 'Other testing'
+    });
+    ```
+
+- Below the `removeUser` function
+- Create a new function; call `getUser` that receives an `id`
+
+    `const getUser = (id) => ();`
+
+    We use the `es6` immediately return syntax because we will just return a value on this function
+
+- Inside of the `getUser` function; use the `filter` method on the `users` array and add a callback function as its argument that they receive a single `user` and inside of the callback return the result of checking if the `id` that you receive on the `getUser` function is equal to the `user id` on an item of the `users` array
+
+    ```js
+    const getUser = (id) => (
+        users.find((user) => user.id === id)
+    );
+    ```
+
+- Below the `addUser` call
+- log the call of the `getUser` function sending one of the `ids`
+
+    `console.log(getUser(22));`
+
+- Save the file and get to your terminal
+- Run the `user.js` script
+- You should see the `user` data
+- Get to the `user.js` file
+- Below the `getUser` function add a new function call `getUsersInRoom` that receive a `room` name
+
+    `const getUsersInRoom = (room) => ();`
+
+- Inside of the `getUser` function; use the `filter` method on the `users` array and add a callback function as its argument that they receive a single `user` and inside of the callback return the result of checking if the `room` that you receive on the `getUsersInRoom` function is equal to the `user room` on an item of the `users` array
+
+    ```js
+    const getUsersInRoom = (room) => (
+        users.filter((user) => user.room === room)
+    );
+    ```
+
+- Get to the bottom of the file
+- Log the `getUsersInRoom` function sending the `room` name that have 2 `users`
+
+    `console.log(getUsersInRoom('testing'));`
+
+- Save the file and get to the terminal
+- Run the `user.js` script
+- You should see an array with the 2 `users`
