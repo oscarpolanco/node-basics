@@ -2808,3 +2808,212 @@ Now we are going to continue with the other functions that will help us to handl
 - Save the file and get to the terminal
 - Run the `user.js` script
 - You should see an array with the 2 `users`
+
+## Tracking users joining and leaving
+
+Now we will use the functions that we created to track the `user` so we will update the events on the `index.js` so they can send the `messages` to the correct `room`; we also will render the `user` data to the `chat`.
+
+- On your editor; go to the `chat-app/src/index.js` file
+- Below of the `generate message` function require; add a require for all `users` functions
+
+    `const { addUser, removeUser, getUser, getUsersInRoom } = require('./utils/users');`
+
+Now we will work with the `join` event; where we are going to add the `user` data on this event to start keeping track of it. First; we will need to get the `id` of each `user` and we will get it from the `socket` object that has an `id` for every particular connection.
+
+- Use destructuring to get the `error` and `user` that may be returned from the `addUser` function sending as argument an object with the `id` of the `socket`; the `username` and `room`
+
+    ```js
+    socket.on('join', ({ username, room }) => {
+        const { error, user } = addUser({
+            id: socket.id,
+            username,
+            room
+        });
+
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+    });
+    ```
+
+We will need to notify the `user` if there is an error so we will need to use an `event acknowledgment` to send the `error` from the server but as you may notice we don't have one for the `join` event so we will need to add it.
+
+- Go to the `public/js/chat.js`
+- At the bottom of the file; provide a function that receives an `error` as the final argument of the `emit` function
+
+    `socket.emit('join', { username, room }, (error) => {});`
+
+    We will fill this function later
+
+- Get back to the `index.js` file
+- Add the new argument to the `join` callback called `callback`
+
+    `socket.on('join', ({ username, room }, callback) => {...});`
+
+- Now add a condition that checks if an `error` exists and if this happens return the `callback` sending the `error`
+
+    ```js
+    socket.on('join', ({ username, room }, callback) => {
+        const { error, user } = addUser({...});
+
+        if (error) {
+            return callback(error);
+        }
+
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+    });
+    ```
+
+- Finally; call the `callback` function at the bottom of the `join` callback to let know the `user` that everything go as expected
+
+    ```js
+    socket.on('join', ({ username, room }, callback) => {
+        const { error, user } = addUser({...});
+
+        if (error) {...}
+
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+
+        callback();
+    });
+    ```
+
+As you may remember the `username` and `room` will be `trim` and converted to `lowercase` and we want those values that way instead of using the arguments that we receive on the `join` callback.
+
+- Update the destructuring of the first argument of the `join` callback and receive the complete object. Call it `options`
+
+    `socket.on('join', (options, callback) => {...});`
+
+- Update the `addUser` argument object to `spread` the `options` object
+
+    ```js
+    socket.on('join', ({ username, room }, callback) => {
+        const { error, user } = addUser({
+            id: socket.id,
+            ...options
+        });
+
+        if (error) {...}
+
+        socket.join(room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(room).emit('message', generateMessage(`${username} has joined!`));
+
+        callback();
+    });
+    ```
+
+- Now update the `room` that is an argument  of the `join` function; the `room` on the `to` function and the `username` on the `generateMessage` function to use the `user` object
+
+    ```js
+    socket.on('join', ({ username, room }, callback) => {
+        const { error, user } = addUser({
+            id: socket.id,
+            ...options
+        });
+
+        if (error) {...}
+
+        socket.join(user.room);
+
+        socket.emit('message', generateMessage('Welcome!'));
+        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined!`));
+
+        callback();
+    });
+    ```
+
+Before we test the `join` event we should update the `disconnect` event in order to eliminate the `users` when they `disconnect` so we don't have names that are not in use and permanently inaccessible.
+
+- Get to the `disconnect` callback
+- Call the `removeUser` function sending the `socket id` as an argument and store the returned value on a new constant called `user`
+
+    ```js
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+
+        io.to(room).emit('message', generateMessage(`A user has left!!`));
+    });
+    ```
+
+As we know the `removeUser` function will return the actual removed `user` or `undefined` so we will emit the `message` when there is a value on the `user` constant
+
+- Add a condition to check if `user` has a value and if it does `emit message`
+
+    ```js
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(room).emit('message', generateMessage(`A user has left!!`));
+        }
+    });
+    ```
+
+- Use the `username` on the `generateMessage` function
+
+    ```js
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(room).emit('message', generateMessage(`${user.username} has left!!`));
+        }
+    });
+    ```
+
+Now we are adding and removing `user` when we need it. Let's test this!!
+
+- Get to your terminal
+- Go to the `chat-app` directory
+- Run the local server using: `npm run dev`
+- Open 2 browser windows and go to http://localhost:3000/
+- On one of the browsers fill out the form and submit(remember the `room`)
+- In the second browser fill out the form joining the same `room` as the first browser and submit
+- You should see the `joined` message on the first browser
+- On the second browser; open a new tab and close the first one
+- You should see the `has left` message on the first browser
+
+Finally, we will need to handle the `error` on the `client` when the `user` wasn't able to `join`.
+
+- Get to the `chat.js` file
+- Go to the `join` callback
+
+We will show a `message` for the `error` and redirect the `user` to the `form` page.
+
+- Add a condition that checks if the `error` exists and if it does use `alert` to show the `error`
+
+    ```js
+    socket.emit('join', { username, room }, (error) => {
+        if (error) {
+            alert(error);
+        }
+    });
+    ```
+
+- Then use the `href` property of the `location` object to assign the `form` page path(`/`)
+
+    ```js
+    socket.emit('join', { username, room }, (error) => {
+        if (error) {
+            alert(error);
+            location.href = '/';
+        }
+    });
+    ```
+
+- Save the file
+- Go to one of the browsers
+- Open a new tab and go to http://localhost:3000/ and close the first tab
+- Fill the `form` with the same name as the `user` on the other browser in the same `room` and submit the `form`
+- You should see the `alert` message
+- Click `ok`
+- You should be redirected to the `form` page
