@@ -3017,3 +3017,251 @@ We will show a `message` for the `error` and redirect the `user` to the `form` p
 - You should see the `alert` message
 - Click `ok`
 - You should be redirected to the `form` page
+
+## Sending messages to rooms
+
+Now that we are tracking the `user` and `room` data we can send the `messages` to the correct `room`. We will have 2 types of `messages`; one from the actual `user` and the other that is sent by the server that will be known as `admin messages` like the `welcome message`.
+
+- On your editor; go to the `chat-app/src/index.js` file
+- Go to the `sendMessage` event handler
+- At the top of the file create a constant call `user` whose value will be the result of calling `getUser` and sending the `socket id` as an argument
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const user = getUser(socket.id);
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {
+            return callback('Profanity is not allowed!');
+        }
+
+        io.emit('message', generateMessage(message));
+        callback();
+    });
+    ```
+
+- Now use the `to` method when you `emit` the `message` event using the `user room`
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const user = getUser(socket.id);
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {...}
+
+        io.to(user.room).emit('message', generateMessage(message));
+        callback();
+    });
+    ```
+
+- Get to the `sendLocation` event handler
+- At the top of the function; create a new constant called `user` that it value will be the `getUser` function sending the `socket id`
+
+    ```js
+    socket.on('sendLocation', ({latitude, longitude}, callback) => {
+        const user = getUser(socket.id);
+
+        io.emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+        callback();
+    });
+    ```
+
+- Now use the `to` method when you `emit` the `locationMessage` event using the `user room`
+
+    ```js
+    socket.on('sendLocation', ({latitude, longitude}, callback) => {
+        const user = getUser(socket.id);
+
+        io.to(user.room).emit('locationMessage', generateLocationMessage(`https://google.com/maps?q=${latitude},${longitude}`));
+        callback();
+    });
+    ```
+
+- Save the file
+- On your terminal; go to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- Open 2 browsers and go to http://localhost:3000/
+- Fill out both `forms` and go to different `rooms`
+- Send a `message` on one of the windows
+- You should see that the `message` doesn't show up on the other browser
+- Send the location to one of the browsers
+- You should see that the `location message` is not shown on the other browser
+
+We will continue working on something related to the `messages` that is the `name` of the `user` that sends the `message` on the `chat` that at this moment is a static `message`. We will update the `messages` function in order for the objects to have all the information that we need and use it on the page.
+
+- Go to the `messages.js`
+- On the `generateLocationMessage` function; add the `username` as first argument
+
+    `const generateLocationMessage = (username, url) => {...}`
+
+- Update the returned object to having a new `username` property and value
+
+    ```js
+    const generateLocationMessage = (username, url) => {
+        return {
+            username,
+            url,
+            createdAt: new Date().getTime()
+        }
+    }
+    ```
+
+- Go to the `index.js` file
+- On the `sendLocation` event handler; send the `username` as the first argument of the `generateLocationMessage` function
+
+    ```js
+    socket.on('sendLocation', ({latitude, longitude}, callback) => {
+        const user = getUser(socket.id);
+
+        io.to(user.room).emit('locationMessage', generateLocationMessage(user.username,`https://google.com/maps?q=${latitude},${longitude}`));
+        callback();
+    });
+    ```
+
+- Now go to the `public/js/chat.js` file
+- Get to the `locationMessage` event handler; add the `username` as an argument of the function
+
+    `socket.on('locationMessage', ({ username, url, createdAt }) => {...});`
+
+- Now send the `username` on the `render` function
+
+    ```js
+    socket.on('locationMessage', ({ username, url, createdAt }) => {
+        console.log(url, createdAt);
+        const html = Mustache.render($locationMessageTemplate, {
+            username,
+            url,
+            createdAt: moment(createdAt).format('h:mm a')
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Go to the `chat.html` file
+- Get to the `location-message-template`
+- Change the `message__name` span content to use the `username`
+
+    ```html
+    <p>
+        <span class="message__name">{{username}}</span>
+        <span class="message__meta">{{createdAt}}</span>
+    </p>
+    ```
+
+- Save the file
+- Go to one of the browsers and refresh
+- Send the `location`
+- You should see the `location message` with the `username`
+- Now get to the `messages.js` file again
+- Add the `username` as the first argument of the `generateMessage` function
+
+    `const generateMessage = (username, text) => {...}`
+
+- Use the `username` on the return object
+
+    ```js
+    const generateMessage = (username, text) => {
+        return {
+            username,
+            text,
+            createdAt: new Date().getTime()
+        }
+    }
+    ```
+
+- Get to the `index.js` file
+- On the `join` event handler; add `Admin` as the first argument on both `message emit`
+
+    ```js
+    socket.on('join', (options, callback) => {
+        const { error, user } = addUser({...});
+
+        if (error) {...}
+
+        socket.join(user.room);
+
+        socket.emit('message', generateMessage('Admin', 'Welcome!'));
+        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`));
+
+        callback();
+    });
+    ```
+
+- Go to the `sendMessage` event handler
+- Send the `username` as the first argument of the `generateMessage` function
+
+    ```js
+    socket.on('sendMessage', (message, callback) => {
+        const user = getUser(socket.id);
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) {
+            return callback('Profanity is not allowed!');
+        }
+
+        io.to(user.room).emit('message', generateMessage(user.username, message));
+        callback();
+    });
+    ```
+
+- Go to the `disconnect` event handler
+- Send the `Admin` as the first argument of the `generateMessage` function
+
+    ```js
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left!!`));
+        }
+    });
+    ```
+
+- Go to the `chat.js` file
+- Get to the `message` event handler
+- Use the `username` on the `render` function object
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {
+            username: message.username,
+            message: message.text,
+            createdAt: moment(message.createdAt).format('h:mm a')
+        });
+        $messages.insertAdjacentHTML('beforeend', html);
+    });
+    ```
+
+- Go to the `chat.html` file
+- On the `message-template` update the `message__name` span to use the `username`
+
+    ```html
+    <p>
+        <span class="message__name">{{username}}</span>
+        <span class="message__meta">{{createdAt}}</span>
+    </p>
+    ```
+
+- Save all files
+- Go to one of the browsers and refresh the page
+- You should see `admin` on the `welcome message`
+- Send a `message`
+- You should see the `username` on the `message`
+
+Finally; we are going to do some little changes to the `message` input in order to avoid the `user` sending an empty `message` and will prevent the `autocomplete` functionality.
+
+- Get to the `chat.html` file
+- On the `message` input; add the `required` property and the `autocompleted` property with an `off` value
+
+    ```html
+    <form id="message-form">
+        <input name="message" placeholder="Message" type="text" required autocomplete="off" />
+        <button>Send</button>
+    </form>
+    ```
+
+- Save the file
+- Go to one of the browsers and refresh
+- Send an empty `message`
+- You should see a `is required` error `message` and don't send the empty `message`

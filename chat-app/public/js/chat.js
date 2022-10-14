@@ -17,23 +17,17 @@ const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true }
 socket.on('message', (message) => {
     console.log(message);
     const html = Mustache.render($messageTemplate, {
+        username: message.username,
         message: message.text,
         createdAt: moment(message.createdAt).format('h:mm a')
     });
     $messages.insertAdjacentHTML('beforeend', html);
 });
 
-// Goal: Add timestamps for location messages
-// 1. Create generateLocationMessage and export
-//  - { url: '', createdAt: 0 }
-// 2. Use generateLocationMessage when the server emits locationMessage
-// 3. Update template to render time before the url
-// 4. Compile the template with the URL and the formatted time
-// 5. Test your work
-
-socket.on('locationMessage', ({ url, createdAt }) => {
+socket.on('locationMessage', ({ username, url, createdAt }) => {
     console.log(url, createdAt);
     const html = Mustache.render($locationMessageTemplate, {
+        username,
         url,
         createdAt: moment(createdAt).format('h:mm a')
     });
