@@ -3265,3 +3265,185 @@ Finally; we are going to do some little changes to the `message` input in order 
 - Go to one of the browsers and refresh
 - Send an empty `message`
 - You should see a `is required` error `message` and don't send the empty `message`
+
+## Rendering user list
+
+We will populate the `sidebar` of the `chat` that will have the name of the `room` and a list of all `users` that are currently in that `room`; the list will update when a `user join` or `disconnects` from a `room` so we always have an up to-date list of `users`. We already did a lot of work for this so we will only need to emit a new event and use the data sent by this event in a template.
+
+- On your editor; go to the `chat-app/src/index.js`
+- On the `join` event handler; before the last `callback` emit a new event call `roomData` to the current `room` that sends an object with the `room` name and an array of `users` on that `room` using the `getUsersInRoom` function
+
+    ```js
+    socket.on('join', (options, callback) => {
+        const { error, user } = addUser({...});
+
+        if (error) {...}
+
+        socket.join(user.room);
+
+        socket.emit('message', generateMessage('Admin', 'Welcome!'));
+        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined!`));
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room)
+        });
+
+        callback();
+    });
+    ```
+
+    This will allow us to make sure that give the list of current `users` every time that someone `join` a `room`
+
+- Now go to the `disconnect` event handler
+- Below the `message` emit; send the `roomData` event with an object with the `room` name and a list of `user` provide by the `getUsersInRoom` function
+
+    ```js
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+
+        if (user) {
+            io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left!!`));
+            io.to(user.room).emit('roomData', {
+                rooms: user.room,
+                users: getUsersInRoom(user.room)
+            });
+        }
+    });
+    ```
+
+    Now every time that a `user` get out of a `room` we will get an updated `list` of `users`
+
+At this moment we will need to listen to the event on the `client` but for now, we will just print the result on the browser console.
+
+- Go to the `public/chat.js` file
+- Below the `locationMessage` handler; add a new handler for the `roomData` event that receive the `room` name and `users` list
+
+    `socket.on('roomData', ({ room, users }) => {});`
+
+- Then log the `room` and `users`
+
+    ```js
+    socket.on('roomData', ({ room, users }) => {
+        console.log(room);
+        console.log(users);
+    });
+    ```
+
+- On your terminal; go to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- Open 2 browsers and go to http://localhost:3000/ on both
+- Fill out the `form` and submit it on one of them
+- Open the browser console
+- You should see the `room` name and the `users` array with one `user`
+- Now on the other browser fill in the `form` using the same `room` and submit
+- You should see that now the `users` array has 2 `users`
+
+Now that we are sure that we have the correct data we can continue with the `template` that will use the `roomData` event's data.
+
+- Go to the `chat.html` file
+- Below the `location-message-template`; add a new `script` tag with a `sidebar-template id`
+
+    `<script id="sidebar-template" type="text/html"></script>`
+
+- Inside of the `script` tag add an `h2` tag with the `room` variable as its contains and add the `room-title` class to it
+
+    ```html
+    <script id="sidebar-template" type="text/html">
+        <h2 class="room-title">{{room}}</h2>
+    </script>
+    ```
+
+- Now add a title for the list of `users` using an `h3` with the word `Users` with a `list-title` class
+
+    ```html
+    <script id="sidebar-template" type="text/html">
+        <h2 class="room-title">{{room}}</h2>
+        <h3 class="list-title">Users</h3>
+    </script>
+    ```
+
+- Then add a `ul` tag with a `users` class for the list of `users`
+
+    ```html
+    <script id="sidebar-template" type="text/html">
+        <h2 class="room-title">{{room}}</h2>
+        <h3 class="list-title">Users</h3>
+        <ul class="users"></ul>
+    </script>
+    ```
+
+Now we will loop on the array of `users` and for each `user` we will print the `username` in a `li` tag. On `mustache` when you have an array you will need to add the `name` of the array with a `#` symbol then close the iteration whit a `/` and the array `name`.
+
+- Add the following to loop with the `user` array
+
+    ```html
+    <script id="sidebar-template" type="text/html">
+        <h2 class="room-title">{{room}}</h2>
+        <h3 class="list-title">Users</h3>
+        <ul class="users">
+            {{#users}}
+            {{#users}}
+        </ul>
+    </script>
+    ```
+
+    Everything inside of this will happen for every item on the `users` array
+
+- Add the `li` tag with the `username` as its content
+
+    ```html
+    <script id="sidebar-template" type="text/html">
+        <h2 class="room-title">{{room}}</h2>
+        <h3 class="list-title">Users</h3>
+        <ul class="users">
+            {{#users}}
+                <li>{{username}}</li>
+            {{#users}}
+        </ul>
+    </script>
+    ```
+
+We will need to add an `id` that we can target from the `chat.js` file to add the list of `users`. We already have the element just we miss the `id`.
+
+- Go to the `chat__sidebar` div and add an `id` with a `sidebar` value
+
+    `<div id="sidebar" class="chat__sidebar"></div>`
+
+Now we will only need to use `mustache` to send the data to the `template`
+
+- Get to the `chat.js` file
+- Below of the `$locationMessageTemplate` constant; create a new constant call `$sidebarTemplate` that it value will be the content of `sidebar-template`
+
+    `const $sidebarTemplate = document.querySelector('#sidebar-template').innerHTML;`
+
+- On the `roomData` handler; remove the logs
+- Now create a constant called `html` that value will be the result of the `render` function of `Mustache` sending the `$sidebarTemplate` and an object with the `room` and `users` data
+
+    ```js
+    socket.on('roomData', ({room, users}) => {
+        const html = Mustache.render($sidebarTemplate, {
+            room,
+            users
+        });
+    });
+    ```
+
+- Now select the `sidebar` div and use the `innerHTML` property to add the `html` constant as it value
+
+    ```js
+    socket.on('roomData', ({room, users}) => {
+        const html = Mustache.render($sidebarTemplate, {
+            room,
+            users
+        });
+        document.querySelector('#sidebar').innerHTML = html;
+    });
+    ```
+
+- Save all files
+- Go to one of the browsers and refresh
+- You should see the `sidebar` with the `room` name and one `user`
+- On the other browser refresh the page
+- You should see that the `sidebar` update the list of `users`
+- Close one of the browsers
+- You should see that the list of `users` update
