@@ -3447,3 +3447,355 @@ Now we will only need to use `mustache` to send the data to the `template`
 - You should see that the `sidebar` update the list of `users`
 - Close one of the browsers
 - You should see that the list of `users` update
+
+## Automatic scroll
+
+Now we will integrate `auto scrolling` to the `chat` app but before that begin let's see why we need `auto scrolling`.
+
+Next, we will have a visualization of the page.
+
+```
+*------------*
+| |        | |
+| |        | |
+| |        | |
+| |        | |
+| |        | |
+*------------*
+```
+
+Here we see an inner rectangle that represents the content that we have available then an outside rectangle that represents our page sidebars representing what we are able to see. In this case, the `height` of both is the same so we are able to see everything so when we receive our first `message` we are able to see it.
+
+```
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |          | |
+| |          | |
+*--------------*
+```
+
+Same with the second and for this example the third too.
+
+```
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+```
+
+For this example when we got a fourth `message` the content gets longer and we won't able to see it.
+
+```
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+```
+
+So we will need to scroll down to see the new `message`; in this case, we are going to have the browser automatically scroll the `user` to the bottom so they are able to see the new `message`
+
+```
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+```
+
+The same will happen with every new `message` and this is great when the `user` is looking at the latest content but when the `user` is searching for an old `message` it will manually `scroll` to the top
+
+```
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+```
+
+It will frustrating that we `automatically` get to the bottom for every new `message` so in that case, we will not `scroll` to the bottom we are only going to `automatically scroll` when the `user` is looking at the latest content. So for a new `message` at this moment, we will have this
+
+```
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+*--------------*
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+| |  ------- | |
+| |  |     | | |
+| |  ------- | |
+```
+
+Now we have a visualization of what we are going to do; let's begin with the update.
+
+- On your editor; go to the `chat-app/public/chat.js` file
+
+We will need to add the `automatic scroll` logic in 2 places in charge of the `messages`; the `message` and `locationMessage` event handlers so we will add a function that we can use in both places.
+
+- Above the `message` event handler; create a new function call `autoScroll`
+
+    `const autoScroll = () => {}`
+
+- Call the function at the bottom of the `message` and `locationMessage` event handler
+
+    ```js
+    socket.on('message', (message) => {
+        console.log(message);
+        const html = Mustache.render($messageTemplate, {...});
+        $messages.insertAdjacentHTML('beforeend', html);
+        autoScroll();
+    });
+
+    socket.on('locationMessage', ({ username, url, createdAt }) => {
+        console.log(url, createdAt);
+        const html = Mustache.render($locationMessageTemplate, {...});
+        $messages.insertAdjacentHTML('beforeend', html);
+        autoScroll();
+    });
+    ```
+
+Running this function will not guarantee that we `auto scroll` but at least we are going to run the logic to see if we need to `auto scroll` and if we should it will do it. The first thing we are going to do is to get the new `message`. Remember that at this point in time the new `message` is already been added so we need to determine that we need to `scroll` to the bottom without this new `message` in there which means that we need the `height` of the new `message`.
+
+- On the `autoScroll` function; create a new constant call `$newMessage` that it value will be the `last element` of `$messages` using the `lastElementChild` property
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+    }
+    ```
+
+Now we need to know how tall the new `message` is including extra things like its `margin`.
+
+- Below `$newMessage`; create a new constant call `newMessageHeight` that its value will be the result of calling the `offsetHeight` property of `$newMessage`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageHeight = $newMessage.offsetHeight;
+    }
+    ```
+
+    The `offsetHeight` will give us the `height` of the new `message` but it won't take into account the `margin` of the element
+
+We will need to get the `margin` that is part of the element so we will need some extra steps to get the actual new `message height`. You may say that we just need to search the value on our `CSS` and hardcode it here but this will represent an issue if we want to change the style and forgot that you need to also change this function so we will get the actual value of the element.
+
+- Below the `$newMessage`; create a new constant call `newMessageStyles` that it value will be the result of calling the `getComputedStyle` sending as argument `$newMessage`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageHeight = $newMessage.offsetHeight;
+    }
+    ```
+
+    The `getComputedStyle` is a function globally set by the browser you just send the element that you need and it will get you all the `styles` of that element in an object
+
+- Log `newMessageStyles` at the bottom on the function
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageHeight = $newMessage.offsetHeight;
+        console.log(newMessageStyles);
+    }
+    ```
+
+- Save the file
+- On your terminal; go to the `chat-app` directory
+- Run your local server using: `npm run dev`
+- Open your browser and go to http://localhost:3000/
+- Fill out the form and submit
+- Open the browser's console
+- You should see a big object
+- Open the object and search the `marginBottom` property
+- You should see that in this case is `16px`
+
+Now that we know that we can get the `margin` of the element we will need to convert it to a number so we can add it to the new `message` height.
+
+- Remove the console.log
+- Below of the `newMessageStyles`; create a new constant call `newMessageMargin` that it value will be the result of the `parseInt` that receive as argument the `marginBottom` property of `newMessageStyles`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+    }
+    ```
+
+- Now sum the `newMessageMargin` to the `offsetHeight` of the `newMessageHeight`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+    }
+    ```
+
+At this moment we will need to check for the `visible height`; this value doesn't change often even if we add `messages` that pass that `height` in other words the `visible height` won't change even if the total of the content is longer.
+
+- Below the `newMessageHeight`; create a new variable call `visibleHeight` that it value will be the `offsetHeight` of `$messages`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+    }
+    ```
+
+Next, we will need the actual `height` of the container; in this case, can be larger than the `visible height` when there are a lot of `messages`.
+
+- Below the `visibleHeight`; create a new constant call `containerHeight` that its value will be the `scrollHeight` property of `$messages`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+        const containerHeight = $messages.scrollHeight;
+    }
+    ```
+
+Now we will need to know how far down we `scroll`.
+
+- Below the `containerHeight`; create a new constant call `scrollOffset` that its value will be the `scrollTop` property of `messages`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+        const containerHeight = $messages.scrollHeight;
+        const scrollOffset = $messages.scrollTop;
+    }
+    ```
+
+    The `scrollTop` property will give you a number that represents the distance that the `scroll` is from the `top` so in case you are at the top of the page the `scrollTop` will return `0`
+
+Since we actually need to know the distance that the `scroll` is from the bottom we will add the `scroll` height which is the actual `visible height` of the container
+
+- Add the `visibleHeight` to the `scrollTop` on the `scrollOffset` constant
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+        const containerHeight = $messages.scrollHeight;
+        const scrollOffset = $messages.scrollTop + visibleHeight;
+    }
+    ```
+
+Now we can do some conditional logic to see if we need to `scroll` to the bottom.
+
+- Below the `scrollOffset` add the following condition
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+        const containerHeight = $messages.scrollHeight;
+        const scrollOffset = $messages.scrollTop + visibleHeight;
+
+        if (containerHeight - newMessageHeight <= scrollOffset) {}
+    }
+    ```
+
+    Here we will take the `height` of the `container` and we will subtract the new `message` height because we want to figure out if we were `scrolled` to the bottom before the new `message` is added. Then we see is the resulting height of the previous mentioned if less or equal to the `scroll offset` to make sure that we indeed are at the bottom before the new `message` is added
+
+Now we can add the `auto scroll` if the previous mention condition is match.
+
+- On the condition; set the `scrollTop` property of `$messages` to be the `scrollHeight` of `$messages`
+
+    ```js
+    const autoScroll = () => {
+        const $newMessage = $messages.lastElementChild;
+        const newMessageStyles = getComputedStyle($newMessage);
+        const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+        const newMessageHeight = $newMessage.offsetHeight;
+        const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+        const visibleHeight = $messages.offsetHeight;
+        const containerHeight = $messages.scrollHeight;
+        const scrollOffset = $messages.scrollTop + visibleHeight;
+
+        if (containerHeight - newMessageHeight <= scrollOffset) {
+            $messages.scrollTop = $messages.scrollHeight;
+        }
+    }
+    ```
+
+- Save the file
+- Go to your browser and refresh the page
+- Add `messages` until you get more `messages` than the `height` of the `visual` content
+- You will see when you add the last `message` that will past the `visual` height it `scroll`
+- `Scroll` to the top
+- Add a new `message`
+- You will see that you don't `auto scroll`
