@@ -3799,3 +3799,79 @@ Now we can add the `auto scroll` if the previous mention condition is match.
 - `Scroll` to the top
 - Add a new `message`
 - You will see that you don't `auto scroll`
+
+## Deploying the chat app
+
+We are done adding functionality to the `chat` app the only thing that we will do is `deploy` our app to a production environment. Like we did with the other apps we will use `Heroku` to create our `production` environment and like the other apps, we will show 2 ways of doing the `deployment` of the app.
+
+In the past, we add everything that we need to make the `deploy` of the `chat` app(The `start` script and the `PORT` environment variable for the `express` server) so the only thing we will need to do is run the `Heroku` commands in order to `deploy` the add.
+
+### Single directory deployment
+
+- On your browser go to https://github.com/
+- Create a new repository
+- Copy the `git remote add your@origin` command that you have on the `create a new repository on the command line` section
+- On your editor; go to the `chat-app` directory
+- In this folder create a new file called `.gitignore`
+- Inside this newly created file add the following
+
+    `node_modules`
+
+- Save the file
+- Get to your terminal
+- Go to the `chat-app` directory(We are assuming that this directory just has the project files)
+- Init the repository using `git init`
+- Add all the files inside of the `chat-app` directory using: `git add .`
+- Commit the added files using: `git commit -m"First commit"`
+- Add the `remote` using the command that you copied from `GitHub`
+- Now push to `main` using: `git push -u origin main`
+- On your browser go to the repository page and refresh the page
+- You should see all files that you just push
+- Now on your editor `login` to your `Heroku` account using: `heroku login`
+- Press any key
+- You should be redirected to your browser
+- Login to your `Heroku` account
+- It will get you back to your terminal
+- Now create your `Heroku` app using: `heroku create prefix-name-of-your-app`
+
+    Like we did before we place a `prefix` with the initials of our name to be our unique identifier
+
+- Now push the app to `Heroku` using: `git push heroku master`
+- You should see all logs of your apps and at the end the successful `deploy` message
+
+### Multi-directory deployment
+
+Here we will assume that you already have a repository and the other 2 apps are on the same repository that we are going to push the `chat` app and also that these two apps already are `deployed` to `Heroku`. Here is the example files structure
+
+```
+project-root
+-| web-server/
+-| task-manager/
+-| chat-app/
+```
+
+- On your terminal go to the `project root`
+- Add all the `chat` app files using: `git add .`
+- Commit the changes using: `git commit -m"Create the chat-app project"`
+- Push your changes using `git push origin main`
+- On your browser; go to the repository page and you should the `chat-app` directory with all its files
+- Get back to your terminal
+- Now on your editor `login` to your `Heroku` account using: `heroku login`
+- Press any key
+- You should be redirected to your browser
+- Login to your `Heroku` account
+- It will get you back to your terminal
+- Now create your `Heroku` app using: `heroku create prefix-name-of-your-app`
+
+    Like we did before we place a `prefix` with the initials of our name to be our unique identifier
+
+- Add the `Heroku remote` of your new app using: `git remote add name-of-your-app your-new-heroku-origin`
+- Now push to `Heroku` the `chat-app` using: `git subtree push --prefix chat-app your-new-heroku-origin master`
+- You should see all logs of your apps and at the end the successful `deploy` message
+
+## Test production app
+
+- Get your `Heroku` URL on the logs that are on the terminal after you `deploy` the app
+- Open 2 browsers and go to the `Heroku` URL on both
+- On both fill out the form and submit(use the same `room`)
+- Send messages and both should see the new messages

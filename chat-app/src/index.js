@@ -40,12 +40,6 @@ io.on('connection', (socket) => {
         callback();
     });
 
-    // Goal: Render username for text messages
-    //
-    // 1. Setup the server to send username to client
-    // 2. Edit every call to "generateMessage" to include the username
-    //  - Use "Admin" for sys messages like connect/welcome/disconnect
-    // 3. Update client to render username in template
     socket.on('sendMessage', (message, callback) => {
         const user = getUser(socket.id);
         const filter = new Filter();

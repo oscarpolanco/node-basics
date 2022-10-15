@@ -39,14 +39,6 @@ const removeUser = (id) => {
     }
 }
 
-// Goal: Create two new functions for users
-//
-// 1. Create getUser
-//  - Accept id and return user object (or undefined)
-// 2. Create getUsersInRoom
-//  - Accept room name and return array of users (or empty array)
-// 3. Test your work by calling the functions!
-
 const getUser = (id) => (
     users.find((user) => user.id === id)
 );

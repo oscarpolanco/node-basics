@@ -14,3 +14,4 @@ On this repository, you will see some examples related to using `NodeJs` to get 
 - [Weather-app](https://github.com/oscarpolanco/node-basics/tree/master/weather-app): App that returns the current `weather` of a location that you provide
 - [Weather-app](https://github.com/oscarpolanco/node-basics/tree/master/web-server)(Web server version): An app that renders a page on the browser; let the user add a `location` and show the current `forecast` of that `location` on the page
 - [Task-app](https://github.com/oscarpolanco/node-basics/tree/master/task-manager): API that creates, reads, updates and deletes tasks created by a valid application `user`
+- [Chat-app](https://github.com/oscarpolanco/node-basics/tree/master/chat-app): Simple `chat` application using `sockets`
