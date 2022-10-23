@@ -56,6 +56,10 @@ const setupDatabase = async () => {
     await new Task(taskThree).save();
 }
 
+const closeConnection = async () => {
+    await mongoose.connection.close();
+}
+
 module.exports = {
     userOneId,
     userOne,
@@ -64,5 +68,6 @@ module.exports = {
     taskOne,
     taskTwo,
     taskThree,
-    setupDatabase
+    setupDatabase,
+    closeConnection
 }

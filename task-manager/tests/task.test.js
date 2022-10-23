@@ -3,12 +3,14 @@ const app = require('../src/app');
 const Task = require('../src/models/task');
 const {
     userOne,
-    setupDatabase,
     userTwo,
-    taskOne
+    taskOne,
+    setupDatabase,
+    closeConnection
 } = require('./fixtures/db');
 
 beforeEach(setupDatabase);
+afterAll(closeConnection);
 
 test('Should create task for user', async () => {
     const response = await request(app)
