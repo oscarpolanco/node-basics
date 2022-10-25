@@ -1,0 +1,42 @@
+name: Integration
+
+on:
+  push:
+    paths:
+      - 'task-manager/*'
+  pull_request:
+    paths:
+      - 'task-manager/*'
+
+env:
+  PORT: ${{ secrets.PORT }}
+  MONGODB_URL: ${{ secrets.TEST_MONGODB_URL }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+jobs:
+  unit-tests:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+        mongodb-version: ['5.0', '6.0']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: task-manager/package-lock.json
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.8.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+      - run: npm install
+        working-directory: ./task-manager
+      - run: npm run test-ci
+        working-directory: ./task-manager
