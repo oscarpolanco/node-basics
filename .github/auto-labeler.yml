@@ -1,0 +1,18 @@
+autolabeler:
+  - label: 'chore'
+    branch:
+      - '/chore{0,1}\/.+/'
+    title:
+      - '/chore/i'
+  - label: 'bug'
+    branch:
+      - '/fix\/.+/'
+      - '/bugfix\/.+/'
+    title:
+      - '/fix/i'
+      - '/bugfix/i'
+  - label: 'enhancement'
+    branch:
+      - '/feature\/.+/'
+    title:
+      - '/feature/i'
