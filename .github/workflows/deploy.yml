@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Install Railway
+        run: npm i -g @railway/cli
       - name: Get updated files
         id: changed-files-specific
         uses: tj-actions/changed-files@v34
@@ -25,36 +27,21 @@ jobs:
             web-server/**
             notes-app/**
             chat-app/**
-
       - name: Deploy Task-manager app
         if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, 'task-manager')
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: "${{ secrets.HEROKU_PREFIX }}task-manager"
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          appdir: "task-manager"
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.TASK_APP_TOKEN }}
+        working-directory: ./task-manager
       - name: Deploy web-server app
         if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, 'web-server')
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: "${{ secrets.HEROKU_PREFIX }}weather-application"
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          appdir: "web-server"
-      - name: Deploy notes-app app
-        if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, 'notes-ap')
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: "${{ secrets.HEROKU_PREFIX }}weather-application"
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          appdir: "notes-app"
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.WEATHER_APP_TOKEN }}
+        working-directory: ./web-server
       - name: Deploy chat app
         if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, 'chat-app')
-        uses: akhileshns/heroku-deploy@v3.12.12
-        with:
-          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-          heroku_app_name: "${{ secrets.HEROKU_PREFIX }}chat-app"
-          heroku_email: ${{ secrets.HEROKU_EMAIL }}
-          appdir: "chat-app"
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.CHAT_APP_TOKEN }}
+        working-directory: ./chat-app
