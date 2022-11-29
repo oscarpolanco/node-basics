@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Should response to the about page 1`] = `
+"<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>About</title>
+        <link rel="icon" href="/img/weather.png">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+        <div class="main-content">
+            <header>
+                <h1>About Me</h1>
+            
+                <a href="/">Weather</a>
+                <a href="/about">About</a>
+                <a href="/help">Help</a>
+            </header>
+            <p>This site was created by me. It use data from mapbox.com and weatherstack.com!</p>
+            <img class="portrait" src="/img/robot.png" />
+        </div>
+        <footer>
+            <p>Created by Testing</p>
+        </footer>
+    </body>
+</html>
+"
+`;
+
+exports[`Should response to the help page 1`] = `
+"<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Help</title>
+        <link rel="icon" href="/img/weather.png">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+        <div class="main-content">
+            <header>
+                <h1>Help</h1>
+            
+                <a href="/">Weather</a>
+                <a href="/about">About</a>
+                <a href="/help">Help</a>
+            </header>
+            <p>This is some helpful message</p>
+        </div>
+        <footer>
+            <p>Created by Testing</p>
+        </footer>
+    </body>
+</html>
+"
+`;
+
+exports[`Should return the 404 page for a not existing route 1`] = `
+"<!DOCTYPE html>
+<html>
+    <head>
+        <title>404</title>
+        <link rel="icon" href="/img/weather.png">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+    <body>
+        <div class="main-content">
+            <header>
+                <h1>404</h1>
+            
+                <a href="/">Weather</a>
+                <a href="/about">About</a>
+                <a href="/help">Help</a>
+            </header>
+            <p>Page not found</p>
+        </div>
+        <footer>
+            <p>Created by Testing</p>
+        </footer>
+    </body>
+</html>
+"
+`;

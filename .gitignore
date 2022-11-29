@@ -7,12 +7,5 @@ node_modules
 notes.txt
 notes.json
 
-# playground
-1-json.json
-2-json.json
-
-# weather app
-keys.dev.js
-
-# task-manager app
-task-manager/config/*.env
+# config file on all apps
+*/config/*.env
