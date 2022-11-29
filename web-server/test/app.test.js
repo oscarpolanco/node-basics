@@ -17,7 +17,6 @@ test('Should return a error message if a location is not provide', async () => {
 test('Should return the unable of connect error message when the location service was unavailable', async () => {
     request.mockImplementation((config, cb) => cb({ error: 'error' }, {}));
 
-
     const response = await superTest(app)
         .get('/weather?address=boston')
         .send()

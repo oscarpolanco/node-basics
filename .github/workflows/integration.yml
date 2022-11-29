@@ -5,9 +5,11 @@ on:
     branches: ['master']
     paths:
       - 'task-manager/*'
+      - 'web-server/*'
   pull_request:
     paths:
       - 'task-manager/*'
+      - 'web-server/*'
 
 env:
   PORT: ${{ secrets.PORT }}
@@ -22,24 +24,34 @@ jobs:
     strategy:
       matrix:
         node-version: [16.x, 18.x]
-        mongodb-version: ['5.0', '6.0']
+        dir: ['task-manager', 'web-server']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Get updated files
+        id: changed-files-specific
+        uses: tj-actions/changed-files@v34
+        with:
+          files: |
+            task-manager/**
+            web-server/**
       - name: Install Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-          cache-dependency-path: task-manager/package-lock.json
-      - name: Setup MongoDB ${{ matrix.mongodb-version }}
+          cache-dependency-path: ${{ matrix.dir }}/package-lock.json
+      - name: Setup MongoDB
+        if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, 'task-manager')
         uses: supercharge/mongodb-github-action@1.8.0
         with:
-          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-version: '6.0'
       - name: Install dependencies
+        if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, matrix.dir)
         run: npm install
-        working-directory: ./task-manager
-      - name: Run tests
+        working-directory: ./${{ matrix.dir }}
+      - name: Run tests ${{ matrix.dir }}
+        if: contains(steps.changed-files-specific.outputs.all_changed_and_modified_files, matrix.dir)
         run: npm run test-ci
-        working-directory: ./task-manager
+        working-directory: ./${{ matrix.dir }}
